@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback, useState } from 'react';
+import React, { useRef, useEffect, useCallback, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  AccessibilityInfo,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
@@ -22,12 +21,16 @@ import ConfirmationModal from '@components/ui/ConfirmationModal';
 
 // ─── Message Bubble ──────────────────────────────────────────────────────────
 
+/**
+ * React.memo evita re-render de todos os balões ao digitar no input
+ * ou quando o estado de loading muda — apenas os props alterados re-renderizam.
+ */
 const MessageBubble: React.FC<{
   message: ChatBotMessage;
   onReschedule: (action: ChatBotAction) => void;
   onCancel: (action: ChatBotAction) => void;
   isActionPending: boolean;
-}> = ({ message, onReschedule, onCancel, isActionPending }) => {
+}> = React.memo(({ message, onReschedule, onCancel, isActionPending }) => {
   const colors = useColors();
   const isUser = message.role === 'user';
 
@@ -75,7 +78,7 @@ const MessageBubble: React.FC<{
       ) : null}
     </View>
   );
-};
+});
 
 // ─── ChatWindow ──────────────────────────────────────────────────────────────
 
@@ -106,18 +109,18 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
     confirmAction,
   } = useChatSession();
 
-  // Scroll to end quando novas mensagens chegam
+  // Scroll to end quando novas mensagens chegam — timer limpo no unmount
   useEffect(() => {
-    if (messages.length > 0) {
-      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 80);
-    }
+    if (messages.length === 0) return;
+    const t = setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 80);
+    return () => clearTimeout(t);
   }, [messages.length]);
 
-  // Foca o input assim que o painel abre (web)
+  // Foca o input assim que o painel abre (web) — timer limpo no unmount
   useEffect(() => {
-    if (Platform.OS === 'web') {
-      setTimeout(() => inputRef.current?.focus(), 200);
-    }
+    if (Platform.OS !== 'web') return;
+    const t = setTimeout(() => inputRef.current?.focus(), 200);
+    return () => clearTimeout(t);
   }, []);
 
   const handleSend = useCallback(() => {
@@ -173,17 +176,38 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
     setPendingAction(null);
   }, []);
 
-  // Último bot message (para quickReplies e suggestedTimes)
-  const lastBotMessage = [...messages]
-    .reverse()
-    .find((m) => m.role === 'bot');
+  // Busca do último bot message sem criar array temporário — O(n) passagem única
+  const lastBotMessage = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === 'bot') return messages[i];
+    }
+    return undefined;
+  }, [messages]);
 
-  const hasQuickReplies =
-    lastBotMessage &&
-    ((lastBotMessage.quickReplies?.length ?? 0) > 0 ||
-      (lastBotMessage.suggestedTimes?.length ?? 0) > 0);
+  const hasQuickReplies = useMemo(
+    () =>
+      !!lastBotMessage &&
+      ((lastBotMessage.quickReplies?.length ?? 0) > 0 ||
+        (lastBotMessage.suggestedTimes?.length ?? 0) > 0),
+    [lastBotMessage],
+  );
 
-  const styles = createStyles(colors);
+  // Memoiza o StyleSheet — evita recriar em cada render
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
+  // renderItem precisa ser um useCallback no topo do componente —
+  // chamar useCallback() diretamente dentro de uma prop JSX viola as Regras dos Hooks
+  const renderItem = useCallback(
+    ({ item }: { item: ChatBotMessage }) => (
+      <MessageBubble
+        message={item}
+        onReschedule={handleReschedule}
+        onCancel={handleCancel}
+        isActionPending={pendingAction !== null}
+      />
+    ),
+    [handleReschedule, handleCancel, pendingAction],
+  );
 
   return (
     <KeyboardAvoidingView
@@ -229,14 +253,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
             </Text>
           </View>
         }
-        renderItem={({ item }) => (
-          <MessageBubble
-            message={item}
-            onReschedule={handleReschedule}
-            onCancel={handleCancel}
-            isActionPending={pendingAction !== null}
-          />
-        )}
+        renderItem={renderItem}
       />
 
       {/* Typing indicator */}
