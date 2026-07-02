@@ -72,4 +72,5 @@ export type NavigationParams = {
     serviceTitle?: string | null;
     roomStatus?: ChatRoomStatus;
   };
+  ChatBot: undefined;
 };

@@ -30,6 +30,7 @@ import ServicesListScreen from '@screens/private/professional/Services/ServicesL
 import ProfessionalRadiusScreen from '@screens/private/professional/RadiusScreen/ProfessionalRadiusScreen';
 import ChatListScreen from '@screens/private/chat/ChatListScreen';
 import ChatThreadScreen from '@screens/private/chat/ChatThreadScreen';
+import ChatBotScreen from '@screens/private/chatbot/ChatBotScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -403,6 +404,16 @@ const RootStack = createNativeStackNavigator({
         },
       },
       options: {
+        headerShown: false,
+      },
+    },
+    ChatBot: {
+      screen: ChatBotScreen,
+      linking: {
+        path: 'chatbot',
+      },
+      options: {
+        title: 'Assistente',
         headerShown: false,
       },
     },
