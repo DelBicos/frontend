@@ -1,0 +1,1 @@
+export { ChatBotAppointmentCard } from './ChatBotAppointmentCard';
