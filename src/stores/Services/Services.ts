@@ -8,6 +8,7 @@ export type ServiceItem = {
   description?: string;
   date?: string; // YYYY-MM-DD
   price_cents?: number;
+  price?: number; // fallback float caso price_cents não esteja no banco
   duration?: number; // minutos
   subcategory_id?: number;
   banner_uri?: string | null;
@@ -22,6 +23,7 @@ export type ServiceItem = {
 
 type ServicesState = {
   services: ServiceItem[];
+  myServices: ServiceItem[];
   loading: boolean;
   lastQuery?: {
     day?: number;
@@ -51,6 +53,7 @@ type ServicesState = {
 
 export const useServicesStore = create<ServicesState>((set, get) => ({
   services: [],
+  myServices: [],
   loading: false,
 
   // NOTE: normalization removed — backend now returns `price_cents` reliably
@@ -118,7 +121,7 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
   },
 
   fetchMyServices: async (opts?: { page?: number; limit?: number }) => {
-    set({ loading: true });
+    set({ myServices: [], loading: true });
     try {
       const params: any = {};
       if (opts?.page !== undefined) params.page = opts.page;
@@ -158,11 +161,11 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
               }))
             : undefined,
       }));
-      set({ services: data, loading: false });
+      set({ myServices: data, loading: false });
       return data;
     } catch (e) {
       console.error('[Services] fetchMyServices', e);
-      set({ loading: false });
+      set({ myServices: [], loading: false });
       return [];
     }
   },
@@ -212,7 +215,7 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
               }))
             : undefined,
       };
-      set({ services: [...(get().services || []), created] });
+      set({ myServices: [...(get().myServices || []), created] });
       return created;
     } catch (e) {
       console.error('[Services] createService', e);
@@ -257,7 +260,7 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
             : undefined,
       };
       set({
-        services: (get().services || []).map((s) =>
+        myServices: (get().myServices || []).map((s) =>
           s.id === id ? updated : s,
         ),
       });
@@ -271,7 +274,7 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
   deleteService: async (id) => {
     try {
       await backendHttpClient.delete(`/api/services/${id}`);
-      set({ services: (get().services || []).filter((s) => s.id !== id) });
+      set({ myServices: (get().myServices || []).filter((s) => s.id !== id) });
       return true;
     } catch (e) {
       console.error('[Services] deleteService', e);
