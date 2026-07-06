@@ -9,7 +9,7 @@ export const registerTokenProvider = (provider: () => string | null) => {
 
 export const backendHttpClient = axios.create({
   baseURL: `${HTTP_DOMAIN}`,
-  timeout: 10000,
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
     accept: 'application/json',
