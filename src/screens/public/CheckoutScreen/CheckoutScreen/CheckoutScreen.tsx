@@ -51,6 +51,7 @@ async function fetchPaymentIntent(
   selectedTime: string,
   addressId: number,
   token: string | null,
+  appointmentId?: number,
 ): Promise<string | null> {
   if (!token) return null;
 
@@ -70,6 +71,7 @@ async function fetchPaymentIntent(
           serviceId,
           selectedTime,
           addressId,
+          ...(appointmentId ? { appointmentId } : {}),
         }),
       },
     );
@@ -93,7 +95,7 @@ function CheckoutScreenContent() {
   const navigation = useNavigation();
   const route =
     useRoute<RouteProp<{ params: CheckoutRouteParams }, 'params'>>();
-  const { professionalId, selectedTime, imageUrl, serviceId } = route.params;
+  const { professionalId, selectedTime, imageUrl, serviceId, appointmentId } = route.params;
 
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
@@ -224,6 +226,7 @@ function CheckoutScreenContent() {
         selectedTime,
         selectedAddress.id,
         token,
+        appointmentId,
       );
 
       if (secret) {
@@ -253,6 +256,7 @@ function CheckoutScreenContent() {
     selectedTime,
     token,
     initPaymentSheet,
+    appointmentId,
   ]);
 
   // 4. Apresenta PaymentSheet e confirma no servidor
