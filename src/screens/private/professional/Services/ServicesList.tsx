@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useRoute, RouteProp } from '@react-navigation/native';
+import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
+import { FontAwesome } from '@expo/vector-icons';
 import {
   View,
   Text,
@@ -17,23 +18,28 @@ import { formatBRL } from '@lib/helpers/formatCurrency';
 const ServicesList: React.FC = () => {
   const colors = useColors();
   const styles = createStyles(colors);
-  const { services, fetchMyServices, deleteService } = useServicesStore();
+  const { myServices, fetchMyServices, deleteService } = useServicesStore();
 
+  const [loaded, setLoaded] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editing, setEditing] = useState<ServiceItem | null>(null);
 
   const route = useRoute<RouteProp<Record<string, any>, string>>();
+  const navigation = useNavigation<any>();
 
   useEffect(() => {
-    if (route?.params?.openCreate) {
+    fetchMyServices().then(() => setLoaded(true));
+  }, [fetchMyServices]);
+
+  // Abre o modal de criação automaticamente apenas se vier o parâmetro
+  // E o profissional ainda não tiver nenhum serviço cadastrado
+  useEffect(() => {
+    if (!loaded) return;
+    if (route?.params?.openCreate && myServices.length === 0) {
       setEditing(null);
       setModalVisible(true);
     }
-  }, [route?.params?.openCreate]);
-
-  useEffect(() => {
-    fetchMyServices();
-  }, [fetchMyServices]);
+  }, [loaded, route?.params?.openCreate]);
 
   const openCreate = () => {
     setEditing(null);
@@ -61,28 +67,34 @@ const ServicesList: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
-        <Text style={styles.title}>Meus Serviços</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 12 }}>
+            <FontAwesome name="arrow-left" size={20} color={colors.primaryOrange} />
+          </TouchableOpacity>
+          <Text style={styles.title}>Meus Serviços</Text>
+        </View>
         <TouchableOpacity style={styles.addBtn} onPress={openCreate}>
           <Text style={styles.addBtnText}>Adicionar</Text>
         </TouchableOpacity>
       </View>
 
       <FlatList
-        data={services}
+        data={myServices}
         keyExtractor={(i) => String(i.id)}
         contentContainerStyle={{ padding: 16 }}
         renderItem={({ item }) => (
           <View style={styles.itemRow}>
             <View style={styles.itemInfo}>
               <Text style={styles.itemTitle}>{item.title}</Text>
-              {item.date ? (
-                <Text style={styles.itemMeta}>{item.date}</Text>
-              ) : null}
-              {item.price_cents ? (
-                <Text style={styles.itemMeta}>
-                  {formatBRL({ price_cents: item.price_cents })}
-                </Text>
-              ) : null}
+              {(() => {
+                const cents = item.price_cents ?? (item.price != null ? Math.round(Number(item.price) * 100) : null);
+                if (!cents) return null;
+                return (
+                  <Text style={styles.itemMeta}>
+                    {formatBRL({ price_cents: cents })}
+                  </Text>
+                );
+              })()}
             </View>
             <View style={styles.itemActions}>
               <TouchableOpacity onPress={() => openEdit(item)}>
