@@ -98,6 +98,13 @@ function MeusAgendamentos({ role }: MeusAgendamentosProps = {}) {
   useEffect(() => {
     if (user) {
       fetchAppointments(role);
+
+      // Polling: Atualiza os agendamentos automaticamente a cada 30 segundos
+      const interval = setInterval(() => {
+        fetchAppointments(role);
+      }, 30000);
+
+      return () => clearInterval(interval);
     }
   }, [user, fetchAppointments, role]);
 
