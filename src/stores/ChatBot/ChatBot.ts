@@ -54,7 +54,7 @@ export const useChatBotStore = create<ChatBotStore>()(
       name: 'chatbot-session',
       storage: createJSONStorage(() => AsyncStorage),
       // Persiste apenas o sessionId — histórico e estado são restaurados via API
-      partialize: (state) => ({ sessionId: state.sessionId }),
+      partialize: (state) => ({ sessionId: state.sessionId } as any),
     },
   ),
 );

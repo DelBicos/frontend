@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { View, Animated, StyleSheet } from 'react-native';
 import { useColors } from '@theme/ThemeProvider';
 import { createStyles } from './styles';
@@ -50,7 +50,7 @@ const Dot: React.FC<{ delay: number; color: string }> = ({ delay, color }) => {
 
 export const TypingIndicator: React.FC = () => {
   const colors = useColors();
-  const styles = createStyles(colors);
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <View style={styles.bubble}>

@@ -52,7 +52,6 @@ export const ChatBotAppointmentCard: React.FC<ChatBotAppointmentCardProps> = ({
   return (
     <View
       style={styles.card}
-      accessibilityRole="region"
       accessibilityLabel={`Agendamento confirmado: ${appointment.serviceTitle}`}>
       {/* Header */}
       <View style={styles.header}>

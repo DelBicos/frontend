@@ -148,7 +148,7 @@ export interface SendMessageResponse {
   context: ChatBotContext;
 }
 
-/** Objeto session retornado dentro do GET /api/chat/bot/session/:id */
+/** Objeto session retornado dentro do GET /api/chat/bot/session/active */
 export interface ChatBotSessionMeta {
   id: number;
   state: ChatBotState;
@@ -157,6 +157,8 @@ export interface ChatBotSessionMeta {
   started_at: string;
   ended_at: string | null;
   appointment_id: number | null;
+  /** Contexto acumulado da conversa — presente quando o backend o inclui na resposta. */
+  context?: ChatBotContext;
 }
 
 /** Resposta de GET /api/chat/bot/session/:id */

@@ -8,6 +8,7 @@ import {
   Dimensions,
   Text,
   SafeAreaView,
+  StyleSheet,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';

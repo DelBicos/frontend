@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -28,7 +28,7 @@ export const QuickReplies: React.FC<QuickRepliesProps> = ({
   disabled = false,
 }) => {
   const colors = useColors();
-  const styles = createStyles(colors);
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const hasReplies = quickReplies && quickReplies.length > 0;
   const hasTimes = suggestedTimes && suggestedTimes.length > 0;

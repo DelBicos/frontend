@@ -281,35 +281,38 @@ export function useChatSession() {
   } = useChatBotStore();
 
   /**
-   * Carrega o histórico de uma sessão persistida.
-   * Chamado no mount do ChatWindow se sessionId estiver no AsyncStorage.
+   * Restaura somente o fluxo pendente do JWT atual. O backend retorna null
+   * para logins novos, impedindo que um session_id persistido de outra conta
+   * seja exibido no chat.
    */
-  const loadSession = useCallback(
-    async (id: number) => {
-      if (!isValidChatBotSessionId(id)) {
-        setError('ID de sessão inválido.');
-        return;
-      }
+  const restoreActiveSession = useCallback(
+    async () => {
       try {
         setLoading(true);
         setError(null);
-        const { data } = await backendHttpClient.get<LoadSessionResponse>(
-          `/api/chat/bot/session/${id}`,
+        const { data } = await backendHttpClient.get<LoadSessionResponse | null>(
+          '/api/chat/bot/session/active',
         );
+        if (!data) {
+          resetSession();
+          return;
+        }
         if (Array.isArray(data.messages) && data.messages.length > 0) {
           prependMessages(data.messages.filter(isValidChatBotStoredMessage) as ChatBotMessage[]);
         }
-        setSessionId(data.session.id ?? id);
+        setSessionId(data.session.id);
         if (data.session.state) {
-          setConversationState(data.session.state, {});
+          setConversationState(data.session.state, data.session.context ?? {});
         }
       } catch {
-        setError('Não foi possível carregar o histórico da conversa.');
+        // O chat continua utilizável mesmo que a restauração falhe.
+        resetSession();
+        setError('Não foi possível restaurar a conversa.');
       } finally {
         setLoading(false);
       }
     },
-    [setLoading, setError, prependMessages, setSessionId, setConversationState],
+    [setLoading, setError, prependMessages, setSessionId, setConversationState, resetSession],
   );
 
   /**
@@ -499,7 +502,7 @@ export function useChatSession() {
     retryLastMessage,
     clearRateLimitReset,
     clearSession,
-    loadSession,
+    restoreActiveSession,
   };
 }
 
