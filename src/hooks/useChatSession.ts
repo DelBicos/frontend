@@ -10,10 +10,7 @@ import {
   parseLocalDateTime,
   parseSlotParts,
 } from '@lib/helpers/datetime';
-import {
-  isValidChatBotSessionId,
-  isValidChatBotStoredMessage,
-} from '@utils/validators';
+import { isValidChatBotSessionId } from '@utils/validators';
 import {
   ChatBotMessage,
   ChatBotState,
@@ -27,6 +24,43 @@ import {
 
 let _counter = 0;
 const localId = () => `local_${Date.now()}_${++_counter}`;
+
+function normalizeHistoryMessage(message: unknown): ChatBotMessage | null {
+  if (!message || typeof message !== 'object') return null;
+  const item = message as Record<string, unknown>;
+
+  if (
+    typeof item.text === 'string' &&
+    (item.role === 'user' || item.role === 'bot')
+  ) {
+    return {
+      id: String(item.id),
+      role: item.role,
+      text: item.text,
+      createdAt:
+        typeof item.createdAt === 'string'
+          ? item.createdAt
+          : new Date().toISOString(),
+    };
+  }
+
+  if (
+    typeof item.content === 'string' &&
+    (item.sender === 'user' || item.sender === 'bot')
+  ) {
+    return {
+      id: `history_${String(item.id)}`,
+      role: item.sender,
+      text: item.content,
+      createdAt:
+        typeof item.createdAt === 'string'
+          ? item.createdAt
+          : new Date().toISOString(),
+    };
+  }
+
+  return null;
+}
 
 /** Canal detectado uma vez na inicialização do módulo. */
 const CHANNEL: string = Platform.OS === 'web' ? 'web' : 'mobile';
@@ -71,6 +105,8 @@ function deriveQuickReplies(
         { label: 'Não', value: 'não' },
       ];
     }
+    // As ofertas completas são exibidas em cartões; evita repetir chips abaixo.
+    if (context.serviceOptionsData?.length) return undefined;
     if (context.serviceOptions?.length) {
       return context.serviceOptions.map((name, i) => ({
         label: name,
@@ -124,16 +160,19 @@ function deriveSuggestedTimes(
   state: ChatBotState,
   context: ChatBotContext,
 ): SuggestedTime[] | undefined {
-  if (state !== 'COLETANDO_HORARIO' || !context.suggestedSlots?.length) return undefined;
+  if (state !== 'COLETANDO_HORARIO' || !context.suggestedSlots?.length)
+    return undefined;
   const fallbackDate = (context as any).date ?? context.selectedDate;
 
   // Se o backend enviou metadados dos slots (com nome do profissional e horário real),
   // mapeamos os índices para rótulos legíveis
-  const slotsData = (context as any).suggestedSlotsData as Array<{
-    index: number;
-    time: string;
-    professionalName: string;
-  }> | undefined;
+  const slotsData = (context as any).suggestedSlotsData as
+    | {
+        index: number;
+        time: string;
+        professionalName: string;
+      }[]
+    | undefined;
 
   if (slotsData && slotsData.length > 0) {
     return context.suggestedSlots.map((slot) => {
@@ -160,7 +199,8 @@ function deriveBotAction(
   state: ChatBotState,
   context: ChatBotContext,
 ): ChatBotAction | undefined {
-  if (state !== 'CONFIRMACAO' || context.pendingAction !== 'CREATE') return undefined;
+  if (state !== 'CONFIRMACAO' || context.pendingAction !== 'CREATE')
+    return undefined;
   if (!context.serviceName && !context.professionalName) return undefined;
 
   // Backend usa `date` e `time` no contexto (não selectedDate/selectedTime)
@@ -173,7 +213,12 @@ function deriveBotAction(
 
   // Calcula endTime a partir de serviceDuration (minutos), se disponivel no contexto
   let endTime = startTime;
-  if (context.serviceDuration && typeof context.serviceDuration === 'number' && ctxDate && ctxTime) {
+  if (
+    context.serviceDuration &&
+    typeof context.serviceDuration === 'number' &&
+    ctxDate &&
+    ctxTime
+  ) {
     const end = parseLocalDateTime(ctxDate, ctxTime);
     end.setMinutes(end.getMinutes() + context.serviceDuration);
     endTime = end.toISOString();
@@ -186,20 +231,34 @@ function deriveBotAction(
     type: 'confirm_appointment',
     appointment: {
       serviceTitle: context.serviceName ?? '',
+      serviceDescription: context.serviceDescription,
+      subcategoryName: context.serviceSubcategoryName,
+      categoryName: context.serviceCategoryName,
       professionalName: context.professionalName ?? '',
+      professionalRating: context.professionalRating,
+      professionalRatingsCount: context.professionalRatingsCount,
+      professionalLocation:
+        context.professionalCity && context.professionalState
+          ? `${context.professionalCity}/${context.professionalState}`
+          : null,
+      durationMinutes: context.serviceDuration,
       professionalAvatarUri: context.professionalAvatarUri ?? null,
       startTime,
       endTime,
-      price: rawPrice != null
-        ? formatBRLFromCents(typeof rawPrice === 'number' ? rawPrice : Number(rawPrice))
-        : '',
+      price:
+        rawPrice != null
+          ? formatBRLFromCents(
+              typeof rawPrice === 'number' ? rawPrice : Number(rawPrice),
+            )
+          : '',
     },
   };
 }
 
 /** Trata erros HTTP — retorna mensagem amigável para erros conhecidos. */
 function resolveGenericError(status: number | undefined): string {
-  if (status === 404) return 'Sessão não encontrada. Uma nova conversa será iniciada.';
+  if (status === 404)
+    return 'Sessão não encontrada. Uma nova conversa será iniciada.';
   return 'Não foi possível enviar a mensagem. Tente novamente.';
 }
 
@@ -238,7 +297,10 @@ function resolveSelectedTimeIso(
       try {
         return localDateTimeToISO(ctxDate, messageText.trim());
       } catch (e) {
-        console.warn('[useChatSession] Error formatting ISO for time string:', e);
+        console.warn(
+          '[useChatSession] Error formatting ISO for time string:',
+          e,
+        );
       }
     }
   }
@@ -285,35 +347,42 @@ export function useChatSession() {
    * para logins novos, impedindo que um session_id persistido de outra conta
    * seja exibido no chat.
    */
-  const restoreActiveSession = useCallback(
-    async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const { data } = await backendHttpClient.get<LoadSessionResponse | null>(
-          '/api/chat/bot/session/active',
-        );
-        if (!data) {
-          resetSession();
-          return;
-        }
-        if (Array.isArray(data.messages) && data.messages.length > 0) {
-          prependMessages(data.messages.filter(isValidChatBotStoredMessage) as ChatBotMessage[]);
-        }
-        setSessionId(data.session.id);
-        if (data.session.state) {
-          setConversationState(data.session.state, data.session.context ?? {});
-        }
-      } catch {
-        // O chat continua utilizável mesmo que a restauração falhe.
+  const restoreActiveSession = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const { data } = await backendHttpClient.get<LoadSessionResponse | null>(
+        '/api/chat/bot/session/active',
+      );
+      if (!data) {
         resetSession();
-        setError('Não foi possível restaurar a conversa.');
-      } finally {
-        setLoading(false);
+        return;
       }
-    },
-    [setLoading, setError, prependMessages, setSessionId, setConversationState, resetSession],
-  );
+      if (Array.isArray(data.messages) && data.messages.length > 0) {
+        const restoredMessages = data.messages
+          .map(normalizeHistoryMessage)
+          .filter((message): message is ChatBotMessage => message !== null);
+        prependMessages(restoredMessages);
+      }
+      setSessionId(data.session.id);
+      if (data.session.state) {
+        setConversationState(data.session.state, data.session.context ?? {});
+      }
+    } catch {
+      // O chat continua utilizável mesmo que a restauração falhe.
+      resetSession();
+      setError('Não foi possível restaurar a conversa.');
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    setLoading,
+    setError,
+    prependMessages,
+    setSessionId,
+    setConversationState,
+    resetSession,
+  ]);
 
   /**
    * Lógica compartilhada de envio HTTP.
@@ -335,7 +404,9 @@ export function useChatSession() {
           '/api/chat/bot/message',
           {
             message: messageText,
-            ...(isValidChatBotSessionId(sessionId) ? { session_id: sessionId } : {}),
+            ...(isValidChatBotSessionId(sessionId)
+              ? { session_id: sessionId }
+              : {}),
             channel: CHANNEL,
             timezone: getClientTimezone(),
             utc_offset_minutes: getClientUtcOffsetMinutes(),
@@ -363,7 +434,10 @@ export function useChatSession() {
             text: data.message,
             createdAt: new Date().toISOString(),
             quickReplies: deriveQuickReplies(data.state, data.context ?? {}),
-            suggestedTimes: deriveSuggestedTimes(data.state, data.context ?? {}),
+            suggestedTimes: deriveSuggestedTimes(
+              data.state,
+              data.context ?? {},
+            ),
             action: deriveBotAction(data.state, data.context ?? {}),
           });
         }
@@ -505,4 +579,3 @@ export function useChatSession() {
     restoreActiveSession,
   };
 }
-
