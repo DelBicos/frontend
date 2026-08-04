@@ -1,4 +1,10 @@
-import React, { useRef, useEffect, useCallback, useState, useMemo } from 'react';
+import React, {
+  useRef,
+  useEffect,
+  useCallback,
+  useState,
+  useMemo,
+} from 'react';
 import {
   View,
   Text,
@@ -19,6 +25,7 @@ import { ChatHeader } from './ChatHeader';
 import { ChatInputBar } from './ChatInputBar';
 import { ChatErrorBanner } from './ChatErrorBanner';
 import { AppointmentStatusBanner } from './AppointmentStatusBanner';
+import { ServiceOptions } from '../ServiceOptions';
 import { useAppointmentPolling } from './hooks/useAppointmentPolling';
 import { useRateLimitCountdown } from './hooks/useRateLimitCountdown';
 import { createStyles } from './styles';
@@ -34,7 +41,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
   const inputRef = useRef<TextInput>(null);
   const listRef = useRef<FlatList<ChatBotMessage>>(null);
   const [inputText, setInputText] = useState('');
-  const [pendingAction, setPendingAction] = useState<ChatBotAction | null>(null);
+  const [pendingAction, setPendingAction] = useState<ChatBotAction | null>(
+    null,
+  );
   const [confirmModal, setConfirmModal] = useState<{
     visible: boolean;
     title: string;
@@ -65,7 +74,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
     appointmentId,
     conversationState,
   );
-  const rateLimitCountdown = useRateLimitCountdown(rateLimitResetAt, clearRateLimitReset);
+  const rateLimitCountdown = useRateLimitCountdown(
+    rateLimitResetAt,
+    clearRateLimitReset,
+  );
 
   // ── Efeitos ───────────────────────────────────────────────────────────────
 
@@ -80,7 +92,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
   // Scroll automático ao receber novas mensagens.
   useEffect(() => {
     if (messages.length === 0) return;
-    const t = setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 80);
+    const t = setTimeout(
+      () => listRef.current?.scrollToEnd({ animated: true }),
+      80,
+    );
     return () => clearTimeout(t);
   }, [messages.length]);
 
@@ -186,7 +201,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-
       <ChatHeader onClear={clearSession} onClose={onClose} />
 
       <FlatList
@@ -198,7 +212,11 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
         keyboardShouldPersistTaps="handled"
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <FontAwesome name="commenting-o" size={40} color={colors.textTertiary} />
+            <FontAwesome
+              name="commenting-o"
+              size={40}
+              color={colors.textTertiary}
+            />
             <Text style={[styles.emptyText, { color: colors.textTertiary }]}>
               Olá! Como posso ajudar com seus agendamentos?
             </Text>
@@ -219,13 +237,30 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
       )}
 
       {conversationState === 'AGUARDANDO_ID_AGENDAMENTO' && !loading && (
-        <View style={[styles.hintBanner, { backgroundColor: colors.warningBackground }]}>
-          <FontAwesome name="info-circle" size={14} color={colors.warningText} />
+        <View
+          style={[
+            styles.hintBanner,
+            { backgroundColor: colors.warningBackground },
+          ]}>
+          <FontAwesome
+            name="info-circle"
+            size={14}
+            color={colors.warningText}
+          />
           <Text style={[styles.hintText, { color: colors.warningText }]}>
-            Digite o ID do agendamento (disponível em "Meus Agendamentos")
+            {'Digite o ID do agendamento (disponível em “Meus Agendamentos”)'}
           </Text>
         </View>
       )}
+
+      {conversationState === 'COLETANDO_SERVICO' &&
+        !!conversationContext?.serviceOptionsData?.length && (
+          <ServiceOptions
+            options={conversationContext.serviceOptionsData}
+            onSelect={handleQuickReply}
+            disabled={loading}
+          />
+        )}
 
       {hasQuickReplies && !loading && (
         <QuickReplies
