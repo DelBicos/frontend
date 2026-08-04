@@ -1,4 +1,10 @@
-import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  useMemo,
+} from 'react';
 import {
   View,
   TouchableOpacity,
@@ -41,7 +47,10 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     if (open) return 0;
     let lastUserIdx = -1;
     for (let i = messages.length - 1; i >= 0; i--) {
-      if (messages[i].role === 'user') { lastUserIdx = i; break; }
+      if (messages[i].role === 'user') {
+        lastUserIdx = i;
+        break;
+      }
     }
     if (lastUserIdx === -1) return 0;
     let count = 0;
@@ -130,27 +139,33 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
           </Animated.View>
         )}
 
-        {/* FAB */}
-        <View style={[styles.fab, { bottom: bottomOffset }]}>
-          {unreadCount > 0 && (
-            <View style={[styles.badge, { backgroundColor: colors.primaryRed }]}>
-              <Text style={styles.badgeText}>
-                {unreadCount > 9 ? '9+' : String(unreadCount)}
-              </Text>
-            </View>
-          )}
-          <TouchableOpacity
-            style={[styles.fabButton, { backgroundColor: colors.primaryOrange }]}
-            onPress={open ? closePanel : openPanel}
-            accessibilityRole="button"
-            accessibilityLabel={open ? 'Fechar assistente' : 'Abrir assistente de agendamentos'}>
-            <FontAwesome
-              name={open ? 'times' : 'commenting'}
-              size={22}
-              color={colors.primaryWhite}
-            />
-          </TouchableOpacity>
-        </View>
+        {/* O FAB fica oculto com o painel aberto; o cabeçalho já possui o botão de fechar. */}
+        {!open && (
+          <View style={[styles.fab, { bottom: bottomOffset }]}>
+            {unreadCount > 0 && (
+              <View
+                style={[styles.badge, { backgroundColor: colors.primaryRed }]}>
+                <Text style={styles.badgeText}>
+                  {unreadCount > 9 ? '9+' : String(unreadCount)}
+                </Text>
+              </View>
+            )}
+            <TouchableOpacity
+              style={[
+                styles.fabButton,
+                { backgroundColor: colors.primaryOrange },
+              ]}
+              onPress={openPanel}
+              accessibilityRole="button"
+              accessibilityLabel="Abrir assistente de agendamentos">
+              <FontAwesome
+                name="commenting"
+                size={22}
+                color={colors.primaryWhite}
+              />
+            </TouchableOpacity>
+          </View>
+        )}
       </>
     );
   }
@@ -172,7 +187,11 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
           onPress={openPanel}
           accessibilityRole="button"
           accessibilityLabel="Abrir assistente de agendamentos">
-          <FontAwesome name="commenting" size={22} color={colors.primaryWhite} />
+          <FontAwesome
+            name="commenting"
+            size={22}
+            color={colors.primaryWhite}
+          />
         </TouchableOpacity>
       </View>
 
@@ -184,7 +203,10 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
         onRequestClose={closePanel}
         statusBarTranslucent>
         <SafeAreaView
-          style={[styles.modalContainer, { backgroundColor: colors.backgroundElevated }]}>
+          style={[
+            styles.modalContainer,
+            { backgroundColor: colors.backgroundElevated },
+          ]}>
           <ChatWindow onClose={closePanel} />
         </SafeAreaView>
       </Modal>
@@ -193,4 +215,3 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
 };
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
-
