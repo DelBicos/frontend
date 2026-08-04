@@ -1,10 +1,5 @@
 import React, { useMemo } from 'react';
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
 import { ChatBotAppointmentData } from '@stores/ChatBot/types';
@@ -57,9 +52,17 @@ export const ChatBotAppointmentCard: React.FC<ChatBotAppointmentCardProps> = ({
       <View style={styles.header}>
         {/* Avatar: imagem do profissional ou fallback local com ícone */}
         {hasAvatar ? (
-          <Image source={{ uri: appointment.professionalAvatarUri! }} style={styles.avatar} />
+          <Image
+            source={{ uri: appointment.professionalAvatarUri! }}
+            style={styles.avatar}
+          />
         ) : (
-          <View style={[styles.avatar, styles.avatarFallback, { backgroundColor: colors.inputBackground }]}>
+          <View
+            style={[
+              styles.avatar,
+              styles.avatarFallback,
+              { backgroundColor: colors.inputBackground },
+            ]}>
             <FontAwesome name="user" size={20} color={colors.textTertiary} />
           </View>
         )}
@@ -70,83 +73,167 @@ export const ChatBotAppointmentCard: React.FC<ChatBotAppointmentCardProps> = ({
           <Text style={styles.professionalName} numberOfLines={1}>
             {appointment.professionalName}
           </Text>
+          {!!appointment.subcategoryName && (
+            <Text style={styles.subcategory} numberOfLines={1}>
+              {[appointment.categoryName, appointment.subcategoryName]
+                .filter(Boolean)
+                .join(' › ')}
+            </Text>
+          )}
+          <View style={styles.ratingRow}>
+            <FontAwesome
+              name="star"
+              size={12}
+              color={
+                appointment.professionalRatingsCount
+                  ? '#F5A623'
+                  : colors.textTertiary
+              }
+            />
+            <Text style={styles.ratingText}>
+              {appointment.professionalRatingsCount
+                ? `${appointment.professionalRating?.toFixed(1)} (${appointment.professionalRatingsCount}) neste serviço`
+                : 'Novo neste serviço'}
+            </Text>
+          </View>
         </View>
-        <View style={[styles.statusBadge, { backgroundColor: colors.successBackground }]}>
-          <Text style={[styles.statusText, { color: colors.successText }]}>
-            Confirmado
+        <View
+          style={[
+            styles.statusBadge,
+            {
+              backgroundColor: appointment.id
+                ? colors.successBackground
+                : colors.warningBackground,
+            },
+          ]}>
+          <Text
+            style={[
+              styles.statusText,
+              {
+                color: appointment.id ? colors.successText : colors.warningText,
+              },
+            ]}>
+            {appointment.id ? 'Confirmado' : 'Revisar'}
           </Text>
         </View>
       </View>
 
       {/* Detalhes */}
       <View style={styles.details}>
+        {!!appointment.serviceDescription && (
+          <Text style={styles.description}>
+            {appointment.serviceDescription}
+          </Text>
+        )}
         <View style={styles.row}>
-          <FontAwesome name="calendar-o" size={14} color={colors.textSecondary} />
+          <FontAwesome
+            name="calendar-o"
+            size={14}
+            color={colors.textSecondary}
+          />
           <Text style={styles.detailText}>
             {formatDateTime(appointment.startTime)}
           </Text>
         </View>
-        {appointment.endTime && appointment.endTime !== appointment.startTime && (
-          <View style={styles.row}>
-            <FontAwesome name="clock-o" size={14} color={colors.textSecondary} />
-            <Text style={styles.detailText}>
-              até {formatDateTime(appointment.endTime)}
-            </Text>
-          </View>
-        )}
+        {appointment.endTime &&
+          appointment.endTime !== appointment.startTime && (
+            <View style={styles.row}>
+              <FontAwesome
+                name="clock-o"
+                size={14}
+                color={colors.textSecondary}
+              />
+              <Text style={styles.detailText}>
+                até {formatDateTime(appointment.endTime)}
+              </Text>
+            </View>
+          )}
         <View style={styles.row}>
           <FontAwesome name="tag" size={14} color={colors.textSecondary} />
           <Text style={styles.detailText}>
             {appointment.price ? appointment.price : 'Valor não disponível'}
           </Text>
         </View>
+        {!!appointment.durationMinutes && (
+          <View style={styles.row}>
+            <FontAwesome
+              name="hourglass-half"
+              size={14}
+              color={colors.textSecondary}
+            />
+            <Text style={styles.detailText}>
+              Duração estimada: {appointment.durationMinutes} minutos
+            </Text>
+          </View>
+        )}
+        {!!appointment.professionalLocation && (
+          <View style={styles.row}>
+            <FontAwesome
+              name="map-marker"
+              size={14}
+              color={colors.textSecondary}
+            />
+            <Text style={styles.detailText}>
+              {appointment.professionalLocation}
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Ações */}
-      <View style={styles.actions}>
-        <TouchableOpacity
-          style={[
-            styles.actionButton,
-            styles.rescheduleButton,
-            { borderColor: colors.primaryBlue },
-            disabled && styles.disabledButton,
-          ]}
-          onPress={() => onReschedule(appointment)}
-          disabled={disabled}
-          accessibilityRole="button"
-          accessibilityLabel="Alterar agendamento">
-          <FontAwesome name="pencil" size={14} color={disabled ? colors.textTertiary : colors.primaryBlue} />
-          <Text
+      {!!appointment.id && (
+        <View style={styles.actions}>
+          <TouchableOpacity
             style={[
-              styles.actionText,
-              { color: disabled ? colors.textTertiary : colors.primaryBlue },
-            ]}>
-            Alterar
-          </Text>
-        </TouchableOpacity>
+              styles.actionButton,
+              styles.rescheduleButton,
+              { borderColor: colors.primaryBlue },
+              disabled && styles.disabledButton,
+            ]}
+            onPress={() => onReschedule(appointment)}
+            disabled={disabled}
+            accessibilityRole="button"
+            accessibilityLabel="Alterar agendamento">
+            <FontAwesome
+              name="pencil"
+              size={14}
+              color={disabled ? colors.textTertiary : colors.primaryBlue}
+            />
+            <Text
+              style={[
+                styles.actionText,
+                { color: disabled ? colors.textTertiary : colors.primaryBlue },
+              ]}>
+              Alterar
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[
-            styles.actionButton,
-            styles.cancelButton,
-            { borderColor: colors.primaryRed },
-            disabled && styles.disabledButton,
-          ]}
-          onPress={() => onCancel(appointment)}
-          disabled={disabled}
-          accessibilityRole="button"
-          accessibilityLabel="Cancelar agendamento">
-          <FontAwesome name="times" size={14} color={disabled ? colors.textTertiary : colors.primaryRed} />
-          <Text
+          <TouchableOpacity
             style={[
-              styles.actionText,
-              { color: disabled ? colors.textTertiary : colors.primaryRed },
-            ]}>
-            Cancelar
-          </Text>
-        </TouchableOpacity>
-      </View>
+              styles.actionButton,
+              styles.cancelButton,
+              { borderColor: colors.primaryRed },
+              disabled && styles.disabledButton,
+            ]}
+            onPress={() => onCancel(appointment)}
+            disabled={disabled}
+            accessibilityRole="button"
+            accessibilityLabel="Cancelar agendamento">
+            <FontAwesome
+              name="times"
+              size={14}
+              color={disabled ? colors.textTertiary : colors.primaryRed}
+            />
+            <Text
+              style={[
+                styles.actionText,
+                { color: disabled ? colors.textTertiary : colors.primaryRed },
+              ]}>
+              Cancelar
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };
-

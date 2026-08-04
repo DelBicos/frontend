@@ -43,6 +43,21 @@ export const createStyles = (colors: ColorsType) =>
       color: colors.textSecondary,
       marginTop: 2,
     },
+    subcategory: {
+      fontSize: 11,
+      color: colors.primaryOrange,
+      marginTop: 2,
+    },
+    ratingRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      marginTop: 3,
+    },
+    ratingText: {
+      fontSize: 11,
+      color: colors.textSecondary,
+    },
     statusBadge: {
       borderRadius: 8,
       paddingHorizontal: 8,
@@ -56,6 +71,12 @@ export const createStyles = (colors: ColorsType) =>
     details: {
       padding: 12,
       gap: 6,
+    },
+    description: {
+      fontSize: 13,
+      lineHeight: 18,
+      color: colors.textSecondary,
+      marginBottom: 2,
     },
     row: {
       flexDirection: 'row',
