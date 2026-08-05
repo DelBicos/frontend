@@ -64,7 +64,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
     confirmAction,
     retryLastMessage,
     clearRateLimitReset,
-    clearSession,
+    restartConversation,
     restoreActiveSession,
   } = useChatSession();
 
@@ -201,7 +201,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <ChatHeader onClear={clearSession} onClose={onClose} />
+      <ChatHeader onClear={restartConversation} onClose={onClose} />
 
       <FlatList
         ref={listRef}
