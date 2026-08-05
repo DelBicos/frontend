@@ -176,6 +176,8 @@ export interface SendMessageResponse {
   message: string;
   state: ChatBotState;
   context: ChatBotContext;
+  /** true quando o backend iniciou uma sessão nova sem o histórico anterior. */
+  clear_history?: boolean;
 }
 
 /** Objeto session retornado dentro do GET /api/chat/bot/session/active */
