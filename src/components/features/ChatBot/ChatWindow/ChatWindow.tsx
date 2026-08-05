@@ -65,6 +65,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
     retryLastMessage,
     clearRateLimitReset,
     restartConversation,
+    receiveAppointmentStatus,
     restoreActiveSession,
   } = useChatSession();
 
@@ -72,7 +73,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
   const appointmentId = conversationContext?.appointmentId;
   const { appointmentStatus, appointmentPaid } = useAppointmentPolling(
     appointmentId,
-    conversationState,
+    conversationContext?.appointmentStatus ?? null,
+    conversationContext?.appointmentPaid ?? false,
+    receiveAppointmentStatus,
   );
   const rateLimitCountdown = useRateLimitCountdown(
     rateLimitResetAt,
@@ -271,12 +274,13 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
         />
       )}
 
-      {conversationState === 'FINALIZADO' && appointmentId && (
+      {appointmentId && (
         <AppointmentStatusBanner
           appointmentId={appointmentId}
           appointmentStatus={appointmentStatus}
           appointmentPaid={appointmentPaid}
           conversationContext={conversationContext}
+          onClose={onClose}
         />
       )}
 
