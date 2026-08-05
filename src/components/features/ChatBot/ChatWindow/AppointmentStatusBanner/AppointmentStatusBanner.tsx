@@ -1,10 +1,10 @@
 import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
 import { navigationRef } from '@screens/navigationRef';
 import { useColors } from '@theme/ThemeProvider';
 import { ChatBotContext } from '@stores/ChatBot/types';
+import { localDateTimeToISO } from '@lib/helpers/datetime';
 import { createStyles } from '../styles';
 
 interface AppointmentStatusBannerProps {
@@ -12,58 +12,64 @@ interface AppointmentStatusBannerProps {
   appointmentStatus: string | null;
   appointmentPaid: boolean;
   conversationContext: ChatBotContext | null;
+  onClose?: () => void;
 }
 
 /**
- * Banner exibido após o bot finalizar o agendamento (state === 'FINALIZADO').
+ * Banner exibido enquanto o chatbot acompanha um agendamento.
  * Mostra o status atual (pending / confirmed / canceled) e oferece ações:
  * - Pagar → navega para Checkout
  * - Ver Agenda → navega para MySchedules
  */
-export const AppointmentStatusBanner: React.FC<AppointmentStatusBannerProps> = ({
+export const AppointmentStatusBanner: React.FC<
+  AppointmentStatusBannerProps
+> = ({
   appointmentId,
   appointmentStatus,
   appointmentPaid,
   conversationContext,
+  onClose,
 }) => {
   const colors = useColors();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  let navigation: any = null;
-  try {
-    navigation = useNavigation();
-  } catch {
-    // Fora do NavigationContainer (ex: ChatWidget global)
-  }
-
   const iconName =
     appointmentStatus === 'confirmed'
-      ? appointmentPaid ? 'check-circle' : 'exclamation-circle'
-      : appointmentStatus === 'canceled' ? 'times-circle' : 'clock-o';
+      ? appointmentPaid
+        ? 'check-circle'
+        : 'exclamation-circle'
+      : appointmentStatus === 'canceled'
+        ? 'times-circle'
+        : 'clock-o';
 
   const iconColor =
     appointmentStatus === 'confirmed' && appointmentPaid
       ? colors.successText
-      : appointmentStatus === 'canceled' ? colors.errorText : colors.warningText;
+      : appointmentStatus === 'canceled'
+        ? colors.errorText
+        : colors.warningText;
 
   const textColor =
     appointmentStatus === 'canceled' ? colors.errorText : colors.warningText;
 
-  const handleNavigateToCheckout = () => {
-    const ctx = conversationContext as any;
-    const selectedTime = ctx?.newDate || ctx?.date || ctx?.selectedDate;
+  const navigateToCheckout = () => {
+    const ctx = conversationContext;
+    const selectedDate = ctx?.newDate || ctx?.date || ctx?.selectedDate;
+    const selectedClock = ctx?.newTime || ctx?.time || ctx?.selectedTime;
+    const selectedTime =
+      selectedDate && selectedClock
+        ? localDateTimeToISO(selectedDate, selectedClock)
+        : selectedDate || '';
     const params = {
       professionalId: ctx?.professionalId,
       selectedTime,
       serviceId: ctx?.serviceId,
       appointmentId,
-      imageUrl: ctx?.imageUrl || undefined,
+      imageUrl: undefined,
       professionalName: ctx?.professionalName,
     };
 
-    if (navigation) {
-      navigation.navigate('Checkout', params);
-    } else if (navigationRef.isReady()) {
+    if (navigationRef.isReady()) {
       navigationRef.navigate('Checkout', params);
     } else {
       const queryStr = [
@@ -71,7 +77,7 @@ export const AppointmentStatusBanner: React.FC<AppointmentStatusBannerProps> = (
         `selectedTime=${encodeURIComponent(selectedTime || '')}`,
         `serviceId=${ctx?.serviceId}`,
         `appointmentId=${appointmentId}`,
-        `imageUrl=${encodeURIComponent(ctx?.imageUrl || '')}`,
+        'imageUrl=',
         `professionalName=${encodeURIComponent(ctx?.professionalName || '')}`,
       ].join('&');
 
@@ -85,10 +91,14 @@ export const AppointmentStatusBanner: React.FC<AppointmentStatusBannerProps> = (
     }
   };
 
+  const handleNavigateToCheckout = () => {
+    // Fecha o painel antes de trocar de tela para que o checkout fique livre.
+    onClose?.();
+    setTimeout(navigateToCheckout, 0);
+  };
+
   const handleNavigateToSchedules = () => {
-    if (navigation) {
-      navigation.navigate('MySchedules');
-    } else if (navigationRef.isReady()) {
+    if (navigationRef.isReady()) {
       navigationRef.navigate('MySchedules');
     } else if (Platform.OS === 'web') {
       window.location.href = `/profile?subroute=MeusAgendamentos`;
@@ -115,7 +125,8 @@ export const AppointmentStatusBanner: React.FC<AppointmentStatusBannerProps> = (
           justifyContent: 'space-between',
         },
       ]}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+      <View
+        style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
         <FontAwesome name={iconName} size={16} color={iconColor} />
         <Text
           style={[
@@ -147,7 +158,12 @@ export const AppointmentStatusBanner: React.FC<AppointmentStatusBannerProps> = (
           onPress={handleNavigateToCheckout}
           accessibilityRole="button"
           accessibilityLabel="Pagar agendamento">
-          <Text style={{ color: colors.primaryWhite, fontFamily: 'Afacad-Bold', fontSize: 13 }}>
+          <Text
+            style={{
+              color: colors.primaryWhite,
+              fontFamily: 'Afacad-Bold',
+              fontSize: 13,
+            }}>
             Pagar
           </Text>
         </TouchableOpacity>
@@ -165,7 +181,12 @@ export const AppointmentStatusBanner: React.FC<AppointmentStatusBannerProps> = (
           onPress={handleNavigateToSchedules}
           accessibilityRole="button"
           accessibilityLabel="Ver agendamento">
-          <Text style={{ color: colors.primaryWhite, fontFamily: 'Afacad-Bold', fontSize: 13 }}>
+          <Text
+            style={{
+              color: colors.primaryWhite,
+              fontFamily: 'Afacad-Bold',
+              fontSize: 13,
+            }}>
             Ver Agenda
           </Text>
         </TouchableOpacity>
