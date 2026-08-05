@@ -10,7 +10,7 @@ import { useFavoriteStore } from '@stores/Favorite';
 import { useUserStore } from '@stores/User';
 import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ScrollView,
   Text,
@@ -18,6 +18,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { useAppointmentStatusSocket } from '@hooks/useAppointmentStatusSocket';
 import { createStyles } from './styles';
 
 const appointmentStatusRenderInfo = (
@@ -107,6 +108,11 @@ function MeusAgendamentos({ role }: MeusAgendamentosProps = {}) {
       return () => clearInterval(interval);
     }
   }, [user, fetchAppointments, role]);
+
+  const handleAppointmentStatus = useCallback(() => {
+    void fetchAppointments(role);
+  }, [fetchAppointments, role]);
+  useAppointmentStatusSocket(handleAppointmentStatus);
 
   const proximosAgendamentos = useMemo(() => {
     return appointments
@@ -357,6 +363,7 @@ function MeusAgendamentos({ role }: MeusAgendamentosProps = {}) {
                         statusLabel={renderInfo.label}
                         statusColor={renderInfo.color}
                         appointment={apt}
+                        viewerRole={role}
                         statusVariant={status}
                         isFavorite={isFavorite(apt.Professional.id)}
                         onToggleFavorite={handleToggleFavorite}
