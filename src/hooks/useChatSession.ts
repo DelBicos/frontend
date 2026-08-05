@@ -355,7 +355,7 @@ export function useChatSession() {
         '/api/chat/bot/session/active',
       );
       if (!data) {
-        resetSession();
+        clearSession();
         return;
       }
       if (Array.isArray(data.messages) && data.messages.length > 0) {
@@ -382,6 +382,7 @@ export function useChatSession() {
     setSessionId,
     setConversationState,
     resetSession,
+    clearSession,
   ]);
 
   /**
@@ -413,6 +414,13 @@ export function useChatSession() {
             ...(selectedTime ? { selected_time: selectedTime } : {}),
           },
         );
+
+        // "reiniciar" encerra a sessão persistida no backend. Removemos as
+        // mensagens locais, inclusive o próprio comando, antes de exibir o
+        // primeiro balão da nova conversa.
+        if (data.clear_history === true) {
+          clearSession();
+        }
 
         if (isValidChatBotSessionId(data.session_id)) {
           setSessionId(data.session_id);
@@ -476,6 +484,7 @@ export function useChatSession() {
       setLastSentText,
       setRateLimitResetAt,
       resetSession,
+      clearSession,
     ],
   );
 
@@ -508,6 +517,17 @@ export function useChatSession() {
     },
     [sendMessage],
   );
+
+  /** Reinicia a conversa persistida sem exibir o comando como mensagem do usuário. */
+  const restartConversation = useCallback(async () => {
+    if (loading) return;
+
+    setLoading(true);
+    setError(null);
+    const errorMsg = await postMessage('reiniciar');
+    if (errorMsg) setError(errorMsg);
+    setLoading(false);
+  }, [loading, setLoading, setError, postMessage]);
 
   /**
    * Confirma uma ação após o modal de confirmação explícita do frontend.
@@ -572,6 +592,7 @@ export function useChatSession() {
     conversationContext,
     sendMessage,
     sendQuickReply,
+    restartConversation,
     confirmAction,
     retryLastMessage,
     clearRateLimitReset,
