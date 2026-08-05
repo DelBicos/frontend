@@ -42,19 +42,27 @@ export interface ChatBotServiceOption {
 export interface ChatBotContext {
   intent?: string;
   pendingAction?: 'CREATE' | 'CANCEL' | 'RESCHEDULE' | string;
+  timeZone?: string;
+  serviceId?: number;
   serviceName?: string;
+  servicePrice?: number;
   /** Lista de serviços disponíveis — exibidos como chips em COLETANDO_SERVICO */
   serviceOptions?: string[];
   /** Ofertas completas por serviço e profissional — exibidas como cartões. */
   serviceOptionsData?: ChatBotServiceOption[];
   selectedDate?: string; // YYYY-MM-DD
   selectedTime?: string; // HH:MM
+  date?: string; // YYYY-MM-DD
+  time?: string; // HH:MM
+  newDate?: string; // YYYY-MM-DD
+  newTime?: string; // HH:MM
   /**
    * Slots disponíveis em COLETANDO_HORARIO.
    * Formato: "HH:MM" (mesmo dia) ou "YYYY-MM-DD|HH:MM" (dias alternativos).
    */
   suggestedSlots?: string[];
   professionalName?: string;
+  professionalId?: number;
   professionalRating?: number;
   professionalRatingsCount?: number;
   professionalCity?: string | null;
@@ -69,6 +77,8 @@ export interface ChatBotContext {
   /** URL do avatar do profissional — optional, melhora visual do AppointmentCard */
   professionalAvatarUri?: string | null;
   appointmentId?: number;
+  appointmentStatus?: 'pending' | 'confirmed' | 'completed' | 'canceled';
+  appointmentPaid?: boolean;
   pendingService?: ChatBotServiceOption | null;
 }
 
@@ -189,6 +199,10 @@ export interface ChatBotSessionMeta {
   started_at: string;
   ended_at: string | null;
   appointment_id: number | null;
+  appointment_status?:
+    'pending' | 'confirmed' | 'completed' | 'canceled' | null;
+  appointment_paid?: boolean;
+  payment_pending?: boolean;
   /** Contexto acumulado da conversa — presente quando o backend o inclui na resposta. */
   context?: ChatBotContext;
 }
