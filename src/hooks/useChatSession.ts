@@ -21,6 +21,7 @@ import {
   SendMessageResponse,
   LoadSessionResponse,
 } from '@stores/ChatBot/types';
+import type { AppointmentStatusEvent } from '@hooks/useAppointmentStatusSocket';
 
 let _counter = 0;
 const localId = () => `local_${Date.now()}_${++_counter}`;
@@ -366,7 +367,16 @@ export function useChatSession() {
       }
       setSessionId(data.session.id);
       if (data.session.state) {
-        setConversationState(data.session.state, data.session.context ?? {});
+        setConversationState(data.session.state, {
+          ...(data.session.context ?? {}),
+          ...(data.session.appointment_id
+            ? { appointmentId: data.session.appointment_id }
+            : {}),
+          ...(data.session.appointment_status
+            ? { appointmentStatus: data.session.appointment_status }
+            : {}),
+          appointmentPaid: data.session.appointment_paid ?? false,
+        });
       }
     } catch {
       // O chat continua utilizável mesmo que a restauração falhe.
@@ -529,6 +539,39 @@ export function useChatSession() {
     setLoading(false);
   }, [loading, setLoading, setError, postMessage]);
 
+  /** Aplica no chat uma confirmação recebida por Socket.IO ou polling. */
+  const receiveAppointmentStatus = useCallback(
+    (event: AppointmentStatusEvent) => {
+      const store = useChatBotStore.getState();
+      const context = store.conversationContext;
+      if (context?.appointmentId !== event.appointment_id) return;
+
+      if (
+        event.message &&
+        !store.messages.some(
+          (message) => message.role === 'bot' && message.text === event.message,
+        )
+      ) {
+        store.addMessage({
+          id: `appointment_status_${event.appointment_id}_${event.status}_${event.paid}`,
+          role: 'bot',
+          text: event.message,
+          createdAt: event.updated_at,
+        });
+      }
+
+      store.setConversationState(
+        event.status === 'pending' ? 'AGUARDANDO_CONFIRMACAO' : 'INICIO',
+        {
+          ...context,
+          appointmentStatus: event.status,
+          appointmentPaid: event.paid,
+        },
+      );
+    },
+    [],
+  );
+
   /**
    * Confirma uma ação após o modal de confirmação explícita do frontend.
    * - CONFIRMACAO → envia "sim"
@@ -593,6 +636,7 @@ export function useChatSession() {
     sendMessage,
     sendQuickReply,
     restartConversation,
+    receiveAppointmentStatus,
     confirmAction,
     retryLastMessage,
     clearRateLimitReset,
