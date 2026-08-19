@@ -24,6 +24,7 @@ originais foram preservados e ampliados.
 | `src/stores/ChatBot/types.ts` | Contratos TypeScript de mensagens, estados, contexto, ações, serviços, respostas HTTP e histórico. |
 | `src/stores/ChatBot/index.ts` | Exportação pública da store e dos tipos. |
 | `src/hooks/useChatSession.ts` | Orquestra chamadas HTTP, restauração, envio, quick replies, reinício, erros e atualização de status no chat. |
+| `src/hooks/useVoiceRecorder.ts` | Solicita microfone e grava áudio com API compartilhada para web, Android e iOS. |
 
 ### 2.2 Ponto de entrada
 
@@ -123,6 +124,9 @@ flowchart TD
     WINDOW --> SESSION["useChatSession"]
     SESSION --> STORE["Zustand ChatBot"]
     SESSION -->|"POST /api/chat/bot/message"| API["Backend"]
+    WINDOW --> RECORDER["useVoiceRecorder"]
+    RECORDER -->|"áudio bruto"| SESSION
+    SESSION -->|"POST /api/voice/commands"| API
     API -->|"state + context + message"| SESSION
     STORE --> WINDOW
     WINDOW --> OPTIONS["ServiceOptions / QuickReplies"]
@@ -153,6 +157,35 @@ O hook é a camada de aplicação do chatbot no frontend.
 5. deriva opções rápidas e horários;
 6. cria a bolha do bot;
 7. trata 401, 404, 429 e erros genéricos.
+
+### Por voz
+
+1. o usuário toca no ícone de microfone; o navegador ou aplicativo solicita a
+   permissão do sistema;
+2. `useVoiceRecorder` grava WebM no navegador e AAC/M4A no mobile;
+3. ao tocar novamente, o frontend envia o áudio bruto para
+   `POST /api/voice/commands`, com JWT, idioma, timezone, sessão e chave de
+   idempotência nos headers;
+4. o backend transcreve e encaminha a frase para a mesma máquina de conversa
+   usada pelo texto, incluindo a busca semântica de serviços;
+5. o frontend mostra a transcrição como bolha do usuário e reutiliza os
+   mesmos cartões de serviço, profissionais, horários e confirmações;
+6. falhas de permissão, áudio curto, formato não aceito, áudio longo, rate
+   limit e transcrição sem compreensão recebem mensagens próprias.
+7. a gravação é encerrada automaticamente após 60 segundos para limitar o
+   tamanho do envio; falhas transitórias podem ser reenviadas com a mesma
+   chave de idempotência, sem duplicar o comando.
+
+Não há chave da Groq, nem de qualquer outro provedor, no aplicativo. A chave
+fica exclusivamente no backend.
+
+### Busca semântica de serviços
+
+As buscas digitadas no cabeçalho e na tela inicial encaminham a frase para
+`GET /api/services/search/semantic`. A tela de resultado exibe os serviços
+ordenados pela relevância recebida do backend, preservando os cartões já usados
+no catálogo. Assim, texto e voz consultam a mesma base semântica, mas somente
+o backend decide a relevância e os dados retornados.
 
 ### Ao reiniciar
 
@@ -208,6 +241,12 @@ Toda regra crítica é confirmada no backend.
 
 - os componentes utilizam React Native;
 - `Platform.OS` diferencia drawer web, modal mobile e fallback de navegação;
+- `expo-audio` usa `MediaRecorder` na web e o gravador nativo no Android/iOS;
+- o Android declara `RECORD_AUDIO` e o iOS apresenta uma justificativa em
+  português antes de liberar o microfone;
+- no desenvolvimento, o emulador Android usa `10.0.2.2` e o simulador iOS usa
+  `localhost`; um dispositivo físico deve apontar para o IP da rede local ou
+  para uma API publicada em HTTPS;
 - `AsyncStorage` guarda apenas o identificador da sessão;
 - timezone é obtido com `Intl.DateTimeFormat`;
 - a mesma API e o mesmo Socket.IO são usados nas duas plataformas;
@@ -222,6 +261,7 @@ Toda regra crítica é confirmada no backend.
 | Zustand | Estado da sessão do chatbot. |
 | expo-zustand-persist + AsyncStorage | Persistência mínima do `sessionId`. |
 | Axios/cliente HTTP existente | Chamadas autenticadas ao backend. |
+| expo-audio | Permissão e gravação de voz no navegador, Android e iOS. |
 | socket.io-client | Atualização em tempo real. |
 | React Navigation | Chatbot como tela e navegação ao checkout/agenda. |
 | Expo Vector Icons | Ícones do widget, mensagens, status e cartões. |
