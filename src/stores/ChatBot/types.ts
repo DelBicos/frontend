@@ -190,6 +190,14 @@ export interface SendMessageResponse {
   clear_history?: boolean;
 }
 
+/**
+ * Resposta do endpoint de voz. Depois da transcrição, o backend executa a
+ * mesma máquina de conversa usada pelas mensagens digitadas.
+ */
+export interface VoiceCommandResponse extends SendMessageResponse {
+  transcript: string;
+}
+
 /** Objeto session retornado dentro do GET /api/chat/bot/session/active */
 export interface ChatBotSessionMeta {
   id: number;
