@@ -7,6 +7,7 @@ interface ChatErrorBannerProps {
   error: string;
   rateLimitCountdown: number;
   lastSentText: string | null;
+  hasRetryableVoiceCommand: boolean;
   onRetry: () => void;
 }
 
@@ -19,28 +20,31 @@ export const ChatErrorBanner: React.FC<ChatErrorBannerProps> = ({
   error,
   rateLimitCountdown,
   lastSentText,
+  hasRetryableVoiceCommand,
   onRetry,
 }) => {
   const colors = useColors();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
-    <View style={[styles.errorBanner, { backgroundColor: colors.errorBackground }]}>
+    <View
+      style={[styles.errorBanner, { backgroundColor: colors.errorBackground }]}>
       <Text style={[styles.errorText, { color: colors.errorText }]}>
         {rateLimitCountdown > 0
           ? `Aguarde ${rateLimitCountdown}s antes de enviar outra mensagem.`
           : error}
       </Text>
-      {lastSentText && rateLimitCountdown === 0 && (
-        <TouchableOpacity
-          onPress={onRetry}
-          accessibilityRole="button"
-          accessibilityLabel="Tentar novamente">
-          <Text style={[styles.retryText, { color: colors.primaryBlue }]}>
-            Tentar novamente
-          </Text>
-        </TouchableOpacity>
-      )}
+      {(lastSentText || hasRetryableVoiceCommand) &&
+        rateLimitCountdown === 0 && (
+          <TouchableOpacity
+            onPress={onRetry}
+            accessibilityRole="button"
+            accessibilityLabel="Tentar novamente">
+            <Text style={[styles.retryText, { color: colors.primaryBlue }]}>
+              Tentar novamente
+            </Text>
+          </TouchableOpacity>
+        )}
     </View>
   );
 };
