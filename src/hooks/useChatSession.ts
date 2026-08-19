@@ -1,7 +1,9 @@
-import { useCallback } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Platform } from 'react-native';
+import uuid from 'react-native-uuid';
 import { useChatBotStore } from '@stores/ChatBot';
 import { backendHttpClient } from '@lib/helpers/httpClient';
+import type { VoiceRecording } from '@hooks/useVoiceRecorder';
 import { formatBRLFromCents } from '@lib/helpers/formatCurrency';
 import {
   getClientTimezone,
@@ -20,11 +22,19 @@ import {
   SuggestedTime,
   SendMessageResponse,
   LoadSessionResponse,
+  VoiceCommandResponse,
 } from '@stores/ChatBot/types';
 import type { AppointmentStatusEvent } from '@hooks/useAppointmentStatusSocket';
 
 let _counter = 0;
 const localId = () => `local_${Date.now()}_${++_counter}`;
+
+type VoiceSubmissionStatus = 'sent' | 'retryable_error' | 'discarded';
+
+interface VoiceCommandAttempt {
+  recording: VoiceRecording;
+  idempotencyKey: string;
+}
 
 function normalizeHistoryMessage(message: unknown): ChatBotMessage | null {
   if (!message || typeof message !== 'object') return null;
@@ -263,6 +273,26 @@ function resolveGenericError(status: number | undefined): string {
   return 'Não foi possível enviar a mensagem. Tente novamente.';
 }
 
+/** Retorna mensagens específicas para os erros de envio de áudio. */
+function resolveVoiceError(status: number | undefined): string {
+  if (status === 413) {
+    return 'O áudio está muito longo. Grave um comando mais curto e tente novamente.';
+  }
+  if (status === 415) {
+    return 'Este formato de áudio não é compatível. Tente gravar novamente.';
+  }
+  if (status === 422) {
+    return 'Não foi possível entender o áudio. Fale mais perto do microfone e tente novamente.';
+  }
+  if (status === 502) {
+    return 'O serviço de transcrição não respondeu. Tente enviar o áudio novamente.';
+  }
+  if (status === 503) {
+    return 'A transcrição de voz está temporariamente indisponível. Tente novamente em instantes.';
+  }
+  return resolveGenericError(status);
+}
+
 /**
  * Deriva ISO UTC do horário selecionado, alinhado ao checkout.
  * Enviado ao backend para gravar start_time corretamente no banco.
@@ -342,6 +372,9 @@ export function useChatSession() {
     resetSession,
     clearSession,
   } = useChatBotStore();
+  const lastVoiceCommandRef = useRef<VoiceCommandAttempt | null>(null);
+  const [hasRetryableVoiceCommand, setHasRetryableVoiceCommand] =
+    useState(false);
 
   /**
    * Restaura somente o fluxo pendente do JWT atual. O backend retorna null
@@ -396,6 +429,56 @@ export function useChatSession() {
   ]);
 
   /**
+   * Atualiza a conversa com a resposta compartilhada por texto e voz.
+   * Mantém a mesma máquina de estados, quick replies e cartões nos dois canais.
+   */
+  const applyConversationResponse = useCallback(
+    (data: SendMessageResponse) => {
+      // "reiniciar" encerra a sessão persistida no backend. Removemos as
+      // mensagens locais, inclusive o próprio comando, antes de exibir o
+      // primeiro balão da nova conversa.
+      if (data.clear_history === true) {
+        clearSession();
+      }
+
+      if (isValidChatBotSessionId(data.session_id)) {
+        setSessionId(data.session_id);
+      }
+      if (data.state && data.context) {
+        setConversationState(data.state, data.context);
+      }
+
+      // Sessão finalizada: zera sessionId/state sem apagar mensagens.
+      // A próxima mensagem cria uma nova sessão automaticamente.
+      if (data.state === 'FINALIZADO') {
+        resetSession();
+      }
+
+      if (typeof data.message === 'string' && data.message.length > 0) {
+        addMessage({
+          id: localId(),
+          role: 'bot',
+          text: data.message,
+          createdAt: new Date().toISOString(),
+          quickReplies: deriveQuickReplies(data.state, data.context ?? {}),
+          suggestedTimes: deriveSuggestedTimes(data.state, data.context ?? {}),
+          action: deriveBotAction(data.state, data.context ?? {}),
+        });
+      }
+
+      setRateLimitResetAt(null);
+    },
+    [
+      addMessage,
+      clearSession,
+      resetSession,
+      setConversationState,
+      setRateLimitResetAt,
+      setSessionId,
+    ],
+  );
+
+  /**
    * Lógica compartilhada de envio HTTP.
    * Rastreia lastSentText, trata FINALIZADO (#4), 429 com header (#6).
    */
@@ -425,43 +508,7 @@ export function useChatSession() {
           },
         );
 
-        // "reiniciar" encerra a sessão persistida no backend. Removemos as
-        // mensagens locais, inclusive o próprio comando, antes de exibir o
-        // primeiro balão da nova conversa.
-        if (data.clear_history === true) {
-          clearSession();
-        }
-
-        if (isValidChatBotSessionId(data.session_id)) {
-          setSessionId(data.session_id);
-        }
-        if (data.state && data.context) {
-          setConversationState(data.state, data.context);
-        }
-
-        // (#4) Sessão finalizada: zera sessionId/state sem apagar mensagens.
-        // Próxima mensagem criará nova sessão automaticamente.
-        if (data.state === 'FINALIZADO') {
-          resetSession();
-        }
-
-        if (typeof data.message === 'string' && data.message.length > 0) {
-          addMessage({
-            id: localId(),
-            role: 'bot',
-            text: data.message,
-            createdAt: new Date().toISOString(),
-            quickReplies: deriveQuickReplies(data.state, data.context ?? {}),
-            suggestedTimes: deriveSuggestedTimes(
-              data.state,
-              data.context ?? {},
-            ),
-            action: deriveBotAction(data.state, data.context ?? {}),
-          });
-        }
-
-        // Limpa rate limit se estava ativo
-        setRateLimitResetAt(null);
+        applyConversationResponse(data);
         return null;
       } catch (err: unknown) {
         if (err && typeof err === 'object' && 'response' in err) {
@@ -488,15 +535,154 @@ export function useChatSession() {
       sessionId,
       conversationState,
       conversationContext,
-      setSessionId,
-      setConversationState,
-      addMessage,
       setLastSentText,
       setRateLimitResetAt,
       resetSession,
-      clearSession,
+      applyConversationResponse,
     ],
   );
+
+  /** Envia (ou reenvia) uma gravação mantendo a mesma chave de idempotência. */
+  const submitVoiceCommand = useCallback(
+    async (attempt: VoiceCommandAttempt): Promise<VoiceSubmissionStatus> => {
+      if (loading) return 'discarded';
+
+      setLoading(true);
+      setError(null);
+      setLastSentText(null);
+      let canRetry = true;
+
+      try {
+        const audioResponse = await fetch(attempt.recording.uri);
+        const audio = await audioResponse.blob();
+        if (audio.size === 0) {
+          canRetry = false;
+          throw new Error('O arquivo de áudio está vazio.');
+        }
+
+        const selectedTime = resolveSelectedTimeIso(
+          '',
+          conversationState,
+          conversationContext,
+        );
+        const { data } = await backendHttpClient.post<VoiceCommandResponse>(
+          '/api/voice/commands',
+          audio,
+          {
+            headers: {
+              'Content-Type': audio.type || attempt.recording.mimeType,
+              Accept: 'application/json',
+              'X-Voice-Language': 'pt-BR',
+              'X-Voice-Channel': `voice-${CHANNEL}`,
+              'X-Voice-Timezone': getClientTimezone(),
+              'Idempotency-Key': attempt.idempotencyKey,
+              ...(isValidChatBotSessionId(sessionId)
+                ? { 'X-Voice-Session-Id': String(sessionId) }
+                : {}),
+              ...(selectedTime
+                ? { 'X-Voice-Selected-Time': selectedTime }
+                : {}),
+            },
+            // Impede que o cliente converta o Blob para JSON antes do envio.
+            transformRequest: [(body) => body],
+          },
+        );
+
+        const transcript = data.transcript?.trim();
+        if (!transcript) {
+          throw new Error('O serviço não retornou uma transcrição.');
+        }
+
+        addMessage({
+          id: localId(),
+          role: 'user',
+          text: transcript,
+          createdAt: new Date().toISOString(),
+        });
+        applyConversationResponse(data);
+        attempt.recording.release();
+        if (lastVoiceCommandRef.current === attempt) {
+          lastVoiceCommandRef.current = null;
+        }
+        setHasRetryableVoiceCommand(false);
+        return 'sent';
+      } catch (err: unknown) {
+        let status: number | undefined;
+        if (err && typeof err === 'object' && 'response' in err) {
+          const axiosErr = err as {
+            response?: { status?: number; headers?: Record<string, string> };
+          };
+          status = axiosErr.response?.status;
+          if (status === 429) {
+            const resetAt = extractRateLimitReset(axiosErr.response?.headers);
+            setRateLimitResetAt(resetAt ?? Date.now() + 60_000);
+          }
+          if (status === 404) resetSession();
+          setError(resolveVoiceError(status));
+        } else {
+          setError('Não foi possível enviar o áudio. Tente novamente.');
+        }
+
+        const isRetryable =
+          canRetry && status !== 413 && status !== 415 && status !== 422;
+        setHasRetryableVoiceCommand(isRetryable);
+        if (!isRetryable) {
+          attempt.recording.release();
+          if (lastVoiceCommandRef.current === attempt) {
+            lastVoiceCommandRef.current = null;
+          }
+          return 'discarded';
+        }
+        return 'retryable_error';
+      } finally {
+        setLoading(false);
+      }
+    },
+    [
+      addMessage,
+      applyConversationResponse,
+      conversationContext,
+      conversationState,
+      loading,
+      resetSession,
+      sessionId,
+      setError,
+      setLastSentText,
+      setLoading,
+      setRateLimitResetAt,
+    ],
+  );
+
+  /** Inicia uma nova tentativa de voz e descarta uma gravação pendente anterior. */
+  const sendVoiceCommand = useCallback(
+    async (recording: VoiceRecording): Promise<VoiceSubmissionStatus> => {
+      if (loading) return 'discarded';
+      if (recording.durationMillis < 300) {
+        recording.release();
+        setError(
+          'A gravação ficou muito curta. Grave por mais alguns instantes.',
+        );
+        return 'discarded';
+      }
+
+      lastVoiceCommandRef.current?.recording.release();
+      const attempt: VoiceCommandAttempt = {
+        recording,
+        idempotencyKey: String(uuid.v4()),
+      };
+      lastVoiceCommandRef.current = attempt;
+      setHasRetryableVoiceCommand(false);
+      return submitVoiceCommand(attempt);
+    },
+    [loading, setError, submitVoiceCommand],
+  );
+
+  /** Reenvia exatamente o mesmo áudio quando a rede/provedor falhou. */
+  const retryLastVoiceCommand = useCallback(async () => {
+    const attempt = lastVoiceCommandRef.current;
+    if (!attempt || loading) return;
+    await submitVoiceCommand(attempt);
+  }, [loading, submitVoiceCommand]);
 
   /** Envia uma mensagem de texto livre. (#8) loading guard já impede duplicação. */
   const sendMessage = useCallback(
@@ -624,22 +810,35 @@ export function useChatSession() {
     setRateLimitResetAt(null);
   }, [setRateLimitResetAt]);
 
+  /** Exibe falhas locais, como permissão de microfone, no banner do chat. */
+  const reportError = useCallback(
+    (message: string) => {
+      setLastSentText(null);
+      setError(message);
+    },
+    [setError, setLastSentText],
+  );
+
   return {
     sessionId,
     messages,
     loading,
     error,
     lastSentText,
+    hasRetryableVoiceCommand,
     rateLimitResetAt,
     conversationState,
     conversationContext,
     sendMessage,
+    sendVoiceCommand,
     sendQuickReply,
     restartConversation,
     receiveAppointmentStatus,
     confirmAction,
     retryLastMessage,
+    retryLastVoiceCommand,
     clearRateLimitReset,
+    reportError,
     clearSession,
     restoreActiveSession,
   };
