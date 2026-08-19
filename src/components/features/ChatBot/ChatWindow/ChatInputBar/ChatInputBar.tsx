@@ -1,5 +1,10 @@
 import React, { useMemo } from 'react';
-import { View, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
 import { ChatBotState } from '@stores/ChatBot/types';
@@ -13,6 +18,11 @@ interface ChatInputBarProps {
   rateLimitCountdown: number;
   conversationState: ChatBotState | null;
   inputRef: React.RefObject<TextInput | null>;
+  isRecording: boolean;
+  isVoicePreparing: boolean;
+  recordingDurationMillis: number;
+  maxRecordingDurationMillis: number;
+  onVoicePress: () => void;
 }
 
 /**
@@ -27,11 +37,18 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
   rateLimitCountdown,
   conversationState,
   inputRef,
+  isRecording,
+  isVoicePreparing,
+  recordingDurationMillis,
+  maxRecordingDurationMillis,
+  onVoicePress,
 }) => {
   const colors = useColors();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  const isDisabled = loading || rateLimitCountdown > 0;
+  const isDisabled = loading || rateLimitCountdown > 0 || isVoicePreparing;
+  const recordingSeconds = Math.floor(recordingDurationMillis / 1000);
+  const maxRecordingSeconds = Math.floor(maxRecordingDurationMillis / 1000);
 
   return (
     <View style={[styles.inputRow, { borderTopColor: colors.borderColor }]}>
@@ -47,30 +64,82 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
         ]}
         value={value}
         onChangeText={onChangeText}
-        placeholder="Digite sua mensagem..."
+        placeholder={
+          isVoicePreparing
+            ? 'Preparando o microfone...'
+            : isRecording
+              ? `Gravando ${recordingSeconds}s de ${maxRecordingSeconds}s... toque no microfone para enviar`
+              : 'Digite sua mensagem...'
+        }
         placeholderTextColor={colors.placeholder}
         returnKeyType="send"
         onSubmitEditing={onSend}
         blurOnSubmit={false}
         multiline={false}
         maxLength={2000}
-        editable={!isDisabled}
+        editable={!isDisabled && !isRecording}
         keyboardType={
-          conversationState === 'AGUARDANDO_ID_AGENDAMENTO' ? 'numeric' : 'default'
+          conversationState === 'AGUARDANDO_ID_AGENDAMENTO'
+            ? 'numeric'
+            : 'default'
         }
         accessibilityLabel="Campo de mensagem"
-        accessibilityHint="Digite e pressione enviar ou Enter"
+        accessibilityHint={
+          isVoicePreparing
+            ? 'Preparando o microfone.'
+            : isRecording
+              ? 'A gravação está em andamento. Toque no microfone para enviar.'
+              : 'Digite e pressione enviar ou Enter'
+        }
       />
       <TouchableOpacity
         style={[
           styles.sendButton,
           {
+            backgroundColor: isRecording
+              ? colors.errorText
+              : colors.inputBackground,
+          },
+        ]}
+        onPress={onVoicePress}
+        disabled={isDisabled}
+        accessibilityRole="button"
+        accessibilityLabel={
+          isVoicePreparing
+            ? 'Preparando o microfone'
+            : isRecording
+              ? `Parar e enviar comando de voz, ${recordingSeconds} segundos gravados`
+              : 'Gravar comando de voz'
+        }
+        accessibilityHint={
+          isVoicePreparing
+            ? 'Aguarde a preparação terminar'
+            : isRecording
+              ? 'Toque para transcrever e enviar o áudio'
+              : 'Toque para começar a gravar'
+        }>
+        {isVoicePreparing ? (
+          <ActivityIndicator size="small" color={colors.primaryOrange} />
+        ) : (
+          <FontAwesome
+            name={isRecording ? 'stop' : 'microphone'}
+            size={16}
+            color={isRecording ? colors.primaryWhite : colors.primaryOrange}
+          />
+        )}
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[
+          styles.sendButton,
+          {
             backgroundColor:
-              value.trim() && !loading ? colors.primaryOrange : colors.inputBackground,
+              value.trim() && !isDisabled && !isRecording
+                ? colors.primaryOrange
+                : colors.inputBackground,
           },
         ]}
         onPress={onSend}
-        disabled={!value.trim() || loading}
+        disabled={!value.trim() || isDisabled || isRecording}
         accessibilityRole="button"
         accessibilityLabel="Enviar mensagem">
         {loading ? (
@@ -79,7 +148,11 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
           <FontAwesome
             name="send"
             size={16}
-            color={value.trim() ? colors.primaryWhite : colors.textTertiary}
+            color={
+              value.trim() && !isDisabled && !isRecording
+                ? colors.primaryWhite
+                : colors.textTertiary
+            }
           />
         )}
       </TouchableOpacity>
