@@ -16,6 +16,10 @@ import {
 import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
 import { useChatSession } from '@hooks/useChatSession';
+import {
+  MAX_VOICE_RECORDING_DURATION_MS,
+  useVoiceRecorder,
+} from '@hooks/useVoiceRecorder';
 import { ChatBotMessage, ChatBotAction } from '@stores/ChatBot/types';
 import { TypingIndicator } from '../TypingIndicator';
 import { QuickReplies } from '../QuickReplies';
@@ -40,6 +44,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
   const styles = useMemo(() => createStyles(colors), [colors]);
   const inputRef = useRef<TextInput>(null);
   const listRef = useRef<FlatList<ChatBotMessage>>(null);
+  const voiceLimitHandledRef = useRef(false);
   const [inputText, setInputText] = useState('');
   const [pendingAction, setPendingAction] = useState<ChatBotAction | null>(
     null,
@@ -56,18 +61,29 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
     loading,
     error,
     lastSentText,
+    hasRetryableVoiceCommand,
     rateLimitResetAt,
     conversationState,
     conversationContext,
     sendMessage,
+    sendVoiceCommand,
     sendQuickReply,
     confirmAction,
     retryLastMessage,
+    retryLastVoiceCommand,
     clearRateLimitReset,
     restartConversation,
     receiveAppointmentStatus,
     restoreActiveSession,
+    reportError,
   } = useChatSession();
+  const {
+    isRecording,
+    isPreparing: isVoicePreparing,
+    durationMillis: recordingDurationMillis,
+    startRecording,
+    stopRecording,
+  } = useVoiceRecorder();
 
   // ── Hooks dedicados ───────────────────────────────────────────────────────
   const appointmentId = conversationContext?.appointmentId;
@@ -117,6 +133,50 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
     setInputText('');
     sendMessage(text);
   }, [inputText, loading, sendMessage]);
+
+  const handleVoicePress = useCallback(async () => {
+    if (loading || isVoicePreparing) return;
+
+    try {
+      if (isRecording) {
+        const recording = await stopRecording();
+        await sendVoiceCommand(recording);
+        return;
+      }
+      await startRecording();
+    } catch (voiceError) {
+      const message =
+        voiceError instanceof Error
+          ? voiceError.message
+          : 'Não foi possível usar o microfone. Tente novamente.';
+      reportError(message);
+    }
+  }, [
+    isRecording,
+    isVoicePreparing,
+    loading,
+    reportError,
+    sendVoiceCommand,
+    startRecording,
+    stopRecording,
+  ]);
+
+  // Evita que um toque esquecido ultrapasse o limite recomendado de 60 s.
+  useEffect(() => {
+    if (!isRecording) {
+      voiceLimitHandledRef.current = false;
+      return;
+    }
+    if (
+      recordingDurationMillis < MAX_VOICE_RECORDING_DURATION_MS ||
+      voiceLimitHandledRef.current
+    ) {
+      return;
+    }
+
+    voiceLimitHandledRef.current = true;
+    void handleVoicePress();
+  }, [handleVoicePress, isRecording, recordingDurationMillis]);
 
   const handleQuickReply = useCallback(
     (value: string, label: string) => sendQuickReply({ value, label }),
@@ -235,7 +295,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
           error={error}
           rateLimitCountdown={rateLimitCountdown}
           lastSentText={lastSentText}
-          onRetry={retryLastMessage}
+          hasRetryableVoiceCommand={hasRetryableVoiceCommand}
+          onRetry={lastSentText ? retryLastMessage : retryLastVoiceCommand}
         />
       )}
 
@@ -292,6 +353,11 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
         rateLimitCountdown={rateLimitCountdown}
         conversationState={conversationState}
         inputRef={inputRef}
+        isRecording={isRecording}
+        isVoicePreparing={isVoicePreparing}
+        recordingDurationMillis={recordingDurationMillis}
+        maxRecordingDurationMillis={MAX_VOICE_RECORDING_DURATION_MS}
+        onVoicePress={handleVoicePress}
       />
 
       <ConfirmationModal
