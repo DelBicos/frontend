@@ -22,7 +22,6 @@ import { registerTokenProvider } from '@lib/helpers/httpClient';
 import { useUserStore } from '@stores/User';
 import { useThemeStore } from '@stores/Theme';
 import { ThemeMode } from '@stores/Theme/types';
-
 import { AuthProvider } from '@lib/hooks/AuthContext';
 import { ChatWidget } from '@components/features/ChatBot/ChatWidget';
 
@@ -51,6 +50,13 @@ function AppContent() {
   const colors = useColors();
   const { user } = useUserStore();
   const isDark = theme === ThemeMode.DARK;
+  const [currentRouteName, setCurrentRouteName] = React.useState<
+    string | undefined
+  >();
+
+  const syncCurrentRoute = React.useCallback(() => {
+    setCurrentRouteName(navigationRef.getCurrentRoute()?.name);
+  }, []);
 
   const navTheme = React.useMemo(
     () => ({
@@ -98,13 +104,14 @@ function AppContent() {
                 prefixes: ['delbicos://'],
               }}
               onReady={() => {
+                syncCurrentRoute();
                 SplashScreen.hideAsync().catch(() => {});
               }}
+              onStateChange={syncCurrentRoute}
             />
-            {!!user && (
-              <ChatWidget
-                bottomOffset={Platform.OS === 'web' ? 24 : 80}
-              />
+            {/* Evita montar um segundo chat sobre a tela dedicada do assistente. */}
+            {!!user && currentRouteName !== 'ChatBot' && (
+              <ChatWidget bottomOffset={Platform.OS === 'web' ? 24 : 80} />
             )}
           </View>
         </LocationProvider>
