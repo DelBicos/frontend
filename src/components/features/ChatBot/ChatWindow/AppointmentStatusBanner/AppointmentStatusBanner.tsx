@@ -97,7 +97,7 @@ export const AppointmentStatusBanner: React.FC<
     setTimeout(navigateToCheckout, 0);
   };
 
-  const handleNavigateToSchedules = () => {
+  const navigateToSchedules = () => {
     if (navigationRef.isReady()) {
       navigationRef.navigate('MySchedules');
     } else if (Platform.OS === 'web') {
@@ -107,6 +107,12 @@ export const AppointmentStatusBanner: React.FC<
         Linking.openURL('delbicos://schedules');
       });
     }
+  };
+
+  const handleNavigateToSchedules = () => {
+    // Libera a tela antes de abrir a agenda no navegador principal.
+    onClose?.();
+    setTimeout(navigateToSchedules, 0);
   };
 
   return (
