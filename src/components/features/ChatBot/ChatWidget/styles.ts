@@ -49,7 +49,33 @@ export const createStyles = (colors: ColorsType) =>
       shadowRadius: 12,
       elevation: 16,
     },
-    modalContainer: {
+    mobileModalRoot: {
       flex: 1,
+      justifyContent: 'flex-end',
+    },
+    modalContainer: {
+      width: '100%',
+      maxWidth: 600,
+      height: '90%',
+      maxHeight: 760,
+      alignSelf: 'center',
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      overflow: 'hidden',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: -4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 12,
+      elevation: 24,
+    },
+    sheetHandleContainer: {
+      height: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    sheetHandle: {
+      width: 42,
+      height: 4,
+      borderRadius: 2,
     },
   });

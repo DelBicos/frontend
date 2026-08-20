@@ -13,9 +13,9 @@ import {
   Animated,
   Dimensions,
   Text,
-  SafeAreaView,
   StyleSheet,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
 import { useChatBotStore } from '@stores/ChatBot';
@@ -32,7 +32,7 @@ interface ChatWidgetProps {
 /**
  * Botão flutuante que abre o painel do chatbot.
  * - Web: painel lateral fixo (drawer-style) animado.
- * - Mobile: Modal em tela cheia com SafeAreaView.
+ * - Mobile: painel inferior que mantém parte da tela de origem visível.
  */
 export const ChatWidget: React.FC<ChatWidgetProps> = ({
   bottomOffset = 80,
@@ -170,7 +170,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     );
   }
 
-  // ── Mobile: Modal tela cheia ──────────────────────────────────────────────
+  // ── Mobile: painel inferior ───────────────────────────────────────────────
   return (
     <>
       {/* FAB */}
@@ -199,16 +199,37 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
       <Modal
         visible={open}
         animationType="slide"
-        presentationStyle="pageSheet"
+        transparent
+        presentationStyle="overFullScreen"
         onRequestClose={closePanel}
         statusBarTranslucent>
-        <SafeAreaView
-          style={[
-            styles.modalContainer,
-            { backgroundColor: colors.backgroundElevated },
-          ]}>
-          <ChatWindow onClose={closePanel} />
-        </SafeAreaView>
+        <View style={styles.mobileModalRoot}>
+          <TouchableOpacity
+            style={[
+              StyleSheet.absoluteFillObject,
+              { backgroundColor: colors.overlay },
+            ]}
+            activeOpacity={1}
+            onPress={closePanel}
+            accessible={false}
+          />
+          <SafeAreaView
+            edges={['bottom']}
+            style={[
+              styles.modalContainer,
+              { backgroundColor: colors.backgroundElevated },
+            ]}>
+            <View style={styles.sheetHandleContainer}>
+              <View
+                style={[
+                  styles.sheetHandle,
+                  { backgroundColor: colors.borderColor },
+                ]}
+              />
+            </View>
+            <ChatWindow onClose={closePanel} closeLabel="Minimizar" />
+          </SafeAreaView>
+        </View>
       </Modal>
     </>
   );
