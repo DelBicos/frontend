@@ -29,7 +29,6 @@ import { ChatHeader } from './ChatHeader';
 import { ChatInputBar } from './ChatInputBar';
 import { ChatErrorBanner } from './ChatErrorBanner';
 import { AppointmentStatusBanner } from './AppointmentStatusBanner';
-import { ServiceOptions } from '../ServiceOptions';
 import { useAppointmentPolling } from './hooks/useAppointmentPolling';
 import { useRateLimitCountdown } from './hooks/useRateLimitCountdown';
 import { createStyles } from './styles';
@@ -37,9 +36,14 @@ import { createStyles } from './styles';
 interface ChatWindowProps {
   /** Callback para fechar o painel (mobile/web). */
   onClose?: () => void;
+  /** Texto exibido na ação de saída do cabeçalho mobile. */
+  closeLabel?: 'Fechar' | 'Minimizar';
 }
 
-export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
+export const ChatWindow: React.FC<ChatWindowProps> = ({
+  onClose,
+  closeLabel = 'Fechar',
+}) => {
   const colors = useColors();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const inputRef = useRef<TextInput>(null);
@@ -62,6 +66,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
     error,
     lastSentText,
     hasRetryableVoiceCommand,
+    isRestarting,
     rateLimitResetAt,
     conversationState,
     conversationContext,
@@ -130,8 +135,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
   const handleSend = useCallback(() => {
     const text = inputText.trim();
     if (!text || loading) return;
-    setInputText('');
-    sendMessage(text);
+    const accepted = sendMessage(text);
+    if (accepted) setInputText('');
   }, [inputText, loading, sendMessage]);
 
   const handleVoicePress = useCallback(async () => {
@@ -264,7 +269,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <ChatHeader onClear={restartConversation} onClose={onClose} />
+      <ChatHeader
+        onClear={restartConversation}
+        restartDisabled={isRestarting || isRecording || isVoicePreparing}
+        onClose={onClose}
+        closeLabel={closeLabel}
+      />
 
       <FlatList
         ref={listRef}
@@ -317,21 +327,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
         </View>
       )}
 
-      {conversationState === 'COLETANDO_SERVICO' &&
-        !!conversationContext?.serviceOptionsData?.length && (
-          <ServiceOptions
-            options={conversationContext.serviceOptionsData}
-            onSelect={handleQuickReply}
-            disabled={loading}
-          />
-        )}
-
       {hasQuickReplies && !loading && (
         <QuickReplies
           quickReplies={lastBotMessage?.quickReplies}
           suggestedTimes={lastBotMessage?.suggestedTimes}
           onSelect={handleQuickReply}
-          disabled={loading}
+          disabled={loading || isRecording || isVoicePreparing}
         />
       )}
 

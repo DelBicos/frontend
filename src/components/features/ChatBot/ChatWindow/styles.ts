@@ -1,4 +1,4 @@
-import { StyleSheet, Platform } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { ColorsType } from '@theme/types';
 
 export const createStyles = (colors: ColorsType) =>
@@ -17,10 +17,20 @@ export const createStyles = (colors: ColorsType) =>
       borderBottomWidth: 1,
       borderBottomColor: colors.borderColor,
     },
+    headerMobile: {
+      flexDirection: 'column',
+      alignItems: 'stretch',
+      gap: 8,
+      paddingHorizontal: 12,
+      paddingTop: 8,
+      paddingBottom: 10,
+    },
     botInfo: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
+      flexShrink: 1,
+      minWidth: 0,
     },
     botAvatar: {
       width: 36,
@@ -28,6 +38,10 @@ export const createStyles = (colors: ColorsType) =>
       borderRadius: 18,
       alignItems: 'center',
       justifyContent: 'center',
+    },
+    botText: {
+      flex: 1,
+      minWidth: 0,
     },
     botName: {
       fontSize: 15,
@@ -38,8 +52,42 @@ export const createStyles = (colors: ColorsType) =>
       fontSize: 12,
       color: colors.textTertiary,
     },
+    headerActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    headerActionsMobile: {
+      justifyContent: 'flex-end',
+    },
+    headerActionButton: {
+      minHeight: 44,
+      paddingHorizontal: 13,
+      borderRadius: 22,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 7,
+    },
+    restartButton: {
+      borderWidth: 1,
+      borderColor: colors.primaryOrange,
+    },
+    headerActionDisabled: {
+      opacity: 0.45,
+    },
+    restartText: {
+      color: colors.primaryOrange,
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 14,
+    },
     closeButton: {
-      padding: 8,
+      backgroundColor: colors.inputBackground,
+    },
+    closeText: {
+      color: colors.textSecondary,
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 14,
     },
     messagesList: {
       paddingVertical: 12,
