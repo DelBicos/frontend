@@ -9,6 +9,7 @@ export type ChatBotState =
   | 'COLETANDO_SERVICO'
   | 'COLETANDO_DATA'
   | 'COLETANDO_HORARIO'
+  | 'SELECIONANDO_PROFISSIONAL'
   | 'CONFIRMACAO'
   | 'AGUARDANDO_CONFIRMACAO'
   | 'FINALIZADO'
@@ -35,6 +36,36 @@ export interface ChatBotServiceOption {
   ratingsCount: number;
 }
 
+export interface ChatBotProfessionalOption {
+  index: number;
+  serviceId: number;
+  professionalId: number;
+  professionalName: string;
+  professionalAvatarUri?: string | null;
+  professionalRating?: number;
+  professionalRatingsCount?: number;
+  professionalCity?: string | null;
+  professionalState?: string | null;
+  /** Preço em centavos. */
+  price: number;
+  duration: number;
+  time: string;
+}
+
+export interface ChatBotServiceChoice {
+  title: string;
+  description?: string | null;
+  subcategoryId: number;
+  subcategoryName: string;
+  categoryName?: string | null;
+  matchedServiceIds: number[];
+}
+
+export interface ChatBotAvailableDayProfessional {
+  professionalId: number;
+  professionalName: string;
+}
+
 /**
  * Contexto acumulado da conversa retornado pelo backend.
  * Reflete o que o bot já coletou até o momento.
@@ -48,8 +79,16 @@ export interface ChatBotContext {
   servicePrice?: number;
   /** Lista de serviços disponíveis — exibidos como chips em COLETANDO_SERVICO */
   serviceOptions?: string[];
-  /** Ofertas completas por serviço e profissional — exibidas como cartões. */
+  /** Contrato legado de ofertas por profissional; não é renderizado nesta etapa. */
   serviceOptionsData?: ChatBotServiceOption[];
+  /** Serviços lógicos agrupados, sem repetir uma opção por profissional. */
+  serviceChoicesData?: ChatBotServiceChoice[];
+  /** Profissionais disponíveis para o serviço, data e horário escolhidos. */
+  professionalOptionsData?: ChatBotProfessionalOption[];
+  /** Ofertas que possuem ao menos um horário livre no dia selecionado. */
+  availableDayServiceIds?: number[];
+  /** Profissionais exibidos para o dia e, quando informado, para o período selecionado. */
+  availableDayProfessionals?: ChatBotAvailableDayProfessional[];
   selectedDate?: string; // YYYY-MM-DD
   selectedTime?: string; // HH:MM
   date?: string; // YYYY-MM-DD
