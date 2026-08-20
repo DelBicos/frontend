@@ -1,5 +1,6 @@
 import React from 'react';
-import { SafeAreaView, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColors } from '@theme/ThemeProvider';
 import { ChatWindow } from '@components/features/ChatBot/ChatWindow';
 import { useNavigation } from '@react-navigation/native';
@@ -14,10 +15,26 @@ const ChatBotScreen: React.FC = () => {
   const colors = useColors();
   const navigation = useNavigation();
 
+  const closeChat = React.useCallback(() => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Home' as never }],
+    });
+  }, [navigation]);
+
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.backgroundElevated }]}>
-      <ChatWindow onClose={() => navigation.goBack()} />
+      edges={['left', 'right']}
+      style={[
+        styles.container,
+        { backgroundColor: colors.backgroundElevated },
+      ]}>
+      <ChatWindow onClose={closeChat} closeLabel="Fechar" />
     </SafeAreaView>
   );
 };
