@@ -49,6 +49,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const inputRef = useRef<TextInput>(null);
   const listRef = useRef<FlatList<ChatBotMessage>>(null);
   const voiceLimitHandledRef = useRef(false);
+  const restoreAttemptedRef = useRef(false);
   const [inputText, setInputText] = useState('');
   const [pendingAction, setPendingAction] = useState<ChatBotAction | null>(
     null,
@@ -68,6 +69,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     hasRetryableVoiceCommand,
     isRestarting,
     rateLimitResetAt,
+    hasHydrated,
     conversationState,
     conversationContext,
     sendMessage,
@@ -105,13 +107,22 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
   // ── Efeitos ───────────────────────────────────────────────────────────────
 
-  // Restaura a sessão ativa do JWT atual na abertura do painel.
+  // Restaura a sessão ativa somente depois que o sessionId persistido foi
+  // hidratado. O ref impede novas consultas quando o backend informa que não
+  // existe uma conversa ativa.
   useEffect(() => {
-    if (messages.length === 0 && !loading) {
-      restoreActiveSession();
+    if (
+      !hasHydrated ||
+      restoreAttemptedRef.current ||
+      messages.length > 0 ||
+      loading
+    ) {
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
+    restoreAttemptedRef.current = true;
+    void restoreActiveSession();
+  }, [hasHydrated, loading, messages.length, restoreActiveSession]);
 
   // Scroll automático ao receber novas mensagens.
   useEffect(() => {
@@ -150,6 +161,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       }
       await startRecording();
     } catch (voiceError) {
+      // Fechar/minimizar durante permissão, preparo ou parada cancela a
+      // operação silenciosamente; não deixe um erro antigo para a próxima tela.
+      if (voiceError instanceof Error && voiceError.name === 'AbortError') {
+        return;
+      }
+
       const message =
         voiceError instanceof Error
           ? voiceError.message

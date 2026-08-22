@@ -140,8 +140,8 @@ export const createStyles = (colors: ColorsType) =>
     },
     errorText: {
       fontSize: 13,
+      lineHeight: 18,
       textAlign: 'center',
-      flex: 1,
     },
     retryText: {
       fontSize: 13,
