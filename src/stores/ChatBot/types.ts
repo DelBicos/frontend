@@ -9,6 +9,7 @@ export type ChatBotState =
   | 'COLETANDO_SERVICO'
   | 'COLETANDO_DATA'
   | 'COLETANDO_HORARIO'
+  | 'VERIFICANDO_DISPONIBILIDADE'
   | 'SELECIONANDO_PROFISSIONAL'
   | 'CONFIRMACAO'
   | 'AGUARDANDO_CONFIRMACAO'
@@ -66,6 +67,18 @@ export interface ChatBotAvailableDayProfessional {
   professionalName: string;
 }
 
+export type ChatBotTimePeriod = 'MORNING' | 'AFTERNOON' | 'EVENING';
+
+export interface ChatBotSuggestedSlotData {
+  index: number;
+  serviceId: number;
+  professionalId: number;
+  professionalName: string;
+  price: number;
+  duration: number;
+  time: string;
+}
+
 /**
  * Contexto acumulado da conversa retornado pelo backend.
  * Reflete o que o bot já coletou até o momento.
@@ -93,13 +106,17 @@ export interface ChatBotContext {
   selectedTime?: string; // HH:MM
   date?: string; // YYYY-MM-DD
   time?: string; // HH:MM
+  timePeriod?: ChatBotTimePeriod;
   newDate?: string; // YYYY-MM-DD
   newTime?: string; // HH:MM
+  newTimePeriod?: ChatBotTimePeriod;
   /**
    * Slots disponíveis em COLETANDO_HORARIO.
    * Formato: "HH:MM" (mesmo dia) ou "YYYY-MM-DD|HH:MM" (dias alternativos).
    */
   suggestedSlots?: string[];
+  suggestedSlotsData?: ChatBotSuggestedSlotData[];
+  suggestedDates?: string[];
   professionalName?: string;
   professionalId?: number;
   professionalRating?: number;
@@ -119,6 +136,7 @@ export interface ChatBotContext {
   appointmentStatus?: 'pending' | 'confirmed' | 'completed' | 'canceled';
   appointmentPaid?: boolean;
   pendingService?: ChatBotServiceOption | null;
+  matchedServiceIds?: number[];
 }
 
 export interface QuickReplyOption {
@@ -191,6 +209,8 @@ export interface ChatBotStore {
    * Populado quando o backend retorna 429 com header RateLimit-Reset.
    */
   rateLimitResetAt: number | null;
+  /** Indica que o sessionId persistido já foi lido do armazenamento local. */
+  hasHydrated: boolean;
 
   setSessionId: (id: number) => void;
   addMessage: (message: ChatBotMessage) => void;
@@ -200,6 +220,7 @@ export interface ChatBotStore {
   setConversationState: (state: ChatBotState, context: ChatBotContext) => void;
   setLastSentText: (text: string | null) => void;
   setRateLimitResetAt: (ts: number | null) => void;
+  setHasHydrated: (hydrated: boolean) => void;
   /** Zera sessionId e state sem apagar o histórico de mensagens. */
   resetSession: () => void;
   /** Zera tudo (mensagens incluídas). */
