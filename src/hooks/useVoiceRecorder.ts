@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import { Platform } from 'react-native';
 import {
   RecordingPresets,
@@ -20,6 +26,14 @@ export interface VoiceRecording {
   release: () => void;
 }
 
+type RecorderOperation = 'idle' | 'starting' | 'recording' | 'stopping';
+
+function recordingCancelledError(): Error {
+  const error = new Error('A gravação foi cancelada.');
+  error.name = 'AbortError';
+  return error;
+}
+
 /**
  * Captura áudio no navegador e nos aplicativos nativos com a mesma API.
  * O preset gera WebM na web e AAC/M4A no mobile, ambos aceitos pelo backend.
@@ -28,24 +42,61 @@ export function useVoiceRecorder() {
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(recorder, 250);
   const [isPreparing, setIsPreparing] = useState(false);
+  // Começa ativo porque o ChatWindow pode existir dentro de um Modal ainda
+  // oculto; alguns ciclos do Modal preservam a instância antes do layout effect.
+  // O cleanup abaixo continua marcando `false` antes do release nativo.
+  const mountedRef = useRef(true);
+  const operationRef = useRef<RecorderOperation>('idle');
 
-  // Fecha a captura ao minimizar ou sair do chatbot sem enviar o áudio.
+  // O cleanup de layout ocorre antes dos cleanups passivos do Expo. Assim,
+  // continuações de permissão/preparo/parada sabem que não podem mais tocar
+  // no SharedObject nativo que será liberado durante o mesmo unmount.
+  useLayoutEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      operationRef.current = 'idle';
+    };
+  }, []);
+
+  // No Android/iOS, `useAudioRecorder` libera (e encerra) o objeto nativo antes
+  // deste cleanup. Não acesse o recorder nesses ambientes depois do unmount:
+  // qualquer getter ou método lança "shared object already released".
+  // A implementação web não faz o mesmo release, então precisa encerrar o
+  // MediaRecorder explicitamente para apagar o indicador do microfone.
   useEffect(
     () => () => {
-      if (recorder.isRecording) {
-        recorder.stop().catch(() => undefined);
+      if (Platform.OS === 'web' && recorder.isRecording) {
+        void recorder
+          .stop()
+          .then(() => {
+            const uri = recorder.uri;
+            if (uri?.startsWith('blob:')) URL.revokeObjectURL(uri);
+          })
+          .catch(() => undefined);
       }
-      setAudioModeAsync({ allowsRecording: false }).catch(() => undefined);
+
+      void setAudioModeAsync({ allowsRecording: false }).catch(() => undefined);
     },
     [recorder],
   );
 
   const startRecording = useCallback(async () => {
-    if (isPreparing || recorderState.isRecording) return;
+    if (
+      !mountedRef.current ||
+      operationRef.current !== 'idle' ||
+      recorderState.isRecording
+    ) {
+      return;
+    }
+
+    operationRef.current = 'starting';
     setIsPreparing(true);
 
     try {
       const permission = await requestRecordingPermissionsAsync();
+      if (!mountedRef.current) return;
+
       if (!permission.granted) {
         throw new Error(
           'Permita o uso do microfone para enviar um comando de voz.',
@@ -59,9 +110,16 @@ export function useVoiceRecorder() {
         shouldPlayInBackground: false,
         shouldRouteThroughEarpiece: false,
       });
+      if (!mountedRef.current) return;
+
       await recorder.prepareToRecordAsync();
+      if (!mountedRef.current) return;
+
       recorder.record();
+      operationRef.current = 'recording';
     } catch (error) {
+      if (!mountedRef.current) return;
+
       console.warn(
         '[useVoiceRecorder] Não foi possível iniciar a gravação:',
         error,
@@ -69,6 +127,8 @@ export function useVoiceRecorder() {
       await setAudioModeAsync({ allowsRecording: false }).catch(
         () => undefined,
       );
+      if (!mountedRef.current) return;
+
       if (error instanceof Error && error.message.startsWith('Permita')) {
         throw error;
       }
@@ -76,22 +136,38 @@ export function useVoiceRecorder() {
         'Não foi possível iniciar a gravação. Verifique a permissão do microfone e tente novamente.',
       );
     } finally {
-      setIsPreparing(false);
+      if (operationRef.current === 'starting') {
+        operationRef.current = 'idle';
+      }
+      if (mountedRef.current) {
+        setIsPreparing(false);
+      } else {
+        void setAudioModeAsync({ allowsRecording: false }).catch(
+          () => undefined,
+        );
+      }
     }
-  }, [isPreparing, recorder, recorderState.isRecording]);
+  }, [recorder, recorderState.isRecording]);
 
   const stopRecording = useCallback(async (): Promise<VoiceRecording> => {
-    if (!recorderState.isRecording) {
+    if (!mountedRef.current) throw recordingCancelledError();
+    if (operationRef.current === 'stopping') {
+      throw recordingCancelledError();
+    }
+    if (operationRef.current !== 'recording' && !recorderState.isRecording) {
       throw new Error('Nenhuma gravação está em andamento.');
     }
 
+    operationRef.current = 'stopping';
     const durationMillis = recorderState.durationMillis;
     try {
       await recorder.stop();
-      if (!recorder.uri) {
+      if (!mountedRef.current) throw recordingCancelledError();
+
+      const uri = recorder.uri;
+      if (!uri) {
         throw new Error('Arquivo de áudio indisponível após a gravação.');
       }
-      const uri = recorder.uri;
 
       return {
         uri,
@@ -104,12 +180,22 @@ export function useVoiceRecorder() {
         },
       };
     } catch (error) {
+      if (
+        !mountedRef.current ||
+        (error instanceof Error && error.name === 'AbortError')
+      ) {
+        throw recordingCancelledError();
+      }
+
       console.warn(
         '[useVoiceRecorder] Não foi possível finalizar a gravação:',
         error,
       );
       throw new Error('Não foi possível preparar o áudio para envio.');
     } finally {
+      if (operationRef.current === 'stopping') {
+        operationRef.current = 'idle';
+      }
       await setAudioModeAsync({ allowsRecording: false }).catch(
         () => undefined,
       );
