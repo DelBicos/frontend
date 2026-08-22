@@ -148,10 +148,34 @@ function extractRateLimitReset(
   return isNaN(epoch) ? null : epoch * 1000;
 }
 
+function formatSuggestedDateLabel(value: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return value;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(year, month - 1, day, 12);
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat('pt-BR', {
+    weekday: 'short',
+    day: '2-digit',
+    month: '2-digit',
+  }).format(date);
+}
+
 /**
  * Deriva quick replies com base no estado e contexto retornados pelo backend.
  *
  * - COLETANDO_SERVICO: chips numerados com nomes de serviços (context.serviceOptions)
+ * - COLETANDO_DATA: chips com as datas ISO sugeridas pelo backend
  * - SELECIONANDO_PROFISSIONAL: chips com nomes dos profissionais
  * - CONFIRMACAO: "Sim" / "Não"
  */
@@ -183,6 +207,14 @@ function deriveQuickReplies(
         value: String(i + 1),
       }));
     }
+  }
+  if (state === 'COLETANDO_DATA' && context.suggestedDates?.length) {
+    return context.suggestedDates.map((date) => ({
+      label: formatSuggestedDateLabel(date),
+      // Envia a data ISO, não o índice visual. Assim a escolha continua
+      // correta mesmo se a sessão for restaurada ou as sugestões mudarem.
+      value: date,
+    }));
   }
   if (
     state === 'SELECIONANDO_PROFISSIONAL' &&
@@ -241,17 +273,11 @@ function deriveSuggestedTimes(
 ): SuggestedTime[] | undefined {
   if (state !== 'COLETANDO_HORARIO' || !context.suggestedSlots?.length)
     return undefined;
-  const fallbackDate = (context as any).date ?? context.selectedDate;
+  const fallbackDate = context.date ?? context.selectedDate;
 
   // Se o backend enviou metadados dos slots (com nome do profissional e horário real),
   // mapeamos os índices para rótulos legíveis
-  const slotsData = (context as any).suggestedSlotsData as
-    | {
-        index: number;
-        time: string;
-        professionalName: string;
-      }[]
-    | undefined;
+  const slotsData = context.suggestedSlotsData;
 
   if (slotsData && slotsData.length > 0) {
     return context.suggestedSlots.map((slot) => {
@@ -427,6 +453,7 @@ export function useChatSession() {
     error,
     lastSentText,
     rateLimitResetAt,
+    hasHydrated,
     conversationState,
     conversationContext,
     setSessionId,
@@ -452,6 +479,11 @@ export function useChatSession() {
    * seja exibido no chat.
    */
   const restoreActiveSession = useCallback(async () => {
+    // O middleware persistente hidrata de forma assíncrona no web e no
+    // nativo. Aguardar esse sinal evita comparar a resposta HTTP com um
+    // sessionId que ainda estava chegando do armazenamento.
+    if (!useChatBotStore.getState().hasHydrated) return;
+
     const requestId = ++_restoreRequestId;
     const initialStore = useChatBotStore.getState();
     const initialSessionId = initialStore.sessionId;
@@ -702,7 +734,11 @@ export function useChatSession() {
           audio,
           {
             headers: {
-              'Content-Type': audio.type || attempt.recording.mimeType,
+              // O Blob criado por fetch(file://...) no Android pode rotular um
+              // M4A/AAC como audio/mpeg. O gravador conhece o formato real e
+              // deve ter prioridade para o backend não enviar M4A como MP3 ao
+              // provedor de transcrição.
+              'Content-Type': attempt.recording.mimeType || audio.type,
               Accept: 'application/json',
               'X-Voice-Language': 'pt-BR',
               'X-Voice-Channel': `voice-${CHANNEL}`,
@@ -717,6 +753,10 @@ export function useChatSession() {
             },
             // Impede que o cliente converta o Blob para JSON antes do envio.
             transformRequest: [(body) => body],
+            // O backend pode fazer duas tentativas de transcrição dentro de
+            // um orçamento de 45 s. O timeout global do Axios é 30 s e fazia
+            // o app abandonar uma resposta válida durante a segunda tentativa.
+            timeout: 60_000,
             signal: request.controller.signal,
           },
         );
@@ -1031,6 +1071,7 @@ export function useChatSession() {
     hasRetryableVoiceCommand,
     isRestarting,
     rateLimitResetAt,
+    hasHydrated,
     conversationState,
     conversationContext,
     sendMessage,
