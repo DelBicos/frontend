@@ -90,6 +90,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     durationMillis: recordingDurationMillis,
     startRecording,
     stopRecording,
+    cancelRecording,
   } = useVoiceRecorder();
 
   // ── Hooks dedicados ───────────────────────────────────────────────────────
@@ -182,6 +183,14 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     startRecording,
     stopRecording,
   ]);
+
+  const handleVoiceCancel = useCallback(async () => {
+    try {
+      await cancelRecording();
+    } catch {
+      // cancelamento silencioso
+    }
+  }, [cancelRecording]);
 
   // Evita que um toque esquecido ultrapasse o limite recomendado de 60 s.
   useEffect(() => {
@@ -376,6 +385,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         recordingDurationMillis={recordingDurationMillis}
         maxRecordingDurationMillis={MAX_VOICE_RECORDING_DURATION_MS}
         onVoicePress={handleVoicePress}
+        onVoiceCancel={handleVoiceCancel}
       />
 
       <ConfirmationModal

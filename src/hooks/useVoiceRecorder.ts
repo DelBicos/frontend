@@ -202,11 +202,41 @@ export function useVoiceRecorder() {
     }
   }, [recorder, recorderState.durationMillis, recorderState.isRecording]);
 
+  const cancelRecording = useCallback(async (): Promise<void> => {
+    if (!mountedRef.current) return;
+    if (operationRef.current === 'stopping') return;
+    if (operationRef.current !== 'recording' && !recorderState.isRecording) {
+      return;
+    }
+
+    operationRef.current = 'stopping';
+    try {
+      await recorder.stop();
+      const uri = recorder.uri;
+      if (Platform.OS === 'web' && uri?.startsWith('blob:')) {
+        URL.revokeObjectURL(uri);
+      }
+    } catch (error) {
+      console.warn(
+        '[useVoiceRecorder] Não foi possível cancelar a gravação:',
+        error,
+      );
+    } finally {
+      if (operationRef.current === 'stopping') {
+        operationRef.current = 'idle';
+      }
+      await setAudioModeAsync({ allowsRecording: false }).catch(
+        () => undefined,
+      );
+    }
+  }, [recorder, recorderState.isRecording]);
+
   return {
     isRecording: recorderState.isRecording,
     isPreparing,
     durationMillis: recorderState.durationMillis,
     startRecording,
     stopRecording,
+    cancelRecording,
   };
 }

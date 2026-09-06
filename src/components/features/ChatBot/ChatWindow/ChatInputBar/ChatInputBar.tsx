@@ -23,6 +23,7 @@ interface ChatInputBarProps {
   recordingDurationMillis: number;
   maxRecordingDurationMillis: number;
   onVoicePress: () => void;
+  onVoiceCancel: () => void;
 }
 
 /**
@@ -42,6 +43,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
   recordingDurationMillis,
   maxRecordingDurationMillis,
   onVoicePress,
+  onVoiceCancel,
 }) => {
   const colors = useColors();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -52,6 +54,24 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
 
   return (
     <View style={[styles.inputRow, { borderTopColor: colors.borderColor }]}>
+      {isRecording && (
+        <TouchableOpacity
+          style={[
+            styles.sendButton,
+            {
+              backgroundColor: colors.inputBackground,
+              borderColor: colors.errorText,
+              borderWidth: 1,
+            },
+          ]}
+          onPress={onVoiceCancel}
+          disabled={isDisabled}
+          accessibilityRole="button"
+          accessibilityLabel="Cancelar gravação de áudio"
+          accessibilityHint="Descarta a gravação de áudio sem enviar ao assistente">
+          <FontAwesome name="trash" size={16} color={colors.errorText} />
+        </TouchableOpacity>
+      )}
       <TextInput
         ref={inputRef}
         style={[
@@ -68,7 +88,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
           isVoicePreparing
             ? 'Preparando o microfone...'
             : isRecording
-              ? `Gravando ${recordingSeconds}s de ${maxRecordingSeconds}s... toque no microfone para enviar`
+              ? `Gravando ${recordingSeconds}s de ${maxRecordingSeconds}s... toque no botão para enviar`
               : 'Digite sua mensagem...'
         }
         placeholderTextColor={colors.placeholder}

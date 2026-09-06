@@ -162,4 +162,26 @@ describe('useVoiceRecorder', () => {
     expect(mockRecorderLifecycle.prepareToRecordAsync).not.toHaveBeenCalled();
     expect(mockRecorderLifecycle.record).not.toHaveBeenCalled();
   });
+
+  it('cancels recording cleanly without throwing error', async () => {
+    let root: TestRenderer.ReactTestRenderer;
+    let voiceRecorder: ReturnType<typeof useVoiceRecorder>;
+    await act(async () => {
+      root = TestRenderer.create(
+        React.createElement(Harness, {
+          onRender: (value) => {
+            voiceRecorder = value as ReturnType<typeof useVoiceRecorder>;
+          },
+        }),
+      );
+    });
+
+    await act(async () => {
+      await voiceRecorder.cancelRecording();
+    });
+
+    expect(ExpoAudio.setAudioModeAsync).toHaveBeenCalledWith({
+      allowsRecording: false,
+    });
+  });
 });
