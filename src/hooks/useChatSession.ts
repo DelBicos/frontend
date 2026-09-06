@@ -552,9 +552,9 @@ export function useChatSession() {
       }
     } catch {
       if (requestId !== _restoreRequestId) return;
-      // O chat continua utilizável mesmo que a restauração falhe.
+      // O assistente continua totalmente utilizável para novos agendamentos.
+      // Se a restauração não encontrar histórico ou falhar, inicia nova sessão silenciosamente.
       resetSession();
-      setError('Não foi possível restaurar a conversa.');
     } finally {
       if (requestId === _restoreRequestId) setLoading(false);
     }

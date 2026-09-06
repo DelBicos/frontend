@@ -61,9 +61,9 @@ export const AppointmentStatusBanner: React.FC<
         ? localDateTimeToISO(selectedDate, selectedClock)
         : selectedDate || '';
     const params = {
-      professionalId: ctx?.professionalId,
+      professionalId: ctx?.professionalId ?? 0,
       selectedTime,
-      serviceId: ctx?.serviceId,
+      serviceId: ctx?.serviceId ?? 0,
       appointmentId,
       imageUrl: undefined,
       professionalName: ctx?.professionalName,
