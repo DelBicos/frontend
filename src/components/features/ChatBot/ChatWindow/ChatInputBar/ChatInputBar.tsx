@@ -47,8 +47,8 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
 }) => {
   const colors = useColors();
   const styles = useMemo(() => createStyles(colors), [colors]);
-
-  const isDisabled = loading || rateLimitCountdown > 0 || isVoicePreparing;
+  const isVoiceDisabled = loading || rateLimitCountdown > 0 || isVoicePreparing;
+  const isTextDisabled = loading;
   const recordingSeconds = Math.floor(recordingDurationMillis / 1000);
   const maxRecordingSeconds = Math.floor(maxRecordingDurationMillis / 1000);
 
@@ -65,7 +65,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
             },
           ]}
           onPress={onVoiceCancel}
-          disabled={isDisabled}
+          disabled={isVoiceDisabled}
           accessibilityRole="button"
           accessibilityLabel="Cancelar gravação de áudio"
           accessibilityHint="Descarta a gravação de áudio sem enviar ao assistente">
@@ -97,7 +97,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
         blurOnSubmit={false}
         multiline={false}
         maxLength={2000}
-        editable={!isDisabled && !isRecording}
+        editable={!isTextDisabled && !isRecording}
         keyboardType={
           conversationState === 'AGUARDANDO_ID_AGENDAMENTO'
             ? 'numeric'
@@ -122,7 +122,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
           },
         ]}
         onPress={onVoicePress}
-        disabled={isDisabled}
+        disabled={isVoiceDisabled}
         accessibilityRole="button"
         accessibilityLabel={
           isVoicePreparing
@@ -153,13 +153,13 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
           styles.sendButton,
           {
             backgroundColor:
-              value.trim() && !isDisabled && !isRecording
+              value.trim() && !isTextDisabled && !isRecording
                 ? colors.primaryOrange
                 : colors.inputBackground,
           },
         ]}
         onPress={onSend}
-        disabled={!value.trim() || isDisabled || isRecording}
+        disabled={!value.trim() || isTextDisabled || isRecording}
         accessibilityRole="button"
         accessibilityLabel="Enviar mensagem">
         {loading ? (
@@ -169,7 +169,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
             name="send"
             size={16}
             color={
-              value.trim() && !isDisabled && !isRecording
+              value.trim() && !isTextDisabled && !isRecording
                 ? colors.primaryWhite
                 : colors.textTertiary
             }
@@ -179,3 +179,4 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
     </View>
   );
 };
+

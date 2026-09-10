@@ -378,6 +378,9 @@ function resolveVoiceError(status: number | undefined): string {
   if (status === 422) {
     return 'Não foi possível entender o áudio. Fale mais perto do microfone e tente novamente.';
   }
+  if (status === 429) {
+    return 'Limite de uso da API de voz atingido. Aguarde a contagem para tentar novamente.';
+  }
   if (status === 502) {
     return 'O serviço de transcrição não respondeu. Tente enviar o áudio novamente.';
   }
@@ -1051,7 +1054,9 @@ export function useChatSession() {
   /** (#6) Chamado pelo countdown do ChatWindow ao zerar. */
   const clearRateLimitReset = useCallback(() => {
     setRateLimitResetAt(null);
-  }, [setRateLimitResetAt]);
+    setError(null);
+    setHasRetryableVoiceCommand(false);
+  }, [setError, setRateLimitResetAt]);
 
   /** Exibe falhas locais, como permissão de microfone, no banner do chat. */
   const reportError = useCallback(
