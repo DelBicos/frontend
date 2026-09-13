@@ -112,6 +112,7 @@
     "eslint-plugin-prettier": "^5.4.0",
     "husky": "^9.1.7",
     "jest-expo": "~54.0.18",
+    "metro-react-native-babel-transformer": "^0.77.0",
     "prettier": "^3.5.3",
     "react-native-svg-transformer": "^1.5.1",
     "typescript": "^5.7.2"
