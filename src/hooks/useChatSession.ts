@@ -231,6 +231,13 @@ function deriveQuickReplies(
       { label: 'Não, cancelar', value: 'não' },
     ];
   }
+  if (
+    state === 'AGUARDANDO_CONFIRMACAO' &&
+    !context.appointmentPaid &&
+    context.appointmentId
+  ) {
+    return [{ label: '💳 Pagar Agora', value: 'pagar' }];
+  }
   return undefined;
 }
 
