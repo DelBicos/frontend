@@ -12,13 +12,14 @@ import { useColors } from '@theme/ThemeProvider';
 import { Appointment, AppointmentStatus } from '@stores/Appointment/types';
 import { useUserStore } from '@stores/User';
 import { useAppointmentStore } from '@stores/Appointment';
-
+import { useNavigation } from '@react-navigation/native';
 import { createStyles } from './styles';
 
 interface AppointmentCardProps {
   statusLabel: string;
   statusColor: string;
   appointment: Appointment;
+  viewerRole?: 'client' | 'professional';
   statusVariant: AppointmentStatus;
   isFavorite: boolean;
   onToggleFavorite: (apt: Appointment) => void;
@@ -42,6 +43,7 @@ const AppointmentCardComponent: React.FC<AppointmentCardProps> = ({
   statusLabel,
   statusColor,
   appointment,
+  viewerRole,
   statusVariant,
   isFavorite,
   onToggleFavorite,
@@ -56,9 +58,35 @@ const AppointmentCardComponent: React.FC<AppointmentCardProps> = ({
     (state) => state.updateAppointmentStatus,
   );
   const [loadingAction, setLoadingAction] = React.useState(false);
+  const navigation = useNavigation();
 
-  const isProfessional = user?.professional_id === appointment.professional_id;
+  const handlePayNow = () => {
+    // @ts-ignore
+    navigation.navigate('Checkout', {
+      professionalId: appointment.professional_id,
+      selectedTime: appointment.start_time,
+      serviceId: appointment.Service.id,
+      appointmentId: appointment.id,
+      imageUrl: appointment.Service.banner_uri || undefined,
+      professionalName: appointment.Professional?.User?.name,
+    });
+  };
+
+  const isProfessional = viewerRole
+    ? viewerRole === 'professional'
+    : user?.professional_id === appointment.professional_id;
   const isPending = statusVariant === AppointmentStatus.PENDING;
+  const isPaymentPending =
+    !isProfessional &&
+    statusVariant === AppointmentStatus.CONFIRMED &&
+    !appointment.payment_intent_id;
+
+  const displayStatusLabel = isPaymentPending
+    ? 'Pagamento pendente'
+    : statusLabel;
+  const displayStatusColor = isPaymentPending
+    ? colors.primaryOrange
+    : statusColor;
 
   const handleAccept = async () => {
     setLoadingAction(true);
@@ -89,15 +117,8 @@ const AppointmentCardComponent: React.FC<AppointmentCardProps> = ({
     appointment.Professional.User.avatar_uri,
   ]);
 
-  const formattedAddress = useMemo(() => {
-    if (!appointment.Address) return 'Endereço a combinar';
-    const { street, number, neighborhood, city, state } = appointment.Address;
-    return `${street}, ${number} - ${neighborhood}, ${city}/${state}`;
-  }, [appointment.Address]);
-
   return (
     <View style={styles.card}>
-      {/* Imagem de Capa e Badges */}
       <View style={styles.imageContainer}>
         <Image
           source={{ uri: imageUrl }}
@@ -105,8 +126,8 @@ const AppointmentCardComponent: React.FC<AppointmentCardProps> = ({
           resizeMode="cover"
         />
 
-        <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-          <Text style={styles.statusText}>{statusLabel.toUpperCase()}</Text>
+        <View style={[styles.statusBadge, { backgroundColor: displayStatusColor }]}>
+          <Text style={styles.statusText}>{displayStatusLabel.toUpperCase()}</Text>
         </View>
 
         {statusVariant === AppointmentStatus.COMPLETED && (
@@ -168,30 +189,6 @@ const AppointmentCardComponent: React.FC<AppointmentCardProps> = ({
           </Text>
         </View>
 
-        <View style={styles.infoRow}>
-          <FontAwesome
-            name="map-marker"
-            size={13}
-            color={colors.textTertiary}
-            style={styles.infoIcon}
-          />
-          <Text style={styles.infoText} numberOfLines={1}>
-            {formattedAddress}
-          </Text>
-        </View>
-
-        <View style={styles.infoRow}>
-          <FontAwesome
-            name="credit-card"
-            size={11}
-            color={colors.textTertiary}
-            style={styles.infoIcon}
-          />
-          <Text style={styles.infoText}>
-            {appointment.payment_method || 'Cartão de Crédito'}
-          </Text>
-        </View>
-
         <View style={styles.actions}>
           {isPending && isProfessional ? (
             loadingAction ? (
@@ -226,12 +223,36 @@ const AppointmentCardComponent: React.FC<AppointmentCardProps> = ({
               </>
             )
           ) : (
-            <TouchableOpacity
-              style={styles.detailsButton}
-              onPress={() => onOpenDetails(appointment)}
-              activeOpacity={0.8}>
-              <Text style={styles.btnTextPrimary}>Detalhes</Text>
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity
+                style={styles.detailsButton}
+                onPress={() => onOpenDetails(appointment)}
+                activeOpacity={0.8}>
+                <Text style={styles.btnTextPrimary}>Detalhes</Text>
+              </TouchableOpacity>
+
+              {isPaymentPending && (
+                <TouchableOpacity
+                  style={[
+                    styles.rateButton,
+                    {
+                      backgroundColor: colors.primaryOrange,
+                      borderColor: colors.primaryOrange,
+                      marginLeft: 8,
+                    },
+                  ]}
+                  onPress={handlePayNow}
+                  activeOpacity={0.8}>
+                  <Text
+                    style={[
+                      styles.btnTextSecondary,
+                      { color: colors.primaryWhite },
+                    ]}>
+                    Pagar
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </>
           )}
 
           {statusVariant === AppointmentStatus.COMPLETED && onOpenRate && (

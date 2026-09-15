@@ -33,6 +33,7 @@ async function fetchPaymentIntent(
   selectedTime: string,
   addressId: number,
   token: string | null,
+  appointmentId?: number,
 ): Promise<string | null> {
   if (!token) return null;
 
@@ -57,6 +58,7 @@ async function fetchPaymentIntent(
           serviceId,
           selectedTime,
           addressId,
+          ...(appointmentId ? { appointmentId } : {}),
         }),
       },
     );
@@ -80,7 +82,7 @@ function CheckoutScreen() {
   const navigation = useNavigation();
   const route =
     useRoute<RouteProp<{ params: CheckoutRouteParams }, 'params'>>();
-  const { professionalId, selectedTime, imageUrl, serviceId } = route.params;
+  const { professionalId, selectedTime, imageUrl, serviceId, appointmentId } = route.params;
 
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [loadingIntent, setLoadingIntent] = useState(false);
@@ -184,6 +186,7 @@ function CheckoutScreen() {
           selectedTime,
           selectedAddress.id,
           token,
+          appointmentId,
         );
 
         if (secret) {
@@ -195,7 +198,7 @@ function CheckoutScreen() {
       };
       initPayment();
     }
-  }, [service, selectedAddress, professionalId, selectedTime, token, amountInReais]);
+  }, [service, selectedAddress, professionalId, selectedTime, token, amountInReais, appointmentId]);
 
   const stripeOptions = useMemo(
     () => ({

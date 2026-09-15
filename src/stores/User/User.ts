@@ -10,6 +10,7 @@ import {
 } from './types';
 import { AxiosError } from 'axios';
 import { backendHttpClient } from '@lib/helpers/httpClient';
+import { useChatBotStore } from '@stores/ChatBot';
 
 export const useUserStore = create<UserStore>()(
   persist(
@@ -439,6 +440,8 @@ export const useUserStore = create<UserStore>()(
       },
 
       signOut: () => {
+        // O chatbot não pode sobreviver à autenticação que o criou.
+        useChatBotStore.getState().clearSession();
         set({
           user: null,
           address: null,
