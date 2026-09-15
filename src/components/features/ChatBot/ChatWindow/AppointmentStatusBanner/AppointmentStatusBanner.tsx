@@ -140,7 +140,11 @@ export const AppointmentStatusBanner: React.FC<
             { color: textColor, fontFamily: 'Afacad-SemiBold', fontSize: 14 },
           ]}>
           {appointmentStatus === 'pending' &&
-            'Aguardando o prestador aceitar o agendamento...'}
+            !appointmentPaid &&
+            'Agendamento criado! Efetue o pagamento para prosseguir.'}
+          {appointmentStatus === 'pending' &&
+            appointmentPaid &&
+            'Pagamento efetuado! Aguardando aceite do prestador...'}
           {appointmentStatus === 'confirmed' &&
             !appointmentPaid &&
             'Agendamento aceito! Efetue o pagamento para finalizar.'}
@@ -152,7 +156,7 @@ export const AppointmentStatusBanner: React.FC<
         </Text>
       </View>
 
-      {appointmentStatus === 'confirmed' && !appointmentPaid && (
+      {!appointmentPaid && appointmentStatus !== 'canceled' && (
         <TouchableOpacity
           style={{
             backgroundColor: colors.primaryOrange,
