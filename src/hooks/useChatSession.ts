@@ -727,10 +727,16 @@ export function useChatSession() {
           throw new Error('O arquivo de áudio está vazio.');
         }
 
+        // Leia a sessão no instante do envio. Em comandos de voz consecutivos,
+        // o callback ainda pode pertencer ao render anterior mesmo depois de a
+        // primeira resposta ter atualizado o Zustand. Usar o snapshot atual
+        // impede que o segundo áudio volte ao início por enviar sessionId e
+        // contexto obsoletos.
+        const currentConversation = useChatBotStore.getState();
         const selectedTime = resolveSelectedTimeIso(
           '',
-          conversationState,
-          conversationContext,
+          currentConversation.conversationState,
+          currentConversation.conversationContext,
         );
         const { data } = await backendHttpClient.post<VoiceCommandResponse>(
           '/api/voice/commands',
@@ -747,8 +753,12 @@ export function useChatSession() {
               'X-Voice-Channel': `voice-${CHANNEL}`,
               'X-Voice-Timezone': getClientTimezone(),
               'Idempotency-Key': attempt.idempotencyKey,
-              ...(isValidChatBotSessionId(sessionId)
-                ? { 'X-Voice-Session-Id': String(sessionId) }
+              ...(isValidChatBotSessionId(currentConversation.sessionId)
+                ? {
+                    'X-Voice-Session-Id': String(
+                      currentConversation.sessionId,
+                    ),
+                  }
                 : {}),
               ...(selectedTime
                 ? { 'X-Voice-Selected-Time': selectedTime }
@@ -830,10 +840,7 @@ export function useChatSession() {
     [
       addMessage,
       applyConversationResponse,
-      conversationContext,
-      conversationState,
       resetSession,
-      sessionId,
       setError,
       setLastSentText,
       setLoading,
