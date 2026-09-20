@@ -30,3 +30,27 @@ backendHttpClient.interceptors.request.use(
     return Promise.reject(error);
   },
 );
+
+backendHttpClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
+    const msg = error?.response?.data?.msg || error?.response?.data?.error;
+    if (
+      status === 401 ||
+      (status === 403 &&
+        (msg === 'Token inválido' ||
+          msg === 'Acesso negado. É obrgatório o envio de token JWT' ||
+          msg?.includes('expired')))
+    ) {
+      try {
+        const { useUserStore } = require('@stores/User');
+        useUserStore.getState().signOut();
+      } catch (e) {
+        // Ignore circular dependency during bootstrap
+      }
+    }
+    return Promise.reject(error);
+  },
+);
+

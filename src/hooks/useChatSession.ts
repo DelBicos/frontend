@@ -362,6 +362,9 @@ function deriveBotAction(
 
 /** Trata erros HTTP — retorna mensagem amigável para erros conhecidos. */
 function resolveGenericError(status: number | undefined): string {
+  if (status === 401 || status === 403) {
+    return 'Sua sessão expirou. Faça login novamente para continuar.';
+  }
   if (status === 404)
     return 'Sessão não encontrada. Uma nova conversa será iniciada.';
   return 'Não foi possível enviar a mensagem. Tente novamente.';
@@ -369,6 +372,9 @@ function resolveGenericError(status: number | undefined): string {
 
 /** Retorna mensagens específicas para os erros de envio de áudio. */
 function resolveVoiceError(status: number | undefined): string {
+  if (status === 401 || status === 403) {
+    return 'Sua sessão expirou. Faça login novamente para enviar comandos de voz.';
+  }
   if (status === 413) {
     return 'O áudio está muito longo. Grave um comando mais curto e tente novamente.';
   }
