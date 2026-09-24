@@ -31,6 +31,7 @@ import ProfessionalRadiusScreen from '@screens/private/professional/RadiusScreen
 import ChatListScreen from '@screens/private/chat/ChatListScreen';
 import ChatThreadScreen from '@screens/private/chat/ChatThreadScreen';
 import ChatBotScreen from '@screens/private/chatbot/ChatBotScreen';
+import DeslocamentoScreen from './private/professional/DeslocamentoScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -414,6 +415,13 @@ const RootStack = createNativeStackNavigator({
       },
       options: {
         title: 'Assistente',
+        headerShown: false,
+      },
+    },
+    DeslocamentoScreen: {
+      screen: DeslocamentoScreen,
+      options: {
+        title: 'Deslocamento',
         headerShown: false,
       },
     },
