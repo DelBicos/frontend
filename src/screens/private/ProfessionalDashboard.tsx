@@ -272,17 +272,43 @@ const ProfessionalDashboard: React.FC = () => {
         {/* Aqui poderia entrar uma imagem de background do banner */}
       </View>
 
-      {/* 6. Agenda e Horários */}
+      {/* 6. Agenda e Horários com Botão 'Vamos!' */}
       <View style={styles.scheduleSection}>
         <View style={styles.sectionTitleRow}>
-          <Text style={styles.sectionTitle}>Sua Agenda</Text>
+          <Text style={styles.sectionTitle}>Sua Agenda de Hoje</Text>
           <TouchableOpacity onPress={navigateToSchedules}>
             <Text style={styles.sectionLink}>Ver agenda</Text>
           </TouchableOpacity>
         </View>
-        <Text style={styles.sectionSubtitle}>
-          Você não tem serviços marcados para hoje
-        </Text>
+
+        {/* Card do Serviço do Dia com Deslocamento */}
+        <TouchableOpacity
+          style={[styles.scheduleCard, { backgroundColor: '#EFF6FF', borderColor: '#3B82F6', borderWidth: 1 }]}
+          onPress={() =>
+            navigation.navigate('DeslocamentoScreen', {
+              appointmentId: '1',
+              serviceTitle: 'Serviço Agendado para Hoje',
+              clientName: 'Cliente DelBicos',
+              address: 'Rua das Flores, 123 - Centro, São Paulo - SP, CEP 01001-000, Brasil',
+              startTime: 'Hoje às 14:00',
+            })
+          }
+          activeOpacity={0.8}>
+          <View style={[styles.scheduleIconContainer, { backgroundColor: '#3B82F6' }]}>
+            <FontAwesome name="car" size={20} color="#FFFFFF" />
+          </View>
+          <View style={styles.scheduleCardContent}>
+            <Text style={[styles.scheduleCardTitle, { color: '#1E40AF', fontWeight: '700' }]}>
+              Serviço de Hoje: Iniciar Deslocamento
+            </Text>
+            <Text style={[styles.scheduleCardSubtitle, { color: '#3B82F6' }]}>
+              Clique para ver o endereço e notificar o cliente
+            </Text>
+          </View>
+          <View style={{ backgroundColor: '#2563EB', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 }}>
+            <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 13 }}>Vamos! 🚗</Text>
+          </View>
+        </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.scheduleCard}
