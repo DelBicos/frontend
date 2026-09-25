@@ -68,8 +68,14 @@ const ServicesList: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 12 }}>
-            <FontAwesome name="arrow-left" size={20} color={colors.primaryOrange} />
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={{ marginRight: 12 }}>
+            <FontAwesome
+              name="arrow-left"
+              size={20}
+              color={colors.primaryOrange}
+            />
           </TouchableOpacity>
           <Text style={styles.title}>Meus Serviços</Text>
         </View>
@@ -87,7 +93,11 @@ const ServicesList: React.FC = () => {
             <View style={styles.itemInfo}>
               <Text style={styles.itemTitle}>{item.title}</Text>
               {(() => {
-                const cents = item.price_cents ?? (item.price != null ? Math.round(Number(item.price) * 100) : null);
+                const cents =
+                  item.price_cents ??
+                  (item.price != null
+                    ? Math.round(Number(item.price) * 100)
+                    : null);
                 if (!cents) return null;
                 return (
                   <Text style={styles.itemMeta}>

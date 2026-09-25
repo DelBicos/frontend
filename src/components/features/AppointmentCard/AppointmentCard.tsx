@@ -126,8 +126,11 @@ const AppointmentCardComponent: React.FC<AppointmentCardProps> = ({
           resizeMode="cover"
         />
 
-        <View style={[styles.statusBadge, { backgroundColor: displayStatusColor }]}>
-          <Text style={styles.statusText}>{displayStatusLabel.toUpperCase()}</Text>
+        <View
+          style={[styles.statusBadge, { backgroundColor: displayStatusColor }]}>
+          <Text style={styles.statusText}>
+            {displayStatusLabel.toUpperCase()}
+          </Text>
         </View>
 
         {statusVariant === AppointmentStatus.COMPLETED && (

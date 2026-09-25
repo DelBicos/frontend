@@ -60,4 +60,3 @@ export const TypingIndicator: React.FC = () => {
     </View>
   );
 };
-

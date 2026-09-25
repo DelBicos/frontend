@@ -58,7 +58,9 @@ describe('AppointmentStore', () => {
     await useAppointmentStore.getState().fetchAppointments('client');
 
     const state = useAppointmentStore.getState();
-    expect(backendHttpClient.get).toHaveBeenCalledWith('api/appointments/user/1?role=client');
+    expect(backendHttpClient.get).toHaveBeenCalledWith(
+      'api/appointments/user/1?role=client',
+    );
     expect(state.appointments).toHaveLength(3);
     expect(state.appointmentsByStatus['pending']).toHaveLength(1);
     expect(state.appointmentsByStatus['confirmed']).toHaveLength(1);

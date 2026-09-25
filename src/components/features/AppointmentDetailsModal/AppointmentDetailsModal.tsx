@@ -36,7 +36,8 @@ export function AppointmentDetailsModal({
 
   if (!appointment) return null;
 
-  const isProfessionalView = user?.professional_id === appointment.professional_id;
+  const isProfessionalView =
+    user?.professional_id === appointment.professional_id;
 
   const headerAvatar = isProfessionalView
     ? appointment.Client?.User?.avatar_uri
@@ -48,8 +49,15 @@ export function AppointmentDetailsModal({
 
   const formattedFullAddress = (() => {
     if (!appointment.Address) return 'Endereço não informado';
-    const { street, number, complement, neighborhood, city, state, postal_code } =
-      appointment.Address;
+    const {
+      street,
+      number,
+      complement,
+      neighborhood,
+      city,
+      state,
+      postal_code,
+    } = appointment.Address;
     return `${street}, ${number}${complement ? ` (${complement})` : ''} - ${neighborhood}, ${city}/${state}${postal_code ? ` - CEP ${postal_code}` : ''}`;
   })();
 

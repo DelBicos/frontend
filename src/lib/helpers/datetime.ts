@@ -50,7 +50,9 @@ export function parseSlotParts(
 /** IANA timezone do cliente (ex.: "America/Sao_Paulo"). */
 export function getClientTimezone(): string {
   try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Sao_Paulo';
+    return (
+      Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Sao_Paulo'
+    );
   } catch {
     return 'America/Sao_Paulo';
   }

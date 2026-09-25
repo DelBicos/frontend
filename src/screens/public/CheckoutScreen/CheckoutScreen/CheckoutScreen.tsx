@@ -95,7 +95,8 @@ function CheckoutScreenContent() {
   const navigation = useNavigation();
   const route =
     useRoute<RouteProp<{ params: CheckoutRouteParams }, 'params'>>();
-  const { professionalId, selectedTime, imageUrl, serviceId, appointmentId } = route.params;
+  const { professionalId, selectedTime, imageUrl, serviceId, appointmentId } =
+    route.params;
 
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
 

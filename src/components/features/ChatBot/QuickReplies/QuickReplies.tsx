@@ -68,7 +68,9 @@ export const QuickReplies: React.FC<QuickRepliesProps> = ({
                 style={[
                   styles.chipText,
                   {
-                    color: disabled ? colors.textTertiary : colors.primaryOrange,
+                    color: disabled
+                      ? colors.textTertiary
+                      : colors.primaryOrange,
                     fontFamily: 'Afacad-SemiBold',
                   },
                 ]}>

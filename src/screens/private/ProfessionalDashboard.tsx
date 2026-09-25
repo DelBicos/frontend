@@ -120,9 +120,12 @@ const ProfessionalDashboard: React.FC = () => {
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <TouchableOpacity
             style={{ marginRight: 12, padding: 4 }}
-            onPress={() => navigation.navigate('Home' as never)}
-          >
-            <FontAwesome name="arrow-left" size={20} color={colors.primaryOrange} />
+            onPress={() => navigation.navigate('Home' as never)}>
+            <FontAwesome
+              name="arrow-left"
+              size={20}
+              color={colors.primaryOrange}
+            />
           </TouchableOpacity>
           <View style={styles.avatarContainer}>
             <Image

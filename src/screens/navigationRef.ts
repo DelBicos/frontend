@@ -9,4 +9,3 @@ export function navigate(name: keyof NavigationParams | string, params?: any) {
     navigationRef.navigate(name, params);
   }
 }
-

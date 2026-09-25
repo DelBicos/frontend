@@ -761,9 +761,7 @@ export function useChatSession() {
               'Idempotency-Key': attempt.idempotencyKey,
               ...(isValidChatBotSessionId(currentConversation.sessionId)
                 ? {
-                    'X-Voice-Session-Id': String(
-                      currentConversation.sessionId,
-                    ),
+                    'X-Voice-Session-Id': String(currentConversation.sessionId),
                   }
                 : {}),
               ...(selectedTime
