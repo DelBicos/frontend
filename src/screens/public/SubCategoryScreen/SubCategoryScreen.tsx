@@ -1,30 +1,26 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  FlatList,
-  Pressable,
-  ActivityIndicator,
-  Alert,
-  useWindowDimensions,
-} from 'react-native';
-import { useRoute, useNavigation } from '@react-navigation/native';
-import { createStyles } from './styles';
-import { useSubCategoryStore } from '@stores/SubCategory';
-import { SubCategory } from '@stores/SubCategory/types';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
+import { FontAwesome, FontAwesome5 } from '@expo/vector-icons';
+import { useSubCategoryStore } from '@stores/SubCategory';
 import { useColors } from '@theme/ThemeProvider';
-import { useThemeStore, ThemeMode } from '@stores/Theme';
-import { FontAwesome5 } from '@expo/vector-icons';
-
+import { useThemeStore } from '@stores/Theme';
 import { getIconForSubCategory } from '@utils/icons';
-import { CONTENT_MAX_WIDTH, useBreakpoint } from '@lib/hooks/useBreakpoint';
-import { useWebScrollGutter } from '@components/layout/PageContainer';
+import { useBreakpoint } from '@lib/hooks/useBreakpoint';
+import {
+  formatLongDate,
+  minBookingDate,
+  MIN_ADVANCE_HOURS,
+} from '@lib/booking';
+import PageContainer, { PageHeader } from '@components/layout/PageContainer';
+import { SectionHeader } from '@components/ui/SectionHeader/SectionHeader';
+import BookingSteps from '@components/features/BookingSteps';
+import { createStyles } from './styles';
 
 type SubCategoryRouteParams = {
   categoryId: number;
-  categoryTitle: string;
+  categoryTitle?: string;
   serviceId?: number;
   singleSubCategory?: { id: number; title: string };
   professionalId?: number;
@@ -74,73 +70,9 @@ LocaleConfig.locales['pt-br'] = {
 } as any;
 LocaleConfig.defaultLocale = 'pt-br';
 
-const SubCategoryButton: React.FC<{
-  item: SubCategory;
-  onPress: () => void;
-  isActive: boolean;
-}> = ({ item, onPress, isActive }) => {
-  const { theme } = useThemeStore();
-  const isHighContrast = theme === ThemeMode.LIGHT_HI_CONTRAST;
-  const isDark = theme === ThemeMode.DARK;
-  const [isHovered, setIsHovered] = useState(false);
-  const colors = useColors();
-  const styles = createStyles(colors, isDark, isHighContrast);
-
-  const styleProps = useMemo(() => {
-    let bg = colors.cardBackground;
-    let border = colors.borderColor;
-    let text = colors.primaryOrange;
-
-    if (isActive) {
-      bg = colors.primaryBlue;
-      border = colors.primaryBlue;
-      text = colors.primaryWhite;
-    } else if (isHovered) {
-      bg = colors.backgroundElevated;
-      border = colors.primaryOrange;
-    }
-
-    if (isHighContrast) {
-      border = colors.primaryBlack;
-      if (isActive) {
-        bg = colors.primaryBlack;
-        text = colors.primaryWhite;
-      }
-    }
-
-    return { bg, border, text };
-  }, [isActive, isHovered, isHighContrast, colors]);
-
-  return (
-    <Pressable
-      style={[
-        styles.subCategoryButton,
-        {
-          backgroundColor: styleProps.bg,
-          borderColor: styleProps.border,
-          borderWidth: isHighContrast ? 2 : 1,
-        },
-      ]}
-      onPress={onPress}
-      onHoverIn={() => setIsHovered(true)}
-      onHoverOut={() => setIsHovered(false)}
-      accessibilityRole="button"
-      accessibilityState={{ selected: isActive }}>
-      <FontAwesome5
-        name={getIconForSubCategory(item.title)}
-        size={20}
-        color={styleProps.text}
-        style={styles.subCategoryIcon as any}
-      />
-      <Text style={[styles.subCategoryText, { color: styleProps.text }]}>
-        {item.title}
-      </Text>
-    </Pressable>
-  );
-};
-
+/** Etapa 1 do agendamento: escolher o servico (subcategoria) e o dia. */
 function SubCategoryScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const route = useRoute();
   const {
     categoryId,
@@ -150,58 +82,54 @@ function SubCategoryScreen() {
     professionalId,
     professionalName,
   } = route.params as SubCategoryRouteParams;
-  const { width } = useWindowDimensions();
-  const { gutter } = useBreakpoint();
-  const scrollGutter = useWebScrollGutter();
-  const { theme } = useThemeStore();
-
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedSubCategory, setSelectedSubCategory] = useState<number | null>(
-    serviceId || (singleSubCategory ? singleSubCategory.id : null),
-  );
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [isButtonHovered, setIsButtonHovered] = useState(false);
+  const colors = useColors();
+  const theme = useThemeStore((s) => s.theme);
+  const { isExpanded, isCompact } = useBreakpoint();
+  const styles = createStyles(colors, isCompact);
 
   const { subCategories, fetchSubCategoriesByCategoryId } =
     useSubCategoryStore();
-  const colors = useColors();
-  const isDark = theme === ThemeMode.DARK;
-  const isHighContrast = theme === ThemeMode.LIGHT_HI_CONTRAST;
-  const styles = createStyles(colors, isDark, isHighContrast);
+  const [isLoading, setIsLoading] = useState(!singleSubCategory);
+  // Parametros vindos da URL (web) chegam como texto.
+  const [selectedId, setSelectedId] = useState<number | null>(
+    singleSubCategory?.id ?? (serviceId ? Number(serviceId) : null),
+  );
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   useEffect(() => {
-    if (singleSubCategory) {
-      setIsLoading(false);
-      return;
-    }
-    if (!categoryId) {
+    if (singleSubCategory || !categoryId) {
       setIsLoading(false);
       return;
     }
     let cancelled = false;
-    const loadSubCategories = async () => {
-      setIsLoading(true);
-      await fetchSubCategoriesByCategoryId(categoryId);
+    setIsLoading(true);
+    fetchSubCategoriesByCategoryId(Number(categoryId)).finally(() => {
       if (!cancelled) setIsLoading(false);
-    };
-    loadSubCategories();
+    });
     return () => {
       cancelled = true;
     };
   }, [categoryId, fetchSubCategoriesByCategoryId, singleSubCategory]);
 
-  const subCategoriesToDisplay = singleSubCategory
-    ? [singleSubCategory]
-    : subCategories;
+  const options = useMemo(
+    () => (singleSubCategory ? [singleSubCategory] : subCategories),
+    [singleSubCategory, subCategories],
+  );
+
+  // Com uma unica opcao, ja deixa selecionada.
+  useEffect(() => {
+    if (!isLoading && options.length === 1) setSelectedId(options[0].id);
+  }, [isLoading, options]);
+
+  const selected = options.find((o) => o.id === selectedId) ?? null;
+  const minDate = minBookingDate();
+  const canContinue = !!selected && !!selectedDate;
 
   const handleContinue = () => {
-    if (!selectedSubCategory || !selectedDate) {
-      Alert.alert('Atenção', 'Por favor, selecione um serviço e uma data.');
-      return;
-    }
-    // @ts-ignore
+    if (!selected || !selectedDate) return;
     navigation.navigate('SearchResult', {
-      subCategoryId: selectedSubCategory,
+      subCategoryId: selected.id,
+      subCategoryTitle: selected.title,
       date: selectedDate,
       professionalId,
       professionalName,
@@ -209,123 +137,194 @@ function SubCategoryScreen() {
   };
 
   const markedDates = useMemo(
-    () => ({
-      [selectedDate || '']: {
-        selected: true,
-        disableTouchEvent: true,
-      },
-    }),
-    [selectedDate],
+    () =>
+      selectedDate
+        ? {
+            [selectedDate]: {
+              selected: true,
+              disableTouchEvent: true,
+              selectedColor: colors.primaryOrange,
+              selectedTextColor: '#000000',
+            },
+          }
+        : {},
+    [selectedDate, colors.primaryOrange],
   );
 
-  const numColumns = width > 768 ? 2 : 1;
-  const isButtonDisabled = !selectedSubCategory || !selectedDate;
+  const columns = isCompact ? 1 : 2;
+
+  const serviceSection = (
+    <View style={styles.section}>
+      <SectionHeader
+        title="1. Qual serviço?"
+        subtitle={
+          professionalName
+            ? `Serviços de ${professionalName} nesta categoria.`
+            : undefined
+        }
+      />
+      {isLoading ? (
+        <ActivityIndicator
+          size="large"
+          color={colors.primaryBlack}
+          style={styles.loading}
+        />
+      ) : options.length === 0 ? (
+        <Text style={styles.emptyText}>
+          Nenhum serviço disponível nesta categoria por enquanto.
+        </Text>
+      ) : (
+        <View
+          style={styles.grid}
+          accessibilityRole="radiogroup"
+          accessibilityLabel="Serviço">
+          {options.map((item) => {
+            const isSelected = item.id === selectedId;
+            return (
+              <View
+                key={item.id}
+                style={[styles.gridItem, { width: `${100 / columns}%` }]}>
+                <Pressable
+                  onPress={() => setSelectedId(item.id)}
+                  style={({ pressed, hovered }: any) => [
+                    styles.option,
+                    hovered && !isSelected && styles.optionHover,
+                    isSelected && styles.optionSelected,
+                    pressed && { opacity: 0.85 },
+                  ]}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: isSelected }}
+                  accessibilityLabel={item.title}>
+                  <View style={styles.optionIcon}>
+                    <FontAwesome5
+                      name={getIconForSubCategory(item.title)}
+                      size={18}
+                      color={colors.primaryBlack}
+                    />
+                  </View>
+                  <Text style={styles.optionText}>{item.title}</Text>
+                  <View
+                    style={[styles.radio, isSelected && styles.radioSelected]}>
+                    {isSelected ? (
+                      <FontAwesome name="check" size={12} color="#000000" />
+                    ) : null}
+                  </View>
+                </Pressable>
+              </View>
+            );
+          })}
+        </View>
+      )}
+    </View>
+  );
+
+  const dateSection = (
+    <View style={styles.section}>
+      <SectionHeader
+        title="2. Para qual dia?"
+        subtitle={`Agende com pelo menos ${MIN_ADVANCE_HOURS} horas de antecedência.`}
+      />
+      <View style={styles.calendarCard}>
+        <Calendar
+          key={theme}
+          minDate={minDate}
+          current={selectedDate ?? minDate}
+          onDayPress={(day) => setSelectedDate(day.dateString)}
+          markedDates={markedDates}
+          enableSwipeMonths
+          disableAllTouchEventsForDisabledDays
+          theme={{
+            calendarBackground: 'transparent',
+            textDayFontFamily: 'Afacad-Regular',
+            textMonthFontFamily: 'Afacad-Bold',
+            textDayHeaderFontFamily: 'Afacad-SemiBold',
+            textDayFontSize: 16,
+            textMonthFontSize: 18,
+            textDayHeaderFontSize: 14,
+            monthTextColor: colors.primaryBlack,
+            textSectionTitleColor: colors.textSecondary,
+            dayTextColor: colors.primaryBlack,
+            textDisabledColor: colors.textTertiary,
+            todayTextColor: colors.primaryBlack,
+            arrowColor: colors.primaryBlack,
+            disabledArrowColor: colors.textTertiary,
+            selectedDayBackgroundColor: colors.primaryOrange,
+            selectedDayTextColor: '#000000',
+          }}
+        />
+      </View>
+    </View>
+  );
+
+  const summary = (
+    <View style={styles.summary}>
+      <View style={styles.summaryRow}>
+        <FontAwesome name="wrench" size={16} color={colors.textSecondary} />
+        <Text style={[styles.summaryText, !selected && styles.summaryMissing]}>
+          {selected ? selected.title : 'Escolha um serviço'}
+        </Text>
+      </View>
+      <View style={styles.summaryRow}>
+        <FontAwesome name="calendar" size={16} color={colors.textSecondary} />
+        <Text
+          style={[styles.summaryText, !selectedDate && styles.summaryMissing]}>
+          {selectedDate ? formatLongDate(selectedDate) : 'Escolha um dia'}
+        </Text>
+      </View>
+      <Pressable
+        onPress={handleContinue}
+        disabled={!canContinue}
+        style={({ pressed, hovered }: any) => [
+          styles.continueButton,
+          hovered && canContinue && styles.continueButtonHover,
+          !canContinue && styles.continueButtonDisabled,
+          pressed && { opacity: 0.85 },
+        ]}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: !canContinue }}
+        accessibilityHint={
+          canContinue ? undefined : 'Escolha um serviço e um dia para continuar'
+        }>
+        <Text
+          style={[
+            styles.continueText,
+            !canContinue && styles.continueTextDisabled,
+          ]}>
+          Ver horários disponíveis
+        </Text>
+        <FontAwesome
+          name="arrow-right"
+          size={16}
+          color={canContinue ? '#000000' : colors.textSecondary}
+        />
+      </Pressable>
+    </View>
+  );
 
   return (
-    <ScrollView
-      style={[styles.container, scrollGutter]}
-      contentContainerStyle={[
-        styles.scrollContainer,
-        { paddingHorizontal: gutter },
-      ]}
-      showsVerticalScrollIndicator={false}>
-      <View
-        style={[
-          styles.mainContent,
-          { maxWidth: CONTENT_MAX_WIDTH, alignSelf: 'center' },
-        ]}>
-        <View style={styles.leftColumn}>
-          <Text style={styles.pageTitle}>{categoryTitle || 'Serviços'}</Text>
-
-          {isLoading ? (
-            <ActivityIndicator size="large" color={colors.primaryBlue} />
-          ) : (
-            <FlatList
-              data={subCategoriesToDisplay}
-              keyExtractor={(item) => item.id.toString()}
-              numColumns={numColumns}
-              key={`grid-${numColumns}`}
-              scrollEnabled={false}
-              contentContainerStyle={styles.subCategoryListContainer}
-              renderItem={({ item }) => (
-                <SubCategoryButton
-                  item={item as SubCategory}
-                  isActive={selectedSubCategory === item.id}
-                  onPress={() => setSelectedSubCategory(item.id)}
-                />
-              )}
-            />
-          )}
-        </View>
-
-        <View style={styles.rightColumn}>
-          <Text style={styles.pageTitle}>Qual Data?</Text>
-
-          <View style={styles.calendarContainer}>
-            <Calendar
-              key={isDark ? 'dark-cal' : 'light-cal'}
-              theme={{
-                // --- FUNDO ---
-                calendarBackground: 'transparent',
-
-                // --- TEXTOS ---
-                textDayFontFamily: 'Afacad-Regular',
-                textMonthFontFamily: 'Afacad-Bold',
-                textDayHeaderFontFamily: 'Afacad-SemiBold',
-
-                monthTextColor: '#ffffff',
-                textSectionTitleColor: '#ffffff',
-                dayTextColor: '#ffffff',
-                textDisabledColor: 'rgba(255, 255, 255, 0.4)',
-
-                // --- SETAS ---
-                arrowColor: '#ffffff',
-                disabledArrowColor: 'rgba(255, 255, 255, 0.4)',
-
-                // --- HOJE ---
-                // Como sempre exige 12h de antecedência, "hoje" sempre estará desabilitado.
-                todayTextColor: 'rgba(255, 255, 255, 0.4)',
-                todayDotColor: 'rgba(255, 255, 255, 0.4)',
-
-                // --- SELEÇÃO ---
-                selectedDayBackgroundColor: '#ffffff',
-                selectedDayTextColor: colors.primaryOrange,
-              }}
-              onDayPress={(day) => setSelectedDate(day.dateString)}
-              markedDates={markedDates}
-              minDate={(() => {
-                const minTime = new Date(Date.now() + 12 * 60 * 60 * 1000);
-                const y = minTime.getFullYear();
-                const m = String(minTime.getMonth() + 1).padStart(2, '0');
-                const d = String(minTime.getDate()).padStart(2, '0');
-                return `${y}-${m}-${d}`;
-              })()}
-              enableSwipeMonths={true}
-            />
+    <PageContainer>
+      <BookingSteps current={1} />
+      <PageHeader
+        eyebrow={categoryTitle}
+        title="Agende um serviço"
+        subtitle="Escolha o serviço e o dia. Em seguida você vê os profissionais e os horários livres."
+      />
+      {isExpanded ? (
+        <View style={styles.columns}>
+          <View style={styles.mainColumn}>{serviceSection}</View>
+          <View style={styles.sideColumn}>
+            {dateSection}
+            {summary}
           </View>
-
-          <Pressable
-            style={[
-              styles.continueButton,
-              isButtonDisabled && styles.continueButtonDisabled,
-              isButtonHovered &&
-                !isButtonDisabled && {
-                  backgroundColor: colors.primaryOrangeHover || '#CC6800',
-                },
-            ]}
-            onPress={handleContinue}
-            disabled={isButtonDisabled}
-            onHoverIn={() => setIsButtonHovered(true)}
-            onHoverOut={() => setIsButtonHovered(false)}>
-            <Text style={styles.continueButtonText}>Continuar</Text>
-          </Pressable>
         </View>
-      </View>
-
-      <Text style={styles.footer}>
-        © DelBicos - {new Date().getFullYear()} - Todos os direitos reservados.
-      </Text>
-    </ScrollView>
+      ) : (
+        <>
+          {serviceSection}
+          {dateSection}
+          {summary}
+        </>
+      )}
+    </PageContainer>
   );
 }
 

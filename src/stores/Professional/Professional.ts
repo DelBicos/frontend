@@ -170,11 +170,11 @@ export const useProfessionalStore = create<ProfessionalStore>((set) => ({
         },
       );
 
-      const data = response.data as ProfessionalResult[];
-      return data;
+      return (response.data as ProfessionalResult[]) ?? [];
     } catch (error) {
+      // A tela mostra o erro (lista vazia pareceria "nenhum profissional").
       console.error('[ProfessionalStore] Error fetching availability:', error);
-      return [];
+      throw error;
     }
   },
 

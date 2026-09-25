@@ -43,6 +43,7 @@ export type NavigationParams = {
   SearchResult:
     | {
         subCategoryId: number;
+        subCategoryTitle?: string;
         date: string;
         professionalId?: number;
         professionalName?: string;

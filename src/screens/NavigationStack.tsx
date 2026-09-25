@@ -17,7 +17,7 @@ import { LoginPassword } from './public/LoginPassword';
 import CategoryScreen from './public/Category';
 import SubCategoryScreen from './public/SubCategoryScreen';
 import SearchResultScreen from './public/SearchResultScreen';
-import CheckoutScreen from './public/CheckoutScreen/CheckoutScreen';
+import CheckoutScreen from './public/CheckoutScreen';
 import PaymentStatusScreen from './public/PaymentStatusScreen';
 import MySchedulesScreen from './private/client/MySchedulesScreen';
 import HelpScreen from '@screens/public/HelpScreen';
@@ -211,8 +211,9 @@ const RootStack = createNativeStackNavigator({
       linking: {
         path: 'checkout', // A URL será algo como /checkout?professionalId=...&time=...
       },
+      // No web, o cabecalho do site continua visivel durante o agendamento.
       options: {
-        headerShown: false, // Opcional: Esconde o header padrão
+        title: 'Pagamento',
       },
     },
     PaymentStatus: {
@@ -221,7 +222,7 @@ const RootStack = createNativeStackNavigator({
         path: 'payment-status', // <-- Esta é a URL de retorno
       },
       options: {
-        headerShown: false, // Sem header
+        title: 'Agendamento',
       },
     },
     MySchedules: {
