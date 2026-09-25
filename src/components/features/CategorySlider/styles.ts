@@ -8,7 +8,7 @@ export const createStyles = (colors: ColorsType) =>
       flexWrap: 'wrap',
     },
 
-    // --- Card com imagem (tablet/desktop) ---
+    // --- Card de categoria ---
     card: {
       aspectRatio: 16 / 10,
       borderRadius: 16,
@@ -59,25 +59,29 @@ export const createStyles = (colors: ColorsType) =>
       textShadowRadius: 3,
     },
 
-    // --- Bolha com icone (celular) ---
-    bubbleCard: {
-      alignItems: 'center',
-      minHeight: 44,
+    // --- Variante compacta (celular) ---
+    cardCompact: {
+      aspectRatio: 3 / 2,
+      borderRadius: 12,
     },
-    bubble: {
-      width: 64,
-      height: 64,
-      borderRadius: 32,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: 8,
+    cardPressed: {
+      opacity: 0.85,
     },
-    bubbleTitle: {
-      fontSize: 14,
-      lineHeight: 17,
-      fontFamily: 'Afacad-SemiBold',
-      textAlign: 'center',
-      color: colors.primaryBlack,
+    cardIconCompact: {
+      top: 10,
+      left: 10,
+      width: 38,
+      height: 38,
+      borderRadius: 19,
+    },
+    cardGradientCompact: {
+      paddingHorizontal: 10,
+      paddingTop: 20,
+      paddingBottom: 10,
+    },
+    cardTitleCompact: {
+      fontSize: 16,
+      lineHeight: 19,
     },
 
     loadingContainer: {

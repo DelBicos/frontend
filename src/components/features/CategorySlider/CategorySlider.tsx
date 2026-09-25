@@ -2,7 +2,6 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useCategoryStore } from '@stores/Category/Category';
 import { Category } from '@stores/Category/types';
-import { ThemeMode, useThemeStore } from '@stores/Theme';
 import { useColors } from '@theme/ThemeProvider';
 import { useBreakpoint } from '@lib/hooks/useBreakpoint';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -43,10 +42,19 @@ function getCategoryIconName(id: number) {
 interface CategoryCardProps {
   category: Category;
   onPress: (category: Category) => void;
+  /** Versao menor (celular): icone, titulo e cantos reduzidos. */
+  compact?: boolean;
 }
 
-/** Card com imagem (tablet/desktop), com fallback de gradiente + icone. */
-function CategoryImageCard({ category, onPress }: CategoryCardProps) {
+/**
+ * Card de categoria usado em todos os tamanhos de tela: imagem com legenda
+ * sobre gradiente, ou gradiente colorido + icone quando nao ha imagem.
+ */
+function CategoryCard({
+  category,
+  onPress,
+  compact = false,
+}: CategoryCardProps) {
   const colors = useColors();
   const styles = createStyles(colors);
   const [isHovered, setIsHovered] = useState(false);
@@ -58,8 +66,10 @@ function CategoryImageCard({ category, onPress }: CategoryCardProps) {
   const label = (
     <LinearGradient
       colors={['transparent', 'rgba(0,0,0,0.8)']}
-      style={styles.cardGradient}>
-      <Text style={styles.cardTitle} numberOfLines={2}>
+      style={[styles.cardGradient, compact && styles.cardGradientCompact]}>
+      <Text
+        style={[styles.cardTitle, compact && styles.cardTitleCompact]}
+        numberOfLines={2}>
         {category.title}
       </Text>
     </LinearGradient>
@@ -67,7 +77,12 @@ function CategoryImageCard({ category, onPress }: CategoryCardProps) {
 
   return (
     <Pressable
-      style={[styles.card, isHovered && styles.cardHovered]}
+      style={({ pressed }) => [
+        styles.card,
+        compact && styles.cardCompact,
+        isHovered && styles.cardHovered,
+        pressed && styles.cardPressed,
+      ]}
       onPress={() => onPress(category)}
       onHoverIn={() => setIsHovered(true)}
       onHoverOut={() => setIsHovered(false)}
@@ -75,8 +90,13 @@ function CategoryImageCard({ category, onPress }: CategoryCardProps) {
       accessibilityLabel={`Categoria ${category.title}`}>
       {imageFailed ? (
         <LinearGradient colors={gradient} style={styles.cardImage}>
-          <View style={styles.cardIcon}>
-            <FontAwesome5 name={iconName} size={28} color="#FFFFFF" solid />
+          <View style={[styles.cardIcon, compact && styles.cardIconCompact]}>
+            <FontAwesome5
+              name={iconName}
+              size={compact ? 20 : 28}
+              color="#FFFFFF"
+              solid
+            />
           </View>
           {label}
         </LinearGradient>
@@ -89,38 +109,6 @@ function CategoryImageCard({ category, onPress }: CategoryCardProps) {
           {label}
         </ImageBackground>
       )}
-    </Pressable>
-  );
-}
-
-/** Bolha com icone (celular). */
-function CategoryBubble({ category, onPress }: CategoryCardProps) {
-  const colors = useColors();
-  const styles = createStyles(colors);
-  const { theme } = useThemeStore();
-  const isDark = theme === ThemeMode.DARK;
-
-  return (
-    <Pressable
-      style={({ pressed }) => [styles.bubbleCard, pressed && { opacity: 0.7 }]}
-      onPress={() => onPress(category)}
-      accessibilityRole="button"
-      accessibilityLabel={`Categoria ${category.title}`}>
-      <View
-        style={[
-          styles.bubble,
-          { backgroundColor: isDark ? '#2C2C2C' : colors.primaryOrange + '1A' },
-        ]}>
-        <FontAwesome5
-          name={getCategoryIconName(category.id)}
-          size={26}
-          color={isDark ? colors.primaryBlack : colors.primaryOrange}
-          solid
-        />
-      </View>
-      <Text style={styles.bubbleTitle} numberOfLines={2}>
-        {category.title}
-      </Text>
     </Pressable>
   );
 }
@@ -172,25 +160,27 @@ function CategorySlider() {
   // Colunas por tamanho de tela. Larguras percentuais (e nao em pixels) para
   // a grade se ajustar sozinha a barra de rolagem e a qualquer container.
   // 6 colunas so quando cada card tem ao menos ~170px; senao 3 (duas linhas
-  // equilibradas), evitando cards pequenos com o titulo sobre o icone.
+  // equilibradas), evitando cards pequenos com o titulo sobre o icone. No
+  // celular, 2 colunas com o mesmo card em versao compacta.
   const columns =
     !isCompact && contentWidth >= WIDE_GRID_MIN_WIDTH
       ? Math.min(6, categories.length)
-      : 3;
-  const gap = isCompact ? 8 : GAP;
-  const Card = isCompact ? CategoryBubble : CategoryImageCard;
+      : isCompact
+        ? 2
+        : 3;
+  const gap = isCompact ? 12 : GAP;
 
   return (
-    <View
-      style={[
-        styles.grid,
-        { marginHorizontal: -gap / 2, rowGap: isCompact ? 20 : GAP },
-      ]}>
+    <View style={[styles.grid, { marginHorizontal: -gap / 2, rowGap: gap }]}>
       {categories.map((item) => (
         <View
           key={item.id}
           style={{ width: `${100 / columns}%`, paddingHorizontal: gap / 2 }}>
-          <Card category={item} onPress={handleCategoryPress} />
+          <CategoryCard
+            category={item}
+            onPress={handleCategoryPress}
+            compact={isCompact}
+          />
         </View>
       ))}
     </View>

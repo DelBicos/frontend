@@ -24,6 +24,8 @@ import { useThemeStore } from '@stores/Theme';
 import { ThemeMode } from '@stores/Theme/types';
 import { AuthProvider } from '@lib/hooks/AuthContext';
 import { ChatWidget } from '@components/features/ChatBot/ChatWidget';
+import BottomNav from '@components/layout/BottomNav';
+import type { NavigationState } from '@react-navigation/native';
 
 // Pre-carrega assets de navegação com captura de erro resiliente
 Asset.loadAsync([...NavigationAssets]).catch(() => {});
@@ -54,8 +56,13 @@ function AppContent() {
     string | undefined
   >();
 
+  const [rootState, setRootState] = React.useState<NavigationState>();
+
   const syncCurrentRoute = React.useCallback(() => {
     setCurrentRouteName(navigationRef.getCurrentRoute()?.name);
+    if (Platform.OS !== 'web') {
+      setRootState(navigationRef.getRootState());
+    }
   }, []);
 
   const navTheme = React.useMemo(
@@ -111,9 +118,10 @@ function AppContent() {
             />
             {/* Evita montar um segundo chat sobre a tela dedicada do assistente. */}
             {!!user && currentRouteName !== 'ChatBot' && (
-              <ChatWidget bottomOffset={Platform.OS === 'web' ? 24 : 80} />
+              <ChatWidget bottomOffset={Platform.OS === 'web' ? 24 : 16} />
             )}
           </View>
+          {Platform.OS !== 'web' && <BottomNav state={rootState} />}
         </LocationProvider>
       </SafeAreaView>
     </View>

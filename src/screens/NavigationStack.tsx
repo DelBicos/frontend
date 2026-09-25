@@ -1,8 +1,7 @@
 import { createStaticNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { FontAwesome } from '@expo/vector-icons';
-import { Platform, Image } from 'react-native';
+import { Platform } from 'react-native';
 import { useColors } from '@theme/ThemeProvider';
 import Feed from './public/Feed';
 import NotFound from './public/NotFound';
@@ -34,171 +33,62 @@ import ChatBotScreen from '@screens/private/chatbot/ChatBotScreen';
 
 const Tab = createBottomTabNavigator();
 
-const MainTabs = () => {
-  const { user } = useUserStore();
+// A barra padrao das abas fica oculta: os apps usam o BottomNav (renderizado
+// fora dos navegadores em App.tsx) para o menu seguir visivel mesmo quando
+// uma tela e empilhada sobre as abas. Na web a navegacao e pelo Header.
+const useTabScreenOptions = () => {
   const colors = useColors();
-
-  return (
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        sceneStyle: { backgroundColor: colors.cardBackground },
-        tabBarStyle:
-          Platform.OS === 'web'
-            ? { display: 'none' }
-            : {
-                backgroundColor: colors.cardBackground,
-                borderTopWidth: 1,
-                borderTopColor: colors.borderColor,
-                height: 60,
-                paddingBottom: 8,
-                paddingTop: 8,
-              },
-        tabBarActiveTintColor: colors.primaryOrange,
-        tabBarInactiveTintColor: colors.textTertiary,
-        tabBarLabelStyle: {
-          fontFamily: 'Afacad-SemiBold',
-          fontSize: 12,
-        },
-      }}>
-      <Tab.Screen
-        name="FeedTab"
-        component={Feed}
-        options={{
-          title: 'Início',
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="home" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="CategoryTab"
-        component={CategoryScreen}
-        options={{
-          title: 'Buscar',
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="search" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="SchedulesTab"
-        component={MySchedulesScreen}
-        options={{
-          title: 'Agenda',
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="calendar-o" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="ProfileTab"
-        component={ProfileScreen}
-        options={{
-          title: 'Perfil',
-          tabBarIcon: ({ color, size }) =>
-            user?.avatar_uri ? (
-              <Image
-                source={{ uri: user.avatar_uri }}
-                style={{
-                  width: size,
-                  height: size,
-                  borderRadius: size / 2,
-                  borderWidth: 1,
-                  borderColor: color,
-                }}
-              />
-            ) : (
-              <FontAwesome name="user-o" size={size} color={color} />
-            ),
-        }}
-      />
-    </Tab.Navigator>
-  );
+  return {
+    headerShown: false,
+    sceneStyle: { backgroundColor: colors.cardBackground },
+  };
 };
 
-const ProfessionalTabs = () => {
-  const { user } = useUserStore();
-  const colors = useColors();
+const MainTabs = () => (
+  <Tab.Navigator tabBar={() => null} screenOptions={useTabScreenOptions()}>
+    <Tab.Screen name="FeedTab" component={Feed} options={{ title: 'Início' }} />
+    <Tab.Screen
+      name="CategoryTab"
+      component={CategoryScreen}
+      options={{ title: 'Buscar' }}
+    />
+    <Tab.Screen
+      name="SchedulesTab"
+      component={MySchedulesScreen}
+      options={{ title: 'Agenda' }}
+    />
+    <Tab.Screen
+      name="ProfileTab"
+      component={ProfileScreen}
+      options={{ title: 'Perfil' }}
+    />
+  </Tab.Navigator>
+);
 
-  return (
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        sceneStyle: { backgroundColor: colors.cardBackground },
-        tabBarStyle:
-          Platform.OS === 'web'
-            ? { display: 'none' }
-            : {
-                backgroundColor: colors.cardBackground,
-                borderTopWidth: 1,
-                borderTopColor: colors.borderColor,
-                height: 60,
-                paddingBottom: 8,
-                paddingTop: 8,
-              },
-        tabBarActiveTintColor: colors.primaryOrange,
-        tabBarInactiveTintColor: colors.textTertiary,
-        tabBarLabelStyle: {
-          fontFamily: 'Afacad-SemiBold',
-          fontSize: 12,
-        },
-      }}>
-      <Tab.Screen
-        name="ProfessionalHomeTab"
-        component={ProfessionalDashboard}
-        options={{
-          title: 'Início',
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="home" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="ProfessionalSchedulesTab"
-        component={MySchedulesScreen}
-        options={{
-          title: 'Agenda',
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="calendar-o" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="ProfessionalServicesTab"
-        component={ServicesListScreen}
-        options={{
-          title: 'Serviços',
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="wrench" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="ProfessionalProfileTab"
-        component={ProfileScreen}
-        options={{
-          title: 'Perfil',
-          tabBarIcon: ({ color, size }) =>
-            user?.avatar_uri ? (
-              <Image
-                source={{ uri: user.avatar_uri }}
-                style={{
-                  width: size,
-                  height: size,
-                  borderRadius: size / 2,
-                  borderWidth: 1,
-                  borderColor: color,
-                }}
-              />
-            ) : (
-              <FontAwesome name="user-o" size={size} color={color} />
-            ),
-        }}
-      />
-    </Tab.Navigator>
-  );
-};
+const ProfessionalTabs = () => (
+  <Tab.Navigator tabBar={() => null} screenOptions={useTabScreenOptions()}>
+    <Tab.Screen
+      name="ProfessionalHomeTab"
+      component={ProfessionalDashboard}
+      options={{ title: 'Início' }}
+    />
+    <Tab.Screen
+      name="ProfessionalSchedulesTab"
+      component={MySchedulesScreen}
+      options={{ title: 'Agenda' }}
+    />
+    <Tab.Screen
+      name="ProfessionalServicesTab"
+      component={ServicesListScreen}
+      options={{ title: 'Serviços' }}
+    />
+    <Tab.Screen
+      name="ProfessionalProfileTab"
+      component={ProfileScreen}
+      options={{ title: 'Perfil' }}
+    />
+  </Tab.Navigator>
+);
 
 // Home: Sempre abre o MainTabs (ou ProfessionalTabs) no Mobile e Feed na Web
 const Home = () => {
