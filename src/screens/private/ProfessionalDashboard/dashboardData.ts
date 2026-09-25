@@ -67,7 +67,10 @@ const MONTH_LABELS = [
 
 export interface MonthTotal {
   key: string;
+  /** Abreviado, para o eixo: "set". */
   label: string;
+  /** Completo, para leitura: "setembro de 2026". */
+  fullLabel: string;
   total: number;
 }
 
@@ -85,6 +88,10 @@ export function lastMonthsEarnings(
     months.push({
       key,
       label: MONTH_LABELS[date.getMonth()],
+      fullLabel: new Intl.DateTimeFormat('pt-BR', {
+        month: 'long',
+        year: 'numeric',
+      }).format(date),
       total: totals.get(key) ?? 0,
     });
   }

@@ -291,41 +291,78 @@ export function EarningsChart({
   hidden: boolean;
   styles: DashboardStyles;
 }) {
+  // Web: o mouse sobre a barra mostra o valor. App: tocar seleciona a barra.
+  // Sem interacao, fica em destaque o mes atual.
+  const [selected, setSelected] = useState(months.length - 1);
+  const [hovered, setHovered] = useState<number | null>(null);
+  const active = hovered ?? selected;
+  const activeMonth = months[active];
   const max = Math.max(...months.map((m) => m.total), 1);
-  const summary = months
-    .map((m) => `${m.label}: ${hidden ? 'oculto' : formatCurrency(m.total)}`)
-    .join(', ');
+  const value = (total: number) => (hidden ? 'R$ ••••' : formatCurrency(total));
 
   return (
-    <View
-      style={styles.chart}
-      accessible
-      accessibilityLabel={`Ganhos por mês. ${summary}`}>
-      {months.map((m, index) => {
-        const isCurrent = index === months.length - 1;
-        return (
-          <View key={m.key} style={styles.chartColumn}>
-            <View style={styles.chartTrack}>
-              <View
+    <View>
+      <View style={styles.chartSummary} accessibilityLiveRegion="polite">
+        <Text style={styles.chartSummaryLabel}>{activeMonth?.fullLabel}</Text>
+        <Text style={styles.chartSummaryValue}>
+          {activeMonth ? value(activeMonth.total) : ''}
+        </Text>
+      </View>
+      <View style={styles.chart} accessibilityRole="radiogroup">
+        {months.map((m, index) => {
+          const isActive = index === active;
+          const height = Math.max((m.total / max) * 100, m.total ? 6 : 2);
+          return (
+            <Pressable
+              key={m.key}
+              style={styles.chartColumn}
+              onPress={() => setSelected(index)}
+              onHoverIn={() => setHovered(index)}
+              onHoverOut={() => setHovered(null)}
+              onFocus={() => setHovered(index)}
+              onBlur={() => setHovered(null)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: isActive }}
+              accessibilityLabel={`${m.fullLabel}: ${hidden ? 'valor oculto' : formatCurrency(m.total)}`}>
+              <View style={styles.chartTrack}>
+                {isActive ? (
+                  <View
+                    style={[styles.chartTooltip, { bottom: `${height}%` }]}
+                    pointerEvents="none">
+                    <View style={styles.chartTooltipBubble}>
+                      <Text style={styles.chartTooltipText} numberOfLines={1}>
+                        {hidden ? '••••' : formatCompact(m.total)}
+                      </Text>
+                    </View>
+                  </View>
+                ) : null}
+                <View
+                  style={[
+                    styles.chartBar,
+                    isActive && styles.chartBarCurrent,
+                    { height: `${height}%` },
+                  ]}
+                />
+              </View>
+              <Text
                 style={[
-                  styles.chartBar,
-                  isCurrent && styles.chartBarCurrent,
-                  {
-                    height: `${Math.max((m.total / max) * 100, m.total ? 6 : 2)}%`,
-                  },
-                ]}
-              />
-            </View>
-            <Text
-              style={[
-                styles.chartLabel,
-                isCurrent && styles.chartLabelCurrent,
-              ]}>
-              {m.label}
-            </Text>
-          </View>
-        );
-      })}
+                  styles.chartLabel,
+                  isActive && styles.chartLabelCurrent,
+                ]}>
+                {m.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
+}
+
+/** Valor curto para o balao sobre a barra: "R$ 1,2 mil". */
+function formatCompact(value: number) {
+  if (value >= 1000) {
+    return `R$ ${(value / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mil`;
+  }
+  return `R$ ${Math.round(value).toLocaleString('pt-BR')}`;
 }

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import AgendaCard from '@components/features/AgendaCard';
 import { AppointmentDetailsModal } from '@components/features/AppointmentDetailsModal';
 import { RateServiceModal } from '@components/features/RateServiceModal';
@@ -70,12 +70,14 @@ function MeusAgendamentos({ role = 'client' }: MeusAgendamentosProps) {
   const [details, setDetails] = useState<Appointment | null>(null);
   const [toRate, setToRate] = useState<Appointment | null>(null);
 
+  // Abas ficam montadas em segundo plano: so atualiza enquanto visivel.
+  const isFocused = useIsFocused();
   useEffect(() => {
-    if (!user) return;
+    if (!user || !isFocused) return;
     fetchAppointments(role);
     const interval = setInterval(() => fetchAppointments(role), POLLING_MS);
     return () => clearInterval(interval);
-  }, [user, fetchAppointments, role]);
+  }, [user, isFocused, fetchAppointments, role]);
 
   const refresh = useCallback(() => {
     void fetchAppointments(role);

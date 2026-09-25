@@ -16,7 +16,19 @@ export const useAppointmentStore = create<AppointmentStore>()((set) => ({
   activeRole: undefined,
 
   fetchAppointments: async (role) => {
-    set({ loading: true, appointments: [], activeRole: role });
+    // Atualiza em segundo plano: so limpa a lista quando o papel muda,
+    // senao cada atualizacao (polling, socket) fazia a tela "piscar".
+    const sameRole = useAppointmentStore.getState().activeRole === role;
+    set(
+      sameRole
+        ? { loading: true }
+        : {
+            loading: true,
+            appointments: [],
+            appointmentsByStatus: {},
+            activeRole: role,
+          },
+    );
     try {
       const { user } = useUserStore.getState();
       if (!user) throw new Error('Usuário não autenticado.');

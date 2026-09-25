@@ -303,21 +303,64 @@ export const createStyles = (
       borderWidth: 1,
       borderColor: colors.borderColor,
     },
+    chartSummary: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      justifyContent: 'space-between',
+      gap: 12,
+      marginBottom: 12,
+    },
+    chartSummaryLabel: {
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 15,
+      color: colors.textSecondary,
+      textTransform: 'capitalize',
+    },
+    chartSummaryValue: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 22,
+      color: colors.primaryBlack,
+    },
     chart: {
       flexDirection: 'row',
       alignItems: 'flex-end',
       gap: 10,
+      // Espaco para o balao acima da barra mais alta.
+      paddingTop: 28,
     },
     chartColumn: {
       flex: 1,
       alignItems: 'center',
       gap: 6,
+      minHeight: 44,
+      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+    },
+    // Faixa larga centrada na barra: o balao pode ser maior que a barra.
+    chartTooltip: {
+      position: 'absolute',
+      left: -40,
+      right: -40,
+      marginBottom: 6,
+      alignItems: 'center',
+      zIndex: 1,
+    },
+    chartTooltipBubble: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 8,
+      backgroundColor: colors.primaryBlack,
+    },
+    chartTooltipText: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 12,
+      color: colors.cardBackground,
     },
     chartTrack: {
       height: isExpanded ? 120 : 100,
       width: '100%',
       maxWidth: 36,
       justifyContent: 'flex-end',
+      alignItems: 'center',
     },
     chartBar: {
       width: '100%',
