@@ -96,7 +96,9 @@ export const createStyles = (colors: ColorsType, isCompact: boolean) =>
       alignItems: isCompact ? 'flex-start' : 'center',
       gap: isCompact ? 8 : 10,
       minHeight: 60,
-      height: '100%',
+      // Cresce ate a altura da linha da grade (cards alinhados). Altura em %
+      // aqui fazia o card ocupar a tela inteira em alguns navegadores.
+      flexGrow: 1,
       paddingHorizontal: isCompact ? 12 : 14,
       paddingVertical: isCompact ? 12 : 10,
       borderRadius: 14,

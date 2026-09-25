@@ -48,8 +48,7 @@ export const createStyles = (
       aspectRatio: 631 / 520,
     },
     heroPhoto: {
-      width: '100%',
-      height: '100%',
+      ...StyleSheet.absoluteFillObject,
     },
 
     section: {
@@ -102,7 +101,8 @@ export const createStyles = (
       paddingHorizontal: GAP / 2,
     },
     devCard: {
-      height: '100%',
+      // Cresce ate a altura da linha (cards alinhados), sem altura em %.
+      flexGrow: 1,
       alignItems: 'center',
       padding: 20,
       borderRadius: 18,
