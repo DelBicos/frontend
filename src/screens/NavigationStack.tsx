@@ -11,6 +11,7 @@ import PartnerProfile from './public/PartnerProfile';
 import { NavigationParams } from './types';
 import Login from './public/Login';
 import Header from '@components/layout/Header';
+import ProfessionalWebNav from '@components/layout/ProfessionalWebNav';
 import { useUserStore } from '@stores/User';
 import { LoginPassword } from './public/LoginPassword';
 import CategoryScreen from './public/Category';
@@ -65,8 +66,16 @@ const MainTabs = () => (
   </Tab.Navigator>
 );
 
+// No web, o painel do colaborador ganha uma barra de secoes no topo.
 const ProfessionalTabs = () => (
-  <Tab.Navigator tabBar={() => null} screenOptions={useTabScreenOptions()}>
+  <Tab.Navigator
+    tabBar={(props) =>
+      Platform.OS === 'web' ? <ProfessionalWebNav {...props} /> : null
+    }
+    screenOptions={{
+      ...useTabScreenOptions(),
+      tabBarPosition: 'top',
+    }}>
     <Tab.Screen
       name="ProfessionalHomeTab"
       component={ProfessionalDashboard}
@@ -234,7 +243,9 @@ const RootStack = createNativeStackNavigator({
         },
       },
       options: {
-        headerShown: false,
+        // No web mostra o cabecalho do site (no app a navegacao e pela barra inferior).
+        headerShown: Platform.OS === 'web',
+        title: 'Painel do colaborador',
       },
     },
     Help: {

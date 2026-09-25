@@ -342,6 +342,20 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = () => {
             <Text style={styles.menuOptionText}>Meu Perfil</Text>
           </View>
         </MenuOption>
+        {user?.professional_id ? (
+          <MenuOption
+            onSelect={() => navigation.navigate('ProfessionalTabs' as never)}>
+            <View style={styles.menuOption}>
+              <FontAwesome
+                name="briefcase"
+                size={18}
+                color={headerIconColor}
+                style={styles.menuIcon}
+              />
+              <Text style={styles.menuOptionText}>Painel do colaborador</Text>
+            </View>
+          </MenuOption>
+        ) : null}
         <View style={styles.menuDivider} />
         <MenuOption onSelect={handleSignOut}>
           <View style={styles.menuOption}>

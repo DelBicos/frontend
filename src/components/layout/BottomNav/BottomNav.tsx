@@ -1,11 +1,11 @@
+import { FontAwesome } from '@expo/vector-icons';
+import type { NavigationState } from '@react-navigation/native';
+import { StackActions } from '@react-navigation/native';
+import { navigationRef } from '@screens/navigationRef';
+import { useUserStore } from '@stores/User';
+import { useColors } from '@theme/ThemeProvider';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Image, Keyboard, Platform, Pressable, Text, View } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
-import { StackActions } from '@react-navigation/native';
-import type { NavigationState } from '@react-navigation/native';
-import { useColors } from '@theme/ThemeProvider';
-import { useUserStore } from '@stores/User';
-import { navigationRef } from '@screens/navigationRef';
 import {
   BottomNavItem,
   HIDDEN_ROUTES,
@@ -69,13 +69,12 @@ const BottomNav: React.FC<BottomNavProps> = ({ state }) => {
           <Pressable
             key={item.tab}
             onPress={() => handlePress(item)}
-            style={styles.item}
+            style={[styles.item, selected && styles.indicatorActive]}
             accessibilityRole="tab"
             accessibilityLabel={item.label}
             accessibilityState={{ selected }}
             android_ripple={{ color: colors.borderColor, borderless: true }}>
-            <View
-              style={[styles.indicator, selected && styles.indicatorActive]}>
+            <View style={styles.indicator}>
               {showAvatar ? (
                 <Image
                   source={{ uri: user!.avatar_uri! }}
