@@ -2,72 +2,48 @@ import { useCallback, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import uuid from 'react-native-uuid';
 import { useChatBotStore } from '@stores/ChatBot';
-import { backendHttpClient } from '@lib/helpers/httpClient';
 import type { VoiceRecording } from '@hooks/useVoiceRecorder';
-import { formatBRLFromCents } from '@lib/helpers/formatCurrency';
 import {
   getClientTimezone,
   getClientUtcOffsetMinutes,
-  localDateTimeToISO,
-  parseLocalDateTime,
-  parseSlotParts,
 } from '@lib/helpers/datetime';
 import { isValidChatBotSessionId } from '@utils/validators';
-import {
+import type {
   ChatBotMessage,
-  ChatBotState,
   ChatBotContext,
-  ChatBotAction,
   QuickReplyOption,
-  SuggestedTime,
   SendMessageResponse,
-  LoadSessionResponse,
-  VoiceCommandResponse,
 } from '@stores/ChatBot/types';
+import * as ChatBotApi from '@api/chatbot';
+import {
+  ACTION_LABELS,
+  deriveBotAction,
+  deriveQuickReplies,
+  deriveSuggestedTimes,
+  hasChatBotMessage,
+  normalizeHistoryMessage,
+  resolveSelectedTimeIso,
+} from '@lib/chatbot/derive';
+import {
+  EMPTY_CHATBOT_RESPONSE_ERROR,
+  extractRateLimitReset,
+  resolveGenericError,
+  resolveVoiceError,
+} from '@lib/chatbot/errors';
+import {
+  ConversationRequest,
+  activeConversationKind,
+  beginConversationRequest,
+  finishConversationRequest,
+  isCurrentConversationRequest,
+  isCurrentRestoreRequest,
+  nextRestoreRequestId,
+} from '@lib/chatbot/conversationRequest';
 import type { AppointmentStatusEvent } from '@hooks/useAppointmentStatusSocket';
 
 let _counter = 0;
 const localId = () => `local_${Date.now()}_${++_counter}`;
-let _restoreRequestId = 0;
-let _conversationRequestId = 0;
-
-type ConversationRequestKind = 'message' | 'voice' | 'restart';
-
-interface ConversationRequest {
-  id: number;
-  kind: ConversationRequestKind;
-  controller: AbortController;
-}
-
-let _activeConversationRequest: ConversationRequest | null = null;
-
-function beginConversationRequest(
-  kind: ConversationRequestKind,
-): ConversationRequest {
-  _activeConversationRequest?.controller.abort();
-  const request = {
-    id: ++_conversationRequestId,
-    kind,
-    controller: new AbortController(),
-  };
-  _activeConversationRequest = request;
-  return request;
-}
-
-function isCurrentConversationRequest(request: ConversationRequest): boolean {
-  return _activeConversationRequest?.id === request.id;
-}
-
-function finishConversationRequest(request: ConversationRequest): boolean {
-  if (!isCurrentConversationRequest(request)) return false;
-  _activeConversationRequest = null;
-  return true;
-}
-
 type VoiceSubmissionStatus = 'sent' | 'retryable_error' | 'discarded';
-
-const EMPTY_CHATBOT_RESPONSE_ERROR =
-  'O assistente não conseguiu responder agora. Tente novamente.';
 
 interface VoiceCommandAttempt {
   recording: VoiceRecording;
@@ -79,368 +55,8 @@ interface ConversationResponseOptions {
   preserveUserMessage?: ChatBotMessage;
 }
 
-function hasChatBotMessage(response: unknown): response is SendMessageResponse {
-  if (!response || typeof response !== 'object') return false;
-  const message = (response as { message?: unknown }).message;
-  return typeof message === 'string' && message.trim().length > 0;
-}
-
-function normalizeHistoryMessage(message: unknown): ChatBotMessage | null {
-  if (!message || typeof message !== 'object') return null;
-  const item = message as Record<string, unknown>;
-
-  if (
-    typeof item.text === 'string' &&
-    (item.role === 'user' || item.role === 'bot')
-  ) {
-    return {
-      id: String(item.id),
-      role: item.role,
-      text: item.text,
-      createdAt:
-        typeof item.createdAt === 'string'
-          ? item.createdAt
-          : new Date().toISOString(),
-    };
-  }
-
-  if (
-    typeof item.content === 'string' &&
-    (item.sender === 'user' || item.sender === 'bot')
-  ) {
-    return {
-      id: `history_${String(item.id)}`,
-      role: item.sender,
-      text: item.content,
-      createdAt:
-        typeof item.createdAt === 'string'
-          ? item.createdAt
-          : new Date().toISOString(),
-    };
-  }
-
-  return null;
-}
-
 /** Canal detectado uma vez na inicialização do módulo. */
 const CHANNEL: string = Platform.OS === 'web' ? 'web' : 'mobile';
-
-/**
- * Rótulos legíveis exibidos no balão do usuário ao confirmar uma ação.
- * Evita expor JSON bruto ou IDs na UI.
- */
-const ACTION_LABELS: Record<string, string> = {
-  confirm_cancel: 'Confirmar cancelamento',
-  confirm_reschedule: 'Confirmar alteração de horário',
-  confirm_appointment: 'Sim, confirmar',
-};
-
-/**
- * Extrai e normaliza o header RateLimit-Reset do Axios.
- * Backend envia epoch Unix em segundos → converte para ms.
- */
-function extractRateLimitReset(
-  headers: Record<string, string> | undefined,
-): number | null {
-  const raw = headers?.['ratelimit-reset'] ?? headers?.['RateLimit-Reset'];
-  if (!raw) return null;
-  const epoch = Number(raw);
-  return isNaN(epoch) ? null : epoch * 1000;
-}
-
-function formatSuggestedDateLabel(value: string): string {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-  if (!match) return value;
-
-  const year = Number(match[1]);
-  const month = Number(match[2]);
-  const day = Number(match[3]);
-  const date = new Date(year, month - 1, day, 12);
-  if (
-    date.getFullYear() !== year ||
-    date.getMonth() !== month - 1 ||
-    date.getDate() !== day
-  ) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat('pt-BR', {
-    weekday: 'short',
-    day: '2-digit',
-    month: '2-digit',
-  }).format(date);
-}
-
-/**
- * Deriva quick replies com base no estado e contexto retornados pelo backend.
- *
- * - COLETANDO_SERVICO: chips numerados com nomes de serviços (context.serviceOptions)
- * - COLETANDO_DATA: chips com as datas ISO sugeridas pelo backend
- * - SELECIONANDO_PROFISSIONAL: chips com nomes dos profissionais
- * - CONFIRMACAO: "Sim" / "Não"
- */
-function deriveQuickReplies(
-  state: ChatBotState,
-  context: ChatBotContext,
-): QuickReplyOption[] | undefined {
-  if (state === 'COLETANDO_SERVICO') {
-    if (context.pendingService) {
-      return [
-        { label: 'Sim', value: 'sim' },
-        { label: 'Não', value: 'não' },
-      ];
-    }
-    // Um contexto estritamente legado ainda não possui o mapeamento de serviços
-    // agrupados. A migração desse contrato pertence ao backend.
-    if (
-      context.serviceOptionsData?.length &&
-      !context.serviceChoicesData?.length
-    ) {
-      return undefined;
-    }
-    const serviceNames = context.serviceChoicesData?.length
-      ? context.serviceChoicesData.map((choice) => choice.title)
-      : context.serviceOptions;
-    if (serviceNames?.length) {
-      return serviceNames.map((name, i) => ({
-        label: name,
-        value: String(i + 1),
-      }));
-    }
-  }
-  if (state === 'COLETANDO_DATA' && context.suggestedDates?.length) {
-    return context.suggestedDates.map((date) => ({
-      label: formatSuggestedDateLabel(date),
-      // Envia a data ISO, não o índice visual. Assim a escolha continua
-      // correta mesmo se a sessão for restaurada ou as sugestões mudarem.
-      value: date,
-    }));
-  }
-  if (
-    state === 'SELECIONANDO_PROFISSIONAL' &&
-    context.professionalOptionsData?.length
-  ) {
-    return context.professionalOptionsData.map((option) => ({
-      label: option.professionalName,
-      value: String(option.index),
-    }));
-  }
-  if (state === 'CONFIRMACAO') {
-    return [
-      { label: 'Sim, confirmar', value: 'sim' },
-      { label: 'Não, cancelar', value: 'não' },
-    ];
-  }
-  return undefined;
-}
-
-/**
- * Parseia um slot do backend em SuggestedTime.
- *
- * Formatos possíveis (conforme doc do backend):
- * - "HH:MM"             → mesmo dia, apenas horário
- * - "YYYY-MM-DD|HH:MM" → dia alternativo, data separada do horário por "|"
- */
-function parseSlot(slot: string, fallbackDate?: string): SuggestedTime {
-  try {
-    const parts = parseSlotParts(slot, fallbackDate);
-    if (parts && parts.time && parts.time.includes(':')) {
-      const parsed = parseLocalDateTime(parts.date, parts.time);
-      if (!isNaN(parsed.getTime())) {
-        const label = new Intl.DateTimeFormat('pt-BR', {
-          weekday: 'short',
-          day: '2-digit',
-          month: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-        }).format(parsed);
-        return { label, value: slot };
-      }
-    }
-  } catch (e) {
-    console.warn('[useChatSession] Error parsing slot:', slot, e);
-  }
-  // Mesmo dia — slot já é "HH:MM" ou fallback genérico
-  return { label: slot, value: slot };
-}
-
-/**
- * Deriva horários sugeridos somente no estado COLETANDO_HORARIO.
- */
-function deriveSuggestedTimes(
-  state: ChatBotState,
-  context: ChatBotContext,
-): SuggestedTime[] | undefined {
-  if (state !== 'COLETANDO_HORARIO' || !context.suggestedSlots?.length)
-    return undefined;
-  const fallbackDate = context.date ?? context.selectedDate;
-
-  // Se o backend enviou metadados dos slots (com nome do profissional e horário real),
-  // mapeamos os índices para rótulos legíveis
-  const slotsData = context.suggestedSlotsData;
-
-  if (slotsData && slotsData.length > 0) {
-    return context.suggestedSlots.map((slot) => {
-      const idx = parseInt(slot, 10);
-      const matched = slotsData.find((d) => d.index === idx);
-      if (matched) {
-        return {
-          label: `${matched.professionalName} — ${matched.time}`,
-          value: slot, // envia o índice para o bot
-        };
-      }
-      return parseSlot(slot, fallbackDate);
-    });
-  }
-
-  return context.suggestedSlots.map((slot) => parseSlot(slot, fallbackDate));
-}
-
-/**
- * Deriva a ação de confirmação de agendamento quando o estado é CONFIRMACAO + CREATE.
- * Permite ao ChatWindow renderizar o AppointmentCard com os dados coletados.
- */
-function deriveBotAction(
-  state: ChatBotState,
-  context: ChatBotContext,
-): ChatBotAction | undefined {
-  if (state !== 'CONFIRMACAO' || context.pendingAction !== 'CREATE')
-    return undefined;
-  if (!context.serviceName && !context.professionalName) return undefined;
-
-  // Backend usa `date` e `time` no contexto (não selectedDate/selectedTime)
-  const ctxDate = (context as any).date ?? context.selectedDate;
-  const ctxTime = (context as any).time ?? context.selectedTime;
-  const startTime =
-    ctxDate && ctxTime
-      ? localDateTimeToISO(ctxDate, ctxTime)
-      : new Date().toISOString();
-
-  // Calcula endTime a partir de serviceDuration (minutos), se disponivel no contexto
-  let endTime = startTime;
-  if (
-    context.serviceDuration &&
-    typeof context.serviceDuration === 'number' &&
-    ctxDate &&
-    ctxTime
-  ) {
-    const end = parseLocalDateTime(ctxDate, ctxTime);
-    end.setMinutes(end.getMinutes() + context.serviceDuration);
-    endTime = end.toISOString();
-  }
-
-  // Backend usa `servicePrice` (centavos) — fallback para `price`
-  const rawPrice = (context as any).servicePrice ?? context.price;
-
-  return {
-    type: 'confirm_appointment',
-    appointment: {
-      serviceTitle: context.serviceName ?? '',
-      serviceDescription: context.serviceDescription,
-      subcategoryName: context.serviceSubcategoryName,
-      categoryName: context.serviceCategoryName,
-      professionalName: context.professionalName ?? '',
-      professionalRating: context.professionalRating,
-      professionalRatingsCount: context.professionalRatingsCount,
-      professionalLocation:
-        context.professionalCity && context.professionalState
-          ? `${context.professionalCity}/${context.professionalState}`
-          : null,
-      durationMinutes: context.serviceDuration,
-      professionalAvatarUri: context.professionalAvatarUri ?? null,
-      startTime,
-      endTime,
-      price:
-        rawPrice != null
-          ? formatBRLFromCents(
-              typeof rawPrice === 'number' ? rawPrice : Number(rawPrice),
-            )
-          : '',
-    },
-  };
-}
-
-/** Trata erros HTTP — retorna mensagem amigável para erros conhecidos. */
-function resolveGenericError(status: number | undefined): string {
-  if (status === 401 || status === 403) {
-    return 'Sua sessão expirou. Faça login novamente para continuar.';
-  }
-  if (status === 404)
-    return 'Sessão não encontrada. Uma nova conversa será iniciada.';
-  return 'Não foi possível enviar a mensagem. Tente novamente.';
-}
-
-/** Retorna mensagens específicas para os erros de envio de áudio. */
-function resolveVoiceError(status: number | undefined): string {
-  if (status === 401 || status === 403) {
-    return 'Sua sessão expirou. Faça login novamente para enviar comandos de voz.';
-  }
-  if (status === 413) {
-    return 'O áudio está muito longo. Grave um comando mais curto e tente novamente.';
-  }
-  if (status === 415) {
-    return 'Este formato de áudio não é compatível. Tente gravar novamente.';
-  }
-  if (status === 422) {
-    return 'Não foi possível entender o áudio. Fale mais perto do microfone e tente novamente.';
-  }
-  if (status === 429) {
-    return 'Limite de uso da API de voz atingido. Aguarde a contagem para tentar novamente.';
-  }
-  if (status === 502) {
-    return 'O serviço de transcrição não respondeu. Tente enviar o áudio novamente.';
-  }
-  if (status === 503) {
-    return 'A transcrição de voz está temporariamente indisponível. Tente novamente em instantes.';
-  }
-  return resolveGenericError(status);
-}
-
-/**
- * Deriva ISO UTC do horário selecionado, alinhado ao checkout.
- * Enviado ao backend para gravar start_time corretamente no banco.
- */
-function resolveSelectedTimeIso(
-  messageText: string,
-  state: ChatBotState | null,
-  context: ChatBotContext | null,
-): string | undefined {
-  if (!state || !context) return undefined;
-
-  const ctxDate = (context as any).date ?? context.selectedDate;
-  const ctxTime = (context as any).time ?? context.selectedTime;
-
-  if (state === 'CONFIRMACAO' && ctxDate && ctxTime) {
-    try {
-      return localDateTimeToISO(ctxDate, ctxTime);
-    } catch (e) {
-      console.warn('[useChatSession] Error formatting ISO for CONFIRMACAO:', e);
-    }
-  }
-
-  if (state === 'COLETANDO_HORARIO') {
-    const slotParts = parseSlotParts(messageText.trim(), ctxDate);
-    if (slotParts && slotParts.time && slotParts.time.includes(':')) {
-      try {
-        return localDateTimeToISO(slotParts.date, slotParts.time);
-      } catch (e) {
-        console.warn('[useChatSession] Error formatting ISO for slotParts:', e);
-      }
-    }
-    if (ctxDate && /^\d{1,2}:\d{2}$/.test(messageText.trim())) {
-      try {
-        return localDateTimeToISO(ctxDate, messageText.trim());
-      } catch (e) {
-        console.warn(
-          '[useChatSession] Error formatting ISO for time string:',
-          e,
-        );
-      }
-    }
-  }
-
-  return undefined;
-}
 
 /**
  * Hook principal do chatbot de agendamentos.
@@ -493,7 +109,7 @@ export function useChatSession() {
     // sessionId que ainda estava chegando do armazenamento.
     if (!useChatBotStore.getState().hasHydrated) return;
 
-    const requestId = ++_restoreRequestId;
+    const requestId = nextRestoreRequestId();
     const initialStore = useChatBotStore.getState();
     const initialSessionId = initialStore.sessionId;
     const initialMessageCount = initialStore.messages.length;
@@ -501,13 +117,11 @@ export function useChatSession() {
     try {
       setLoading(true);
       setError(null);
-      const { data } = await backendHttpClient.get<LoadSessionResponse | null>(
-        '/api/chat/bot/session/active',
-      );
+      const data = await ChatBotApi.getActiveSession();
 
       // Outra ChatWindow pode ter iniciado uma restauração mais recente.
       // Nunca deixe uma resposta antiga sobrescrever o store compartilhado.
-      if (requestId !== _restoreRequestId) return;
+      if (!isCurrentRestoreRequest(requestId)) return;
 
       const currentStore = useChatBotStore.getState();
       const storeChangedWhileLoading =
@@ -560,12 +174,12 @@ export function useChatSession() {
         setConversationState(data.session.state, restoredContext);
       }
     } catch {
-      if (requestId !== _restoreRequestId) return;
+      if (!isCurrentRestoreRequest(requestId)) return;
       // O assistente continua totalmente utilizável para novos agendamentos.
       // Se a restauração não encontrar histórico ou falhar, inicia nova sessão silenciosamente.
       resetSession();
     } finally {
-      if (requestId === _restoreRequestId) setLoading(false);
+      if (isCurrentRestoreRequest(requestId)) setLoading(false);
     }
   }, [
     setLoading,
@@ -656,19 +270,16 @@ export function useChatSession() {
           conversationContext,
         );
 
-        const { data } = await backendHttpClient.post<SendMessageResponse>(
-          '/api/chat/bot/message',
+        const data = await ChatBotApi.sendMessage(
           {
             message: messageText,
-            ...(isValidChatBotSessionId(sessionId)
-              ? { session_id: sessionId }
-              : {}),
+            sessionId: isValidChatBotSessionId(sessionId) ? sessionId : null,
             channel: CHANNEL,
             timezone: getClientTimezone(),
-            utc_offset_minutes: getClientUtcOffsetMinutes(),
-            ...(selectedTime ? { selected_time: selectedTime } : {}),
+            utcOffsetMinutes: getClientUtcOffsetMinutes(),
+            selectedTime,
           },
-          { signal: request.controller.signal },
+          request.controller.signal,
         );
 
         if (!isCurrentConversationRequest(request)) return null;
@@ -744,38 +355,19 @@ export function useChatSession() {
           currentConversation.conversationState,
           currentConversation.conversationContext,
         );
-        const { data } = await backendHttpClient.post<VoiceCommandResponse>(
-          '/api/voice/commands',
-          audio,
+        const data = await ChatBotApi.sendVoiceCommand(
           {
-            headers: {
-              // O Blob criado por fetch(file://...) no Android pode rotular um
-              // M4A/AAC como audio/mpeg. O gravador conhece o formato real e
-              // deve ter prioridade para o backend não enviar M4A como MP3 ao
-              // provedor de transcrição.
-              'Content-Type': attempt.recording.mimeType || audio.type,
-              Accept: 'application/json',
-              'X-Voice-Language': 'pt-BR',
-              'X-Voice-Channel': `voice-${CHANNEL}`,
-              'X-Voice-Timezone': getClientTimezone(),
-              'Idempotency-Key': attempt.idempotencyKey,
-              ...(isValidChatBotSessionId(currentConversation.sessionId)
-                ? {
-                    'X-Voice-Session-Id': String(currentConversation.sessionId),
-                  }
-                : {}),
-              ...(selectedTime
-                ? { 'X-Voice-Selected-Time': selectedTime }
-                : {}),
-            },
-            // Impede que o cliente converta o Blob para JSON antes do envio.
-            transformRequest: [(body) => body],
-            // O backend pode fazer duas tentativas de transcrição dentro de
-            // um orçamento de 45 s. O timeout global do Axios é 30 s e fazia
-            // o app abandonar uma resposta válida durante a segunda tentativa.
-            timeout: 60_000,
-            signal: request.controller.signal,
+            audio,
+            mimeType: attempt.recording.mimeType,
+            channel: CHANNEL,
+            timezone: getClientTimezone(),
+            idempotencyKey: attempt.idempotencyKey,
+            sessionId: isValidChatBotSessionId(currentConversation.sessionId)
+              ? currentConversation.sessionId
+              : null,
+            selectedTime,
           },
+          request.controller.signal,
         );
 
         if (!isCurrentConversationRequest(request)) return 'discarded';
@@ -940,11 +532,11 @@ export function useChatSession() {
 
   /** Reinicia a conversa persistida sem exibir o comando como mensagem do usuário. */
   const restartConversation = useCallback(async () => {
-    if (_activeConversationRequest?.kind === 'restart') return;
+    if (activeConversationKind() === 'restart') return;
 
     // Invalida restaurações e envios ainda pendentes. Assim Reiniciar também
     // funciona quando uma resposta ficou presa em carregamento.
-    ++_restoreRequestId;
+    nextRestoreRequestId();
     const request = beginConversationRequest('restart');
     lastTextMessageRef.current = null;
     lastVoiceCommandRef.current?.recording.release();
