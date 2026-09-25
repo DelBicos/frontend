@@ -45,10 +45,7 @@ export const createStyles = (
       flex: isExpanded ? 1 : undefined,
       width: isExpanded ? undefined : '100%',
       maxWidth: 560,
-      aspectRatio: 631 / 520,
-    },
-    heroPhoto: {
-      ...StyleSheet.absoluteFillObject,
+      alignSelf: 'center',
     },
 
     section: {

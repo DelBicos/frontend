@@ -9,6 +9,8 @@ import { Developer, developers } from './aboutUsData';
 import { createStyles } from './styles';
 
 const teamPhoto = require('@assets/aboutus/TeamDelbicos-profile.png');
+// Proporcao da imagem original (631 x 520).
+const TEAM_PHOTO_RATIO = 631 / 520;
 
 const VALUES = [
   {
@@ -38,6 +40,10 @@ function AboutUsScreen() {
     () => createStyles(colors, isCompact, isExpanded),
     [colors, isCompact, isExpanded],
   );
+
+  // A altura da foto e calculada a partir da largura medida: altura e
+  // aspect-ratio em % se comportavam diferente entre navegadores.
+  const [photoWidth, setPhotoWidth] = useState(0);
 
   const teamColumns = isCompact
     ? 1
@@ -72,10 +78,17 @@ function AboutUsScreen() {
             na contratação em uma rede local eficiente, confiável e acessível.
           </Text>
         </View>
-        <View style={styles.heroPhotoWrapper}>
+        <View
+          style={styles.heroPhotoWrapper}
+          onLayout={(e) => setPhotoWidth(e.nativeEvent.layout.width)}>
           <Image
             source={teamPhoto}
-            style={styles.heroPhoto}
+            style={
+              photoWidth
+                ? { width: photoWidth, height: photoWidth / TEAM_PHOTO_RATIO }
+                : // Antes da primeira medicao.
+                  { width: '100%', aspectRatio: TEAM_PHOTO_RATIO }
+            }
             resizeMode="contain"
             accessibilityLabel="Foto da equipe DelBicos, oito pessoas com camisetas pretas do projeto"
           />
