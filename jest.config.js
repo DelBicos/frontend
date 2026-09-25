@@ -1,5 +1,6 @@
 module.exports = {
   preset: 'jest-expo',
+  setupFiles: ['<rootDir>/jest.setup.js'],
   // Cobertura sobre todo o src, nao so sobre os arquivos importados pelos testes.
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
