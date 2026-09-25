@@ -136,15 +136,16 @@ describe('deriveBotAction', () => {
   it('monta o cartao de confirmacao com preco, horario e local', () => {
     const action = deriveBotAction('CONFIRMACAO', context)!;
     expect(action.type).toBe('confirm_appointment');
-    expect(action.appointment.startTime).toBe(
+    const appointment = action.appointment!;
+    expect(appointment.startTime).toBe(
       localDateTimeToISO('2026-10-05', '10:00'),
     );
     expect(
-      new Date(action.appointment.endTime).getTime() -
-        new Date(action.appointment.startTime).getTime(),
+      new Date(appointment.endTime).getTime() -
+        new Date(appointment.startTime).getTime(),
     ).toBe(30 * 60_000);
-    expect(action.appointment.price).toMatch(/50,00/);
-    expect(action.appointment.professionalLocation).toBe('Sorocaba/SP');
+    expect(appointment.price).toMatch(/50,00/);
+    expect(appointment.professionalLocation).toBe('Sorocaba/SP');
   });
 
   it('nao gera cartao fora da confirmacao de criacao', () => {
