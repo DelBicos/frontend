@@ -63,6 +63,55 @@ export const createStyles = (colors: ColorsType) =>
       height: 50,
       resizeMode: 'contain',
     },
+    logoImageSmall: {
+      width: 132,
+      height: 40,
+    },
+
+    // --- MENU RECOLHIDO (celular/tablet) ---
+    collapsedActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    menuToggle: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+    },
+    collapsedPanel: {
+      backgroundColor: colors.cardBackground,
+      borderBottomWidth: 1,
+      borderColor: colors.borderColor,
+      paddingVertical: 12,
+      gap: 12,
+    },
+    collapsedNav: {
+      gap: 2,
+    },
+    collapsedDivider: {
+      height: 1,
+      backgroundColor: colors.borderColor,
+    },
+    collapsedRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 12,
+    },
+    menuItemStacked: {
+      minHeight: 48,
+      justifyContent: 'center',
+      paddingHorizontal: 8,
+    },
+    authButtonsStacked: {
+      flexDirection: 'column',
+      alignItems: 'stretch',
+    },
 
     // --- MENU DE NAVEGAÇÃO (DESKTOP) ---
     menu: {
@@ -150,13 +199,14 @@ export const createStyles = (colors: ColorsType) =>
       backgroundColor: '#FFFFFF',
       borderRadius: 8,
       overflow: 'hidden',
-      width: 400,
+      width: '100%',
+      maxWidth: 480,
       height: 44,
     },
     searchInput: {
       flex: 1,
       paddingHorizontal: 16,
-      fontSize: 14,
+      fontSize: 16,
       fontFamily: 'Afacad-Regular',
       height: '100%',
       color: '#000000',

@@ -4,6 +4,7 @@ import { MapComponent } from '@components/ui/MapComponent/MapComponent';
 import { ThemeToggle } from '@components/ui/ThemeToggle';
 import { FontAwesome } from '@expo/vector-icons';
 import { useLocation } from '@lib/hooks/LocationContext';
+import { useBreakpoint } from '@lib/hooks/useBreakpoint';
 import { Region } from '@lib/hooks/types';
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import { NativeStackHeaderProps } from '@react-navigation/native-stack';
@@ -54,6 +55,10 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = () => {
   } = useLocation();
 
   const navigation = useNavigation();
+  const { isExpanded, isCompact, gutter } = useBreakpoint();
+  // Abaixo do desktop, links e acoes ficam em um menu recolhivel.
+  const isCollapsed = !isExpanded;
+  const [menuOpen, setMenuOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [isMapModalVisible, setIsMapModalVisible] = useState(false);
 
@@ -66,11 +71,20 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = () => {
   const navigateTo = useCallback(
     (screen?: keyof NavigationParams) => {
       if (!screen) return;
+      setMenuOpen(false);
       // @ts-ignore
       navigation.navigate(screen);
     },
     [navigation],
   );
+
+  const handleSearchSubmit = useCallback(() => {
+    const query = search.trim();
+    if (!query) return;
+    setMenuOpen(false);
+    // @ts-ignore
+    navigation.navigate('SearchResult', { query });
+  }, [navigation, search]);
 
   const handleSignOut = useCallback(() => {
     signOut();
@@ -237,7 +251,12 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = () => {
         onPress={() => navigateTo(screen)}
         onHoverIn={() => setIsHovered(true)}
         onHoverOut={() => setIsHovered(false)}
-        style={[styles.menuItemPressable, isHovered && styles.menuItemHovered]}>
+        accessibilityRole="link"
+        style={[
+          styles.menuItemPressable,
+          isCollapsed && styles.menuItemStacked,
+          isHovered && styles.menuItemHovered,
+        ]}>
         <Text
           style={[
             styles.menuItemText,
@@ -249,123 +268,179 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = () => {
     );
   };
 
+  const navLinks = (
+    <>
+      <MenuItem screen={'Feed'}>Página Inicial</MenuItem>
+      <MenuItem screen={'Category'}>Categorias</MenuItem>
+      <MenuItem screen={'AboutUs'}>Quem Somos</MenuItem>
+      <MenuItem screen={'Help'}>FAQ</MenuItem>
+      {!!user && (
+        <>
+          <MenuItem screen={'MySchedules'}>Meus Agendamentos</MenuItem>
+          {user?.admin && (
+            <MenuItem screen={'AdminAnalytics'}>Analytics</MenuItem>
+          )}
+        </>
+      )}
+    </>
+  );
+
+  const locationPicker = (
+    <View style={styles.locationContainer}>
+      <Text style={styles.locationLabel}>Estou em:</Text>
+      <Button
+        colorVariant="secondary"
+        sizeVariant="smallPill"
+        fontVariant="AfacadRegular15"
+        onPress={() => {
+          setMenuOpen(false);
+          openMapModal();
+        }}
+        endIcon={
+          <FontAwesome
+            name="chevron-down"
+            size={12}
+            color={colors.primaryWhite}
+          />
+        }>
+        {city && state ? `${city} - ${state}` : 'Definir Local'}
+      </Button>
+    </View>
+  );
+
+  const userMenu = (
+    <Menu>
+      <MenuTrigger>
+        <View style={styles.userContainer}>
+          <Image
+            source={
+              user?.avatar_uri
+                ? { uri: user.avatar_uri }
+                : require('@assets/logo.png')
+            }
+            style={styles.profileImage}
+            accessibilityLabel="Menu da conta"
+          />
+        </View>
+      </MenuTrigger>
+      <MenuOptions
+        customStyles={{
+          optionsContainer: styles.menuOptionsContainer,
+        }}>
+        <MenuOption
+          onSelect={() => navigation.navigate('ClientProfile' as never)}>
+          <View style={styles.menuOption}>
+            <FontAwesome
+              name="user-circle-o"
+              size={18}
+              color={headerIconColor}
+              style={styles.menuIcon}
+            />
+            <Text style={styles.menuOptionText}>Meu Perfil</Text>
+          </View>
+        </MenuOption>
+        <View style={styles.menuDivider} />
+        <MenuOption onSelect={handleSignOut}>
+          <View style={styles.menuOption}>
+            <FontAwesome
+              name="sign-out"
+              size={18}
+              color={colors.errorText}
+              style={styles.menuIcon}
+            />
+            <Text style={[styles.menuOptionText, { color: colors.errorText }]}>
+              Sair
+            </Text>
+          </View>
+        </MenuOption>
+      </MenuOptions>
+    </Menu>
+  );
+
+  const authButtons = (
+    <View style={[styles.authButtons, isCompact && styles.authButtonsStacked]}>
+      <Button
+        colorVariant="primaryOrange"
+        sizeVariant="default"
+        fontVariant="AfacadBold16"
+        variant="outlined"
+        onPress={() => navigateTo('Login')}>
+        Entrar
+      </Button>
+      <Button
+        colorVariant="primaryOrange"
+        sizeVariant="default"
+        variant="contained"
+        fontVariant="AfacadBold16"
+        onPress={() => navigateTo('Register')}>
+        Cadastre-se
+      </Button>
+    </View>
+  );
+
   return (
     <View style={styles.headerContainer}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={() => navigateTo('Feed')}>
-          <Image source={logo} style={styles.logoImage} />
+      <View
+        style={[
+          styles.topBar,
+          isCollapsed && { height: 64, paddingHorizontal: gutter },
+        ]}>
+        <TouchableOpacity
+          onPress={() => navigateTo('Feed')}
+          accessibilityRole="link"
+          accessibilityLabel="DelBicos, página inicial">
+          <Image
+            source={logo}
+            style={[styles.logoImage, isCollapsed && styles.logoImageSmall]}
+          />
         </TouchableOpacity>
 
-        <View style={styles.menu}>
-          <MenuItem screen={'Feed'}>Página Inicial</MenuItem>
-          <MenuItem screen={'Category'}>Categorias</MenuItem>
-          <MenuItem screen={'AboutUs'}>Quem Somos</MenuItem>
-          <MenuItem screen={'Help'}>FAQ</MenuItem>
-          {!!user && (
-            <>
-              <MenuItem screen={'MySchedules'}>Meus Agendamentos</MenuItem>
-              {user?.admin && (
-                <MenuItem screen={'AdminAnalytics'}>Analytics</MenuItem>
-              )}
-            </>
-          )}
-        </View>
-
-        <View style={styles.rightSection}>
-          <ThemeToggle />
-          <View style={styles.locationContainer}>
-            <Text style={styles.locationLabel}>Estou em:</Text>
-            <Button
-              colorVariant="secondary"
-              sizeVariant="smallPill"
-              fontVariant="AfacadRegular15"
-              onPress={openMapModal}
-              endIcon={
-                <FontAwesome
-                  name="chevron-down"
-                  size={12}
-                  color={colors.primaryWhite}
-                />
-              }>
-              {city && state ? `${city} - ${state}` : 'Definir Local'}
-            </Button>
+        {isCollapsed ? (
+          <View style={styles.collapsedActions}>
+            {!!user && userMenu}
+            <Pressable
+              onPress={() => setMenuOpen((open) => !open)}
+              style={styles.menuToggle}
+              accessibilityRole="button"
+              accessibilityLabel={menuOpen ? 'Fechar menu' : 'Abrir menu'}
+              accessibilityState={{ expanded: menuOpen }}>
+              <FontAwesome
+                name={menuOpen ? 'close' : 'bars'}
+                size={22}
+                color={colors.primaryBlack}
+              />
+            </Pressable>
           </View>
-          {!!user ? (
-            <Menu>
-              <MenuTrigger>
-                <View style={styles.userContainer}>
-                  <Image
-                    source={
-                      user.avatar_uri
-                        ? { uri: user.avatar_uri }
-                        : require('@assets/logo.png')
-                    }
-                    style={styles.profileImage}
-                  />
-                </View>
-              </MenuTrigger>
-              <MenuOptions
-                customStyles={{
-                  optionsContainer: styles.menuOptionsContainer,
-                }}>
-                <MenuOption
-                  onSelect={() =>
-                    navigation.navigate('ClientProfile' as never)
-                  }>
-                  <View style={styles.menuOption}>
-                    <FontAwesome
-                      name="user-circle-o"
-                      size={18}
-                      color={headerIconColor}
-                      style={styles.menuIcon}
-                    />
-                    <Text style={styles.menuOptionText}>Meu Perfil</Text>
-                  </View>
-                </MenuOption>
-                <View style={styles.menuDivider} />
-                <MenuOption onSelect={handleSignOut}>
-                  <View style={styles.menuOption}>
-                    <FontAwesome
-                      name="sign-out"
-                      size={18}
-                      color={colors.errorText}
-                      style={styles.menuIcon}
-                    />
-                    <Text
-                      style={[
-                        styles.menuOptionText,
-                        { color: colors.errorText },
-                      ]}>
-                      Sair
-                    </Text>
-                  </View>
-                </MenuOption>
-              </MenuOptions>
-            </Menu>
-          ) : (
-            <View style={styles.authButtons}>
-              <Button
-                colorVariant="primaryOrange"
-                sizeVariant="default"
-                fontVariant="AfacadBold16"
-                variant="outlined"
-                onPress={() => navigateTo('Login')}>
-                Entrar
-              </Button>
-              <Button
-                colorVariant="primaryOrange"
-                sizeVariant="default"
-                variant="contained"
-                fontVariant="AfacadBold16"
-                onPress={() => navigateTo('Register')}>
-                Cadastre-se
-              </Button>
+        ) : (
+          <>
+            <View style={styles.menu}>{navLinks}</View>
+            <View style={styles.rightSection}>
+              <ThemeToggle />
+              {locationPicker}
+              {user ? userMenu : authButtons}
             </View>
-          )}
-        </View>
+          </>
+        )}
       </View>
-      <View style={styles.searchBar}>
-        {user && (
+
+      {isCollapsed && menuOpen && (
+        <View style={[styles.collapsedPanel, { paddingHorizontal: gutter }]}>
+          <View style={styles.collapsedNav}>{navLinks}</View>
+          <View style={styles.collapsedDivider} />
+          <View style={styles.collapsedRow}>
+            <ThemeToggle />
+            {locationPicker}
+          </View>
+          {!user && authButtons}
+        </View>
+      )}
+
+      <View
+        style={[
+          styles.searchBar,
+          isCollapsed && { paddingHorizontal: gutter },
+        ]}>
+        {user && !isCompact && (
           <Text style={styles.searchText}>
             Olá, {user.name.split(' ')[0]}! Como podemos te ajudar hoje?
           </Text>
@@ -374,12 +449,19 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = () => {
           <TextInput
             style={styles.searchInput}
             placeholder="O que você precisa?"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor="#6B7280"
             value={search}
             onChangeText={setSearch}
+            onSubmitEditing={handleSearchSubmit}
+            returnKeyType="search"
+            accessibilityLabel="Buscar serviço"
           />
-          <TouchableOpacity style={styles.searchButton}>
-            <FontAwesome name="search" size={16} color="#666" />
+          <TouchableOpacity
+            style={styles.searchButton}
+            onPress={handleSearchSubmit}
+            accessibilityRole="button"
+            accessibilityLabel="Buscar">
+            <FontAwesome name="search" size={16} color="#374151" />
           </TouchableOpacity>
         </View>
       </View>
