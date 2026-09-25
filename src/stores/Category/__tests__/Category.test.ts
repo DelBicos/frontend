@@ -30,4 +30,11 @@ describe('CategoryStore', () => {
     await useCategoryStore.getState().fetchCategories();
     expect(useCategoryStore.getState().categories).toEqual([]);
   });
+
+  it('compartilha a requisicao entre chamadas simultaneas', async () => {
+    http.get.mockResolvedValue({ data: [] });
+    const store = useCategoryStore.getState();
+    await Promise.all([store.fetchCategories(), store.fetchCategories()]);
+    expect(http.get).toHaveBeenCalledTimes(1);
+  });
 });

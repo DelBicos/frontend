@@ -1,64 +1,80 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { backendHttpClient } from '@lib/helpers/httpClient';
 import { SubCategory } from '@stores/SubCategory/types';
-import { useCategoryStore } from '@stores/Category';
 
+const MAX_RESULTS = 5;
+
+// Cache compartilhado entre telas: a lista de subcategorias muda raramente.
+let cache: SubCategory[] | null = null;
+let inFlight: Promise<SubCategory[]> | null = null;
+
+/** Carrega todas as subcategorias com uma unica requisicao (e so uma vez). */
+export function loadAllSubCategories(): Promise<SubCategory[]> {
+  if (cache) return Promise.resolve(cache);
+  if (!inFlight) {
+    inFlight = backendHttpClient
+      .get<SubCategory[]>('/api/subcategories')
+      .then(({ data }) => {
+        cache = Array.isArray(data) ? data : [];
+        return cache;
+      })
+      .finally(() => {
+        inFlight = null;
+      });
+  }
+  return inFlight;
+}
+
+/** Apenas para testes. */
+export function resetSubCategoryCache() {
+  cache = null;
+  inFlight = null;
+}
+
+export function filterSubCategories(
+  all: SubCategory[],
+  term: string,
+  limit = MAX_RESULTS,
+): SubCategory[] {
+  const needle = term.toLowerCase().trim();
+  if (!needle) return [];
+  return all
+    .filter((sub) => sub.title.toLowerCase().includes(needle))
+    .slice(0, limit);
+}
+
+/**
+ * Autocomplete de servicos (subcategorias). A lista so e buscada quando a
+ * pessoa comeca a digitar, evitando requisicoes em toda abertura da pagina.
+ */
 export const useServiceSearch = () => {
-  const [allSubCategories, setAllSubCategories] = useState<SubCategory[]>([]);
   const [results, setResults] = useState<SubCategory[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { categories } = useCategoryStore();
+  const [loading, setLoading] = useState(false);
+  const lastTerm = useRef('');
 
-  useEffect(() => {
-    // Como a rota /api/subcategories geral deu 404, vamos buscar por categoria
-    if (categories.length === 0) return;
-
-    const fetchAll = async () => {
-      setLoading(true);
-      try {
-        const promises = categories.map((cat) =>
-          backendHttpClient.get(`/api/subcategories/category/${cat.id}`),
-        );
-        const responses = await Promise.allSettled(promises);
-
-        const combined: SubCategory[] = [];
-        responses.forEach((result, index) => {
-          if (
-            result.status === 'fulfilled' &&
-            Array.isArray(result.value.data)
-          ) {
-            const withCategoryId = result.value.data.map(
-              (sub: SubCategory) => ({
-                ...sub,
-                categoryId: categories[index].id,
-              }),
-            );
-            combined.push(...withCategoryId);
-          }
-        });
-
-        setAllSubCategories(combined);
-      } catch (error) {
-        console.error('Erro ao buscar subcategorias:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAll();
-  }, [categories]);
-
-  const search = (term: string) => {
+  const search = useCallback((term: string) => {
+    lastTerm.current = term;
     if (!term || term.trim().length === 0) {
       setResults([]);
       return;
     }
-    const lowerTerm = term.toLowerCase().trim();
-    const filtered = allSubCategories
-      .filter((sub) => sub.title.toLowerCase().includes(lowerTerm))
-      .slice(0, 5);
-    setResults(filtered);
-  };
+    if (cache) {
+      setResults(filterSubCategories(cache, term));
+      return;
+    }
+    setLoading(true);
+    loadAllSubCategories()
+      .then((all) => {
+        // Ignora respostas de termos ja substituidos pela digitacao.
+        if (lastTerm.current === term) {
+          setResults(filterSubCategories(all, term));
+        }
+      })
+      .catch((error) => {
+        console.error('Erro ao buscar subcategorias:', error);
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   return { results, search, setResults, loading };
 };

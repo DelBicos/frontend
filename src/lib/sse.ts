@@ -10,6 +10,9 @@ interface RNSSEClient {
 
 let client: RNSSEClient | null = null;
 
+const MIN_RETRY_MS = 5_000;
+const MAX_RETRY_MS = 60_000;
+
 /**
  * Cria um cliente SSE usando XMLHttpRequest com streaming (onprogress).
  * Compatível com React Native onde fetch não expõe res.body como ReadableStream.
@@ -19,6 +22,15 @@ function createSSEClient(url: string): RNSSEClient {
   let closed = false;
   let xhr: XMLHttpRequest | null = null;
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  let retryDelay = MIN_RETRY_MS;
+
+  // Backoff exponencial: evita martelar o servidor quando ele recusa a
+  // conexao (ex.: 429/503). Volta ao minimo quando a conexao funciona.
+  const scheduleReconnect = () => {
+    if (closed) return;
+    reconnectTimer = setTimeout(connect, retryDelay);
+    retryDelay = Math.min(retryDelay * 2, MAX_RETRY_MS);
+  };
 
   const emit = (event: string, data: string) => {
     listeners.get(event)?.forEach((fn) => {
@@ -57,21 +69,16 @@ function createSSEClient(url: string): RNSSEClient {
 
     xhr.onprogress = () => {
       if (!xhr) return;
+      if (xhr.status === 200) retryDelay = MIN_RETRY_MS;
       const newChunk = xhr.responseText.slice(processed);
       processed = xhr.responseText.length;
       if (newChunk) parseAndEmit(newChunk);
     };
 
-    xhr.onerror = () => {
-      if (closed) return;
-      reconnectTimer = setTimeout(connect, 5000);
-    };
+    xhr.onerror = scheduleReconnect;
 
-    xhr.onload = () => {
-      // Conexão fechada pelo servidor — reconectar
-      if (closed) return;
-      reconnectTimer = setTimeout(connect, 5000);
-    };
+    // Conexao encerrada (ou recusada) pelo servidor: reconectar com backoff.
+    xhr.onload = scheduleReconnect;
 
     xhr.send();
   };
