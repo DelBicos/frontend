@@ -10,6 +10,8 @@ import {
 } from './types';
 import { AxiosError } from 'axios';
 import { backendHttpClient } from '@lib/helpers/httpClient';
+import { login as loginRequest } from '@api/auth';
+import { getApiErrorMessage, getApiErrorStatus } from '@api/errors';
 import { useChatBotStore } from '@stores/ChatBot';
 
 export const useUserStore = create<UserStore>()(
@@ -80,106 +82,32 @@ export const useUserStore = create<UserStore>()(
       },
 
       signInPassword: async (email: string, password: string) => {
+        let session;
         try {
-          const { data } = await backendHttpClient.post('/api/user/login', {
-            email,
-            password,
-          });
-
-          const { token, user } = data;
-
-          if (!token) {
-            console.error('No token received from the server');
-            return;
+          session = await loginRequest(email, password);
+        } catch (error) {
+          const status = getApiErrorStatus(error);
+          if (status === 401 || status === 404) {
+            throw new Error(
+              'Credenciais inválidas. Verifique seu e-mail e senha.',
+            );
           }
-
-          const tokenTrimmed = typeof token === 'string' ? token.trim() : token;
-
-          const userData = {
-            id: user.id,
-            client_id: user.client_id,
-            name: user.name,
-            email: user.email,
-            phone: user.phone,
-            cpf: user.cpf,
-            avatar_uri: user.avatar_uri || null,
-            banner_uri: user.banner_uri || null,
-            professional_id:
-              user.professional_id ||
-              user.Professional?.id ||
-              user.professional?.id ||
-              undefined,
-          };
-
-          // signInPassword debug logs removed
-
-          const addressData: Address | null = user.address
-            ? {
-                id: user.address.id,
-                lat: user.address.lat,
-                lng: user.address.lng,
-                street: user.address.street,
-                number: user.address.number,
-                complement: user.address.complement,
-                neighborhood: user.address.neighborhood,
-                city: user.address.city,
-                state: user.address.state,
-                country_iso: user.address.country_iso,
-                postal_code: user.address.postal_code,
-              }
-            : null;
-
-          get().setLoggedInUser({
-            token: tokenTrimmed,
-            user: {
-              id: user.id,
-              client_id: user.client_id,
-              name: user.name,
-              email: user.email,
-              phone: user.phone,
-              cpf: user.cpf,
-              avatar_uri: user.avatar_uri,
-              professional_id:
-                user.professional_id ||
-                user.Professional?.id ||
-                user.professional?.id ||
-                undefined,
-            },
-            address: addressData,
-          });
-
-          set({
-            user: userData,
-            address: addressData,
-            token: tokenTrimmed,
-            avatarBase64: userData.avatar_uri || null,
-          });
-
-          get().setLoggedInUser({
-            token: tokenTrimmed,
-            user: userData,
-            address: addressData,
-          });
-
-          return;
-        } catch (error: any | AxiosError) {
-          if (error instanceof AxiosError) {
-            if (
-              error.response?.status === 401 ||
-              error.response?.status === 404
-            ) {
-              throw new Error(
-                'Credenciais inválidas. Verifique seu e-mail e senha.',
-              );
-            }
-            if (error.response?.status.toString().startsWith('5')) {
-              throw new Error(
-                'Erro interno do servidor. Tente novamente mais tarde.',
-              );
-            }
+          if (status && status >= 500) {
+            throw new Error(
+              'Erro interno do servidor. Tente novamente mais tarde.',
+            );
           }
-          throw new Error('Erro ao fazer login. Por favor, tente novamente.');
+          // 403 (conta desativada) e 429 (muitas tentativas) trazem mensagem do servidor.
+          throw new Error(
+            getApiErrorMessage(
+              error,
+              'Erro ao fazer login. Por favor, tente novamente.',
+            ),
+          );
         }
+
+        get().setLoggedInUser(session);
+        set({ avatarBase64: session.user.avatar_uri || null });
       },
 
       signInAdmin: async (email: string, password: string) => {
@@ -386,19 +314,6 @@ export const useUserStore = create<UserStore>()(
             mensagem: error.response?.data?.error || 'Erro ao remover avatar.',
           };
         }
-      },
-
-      registerUser: async (formData) => {
-        const { data } = await backendHttpClient.post(
-          '/auth/register',
-          formData,
-        );
-
-        if (!data || data.error) {
-          throw new Error(data.error || 'Ocorreu um problema.');
-        }
-
-        return data;
       },
 
       becomeProfessional: async (data) => {

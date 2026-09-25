@@ -13,7 +13,8 @@ import { Elements, useStripe } from '@stripe/react-stripe-js';
 import { stripePromise } from '@lib/stripe/stripe';
 import { createStyles } from './styles';
 import { FontAwesome } from '@expo/vector-icons';
-import { HTTP_DOMAIN } from '@config/varEnvs';
+import { confirmPayment } from '@api/payments';
+import { getApiErrorMessage } from '@api/errors';
 import { useUserStore } from '@stores/User';
 import {
   useAppointmentStore,
@@ -69,33 +70,9 @@ function PaymentStatusLogic() {
         if (error) throw error;
 
         if (paymentIntent?.status === 'succeeded') {
-          const { token } = useUserStore.getState();
-
-          const confirmResponse = await fetch(
-            `${HTTP_DOMAIN}/api/payments/confirm`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                paymentIntentId: paymentIntentId,
-                userId: user.id,
-              }),
-            },
-          );
-
-          const confirmData = await confirmResponse.json();
-
-          if (!confirmResponse.ok) {
-            throw new Error(
-              confirmData.error ||
-                'Falha ao confirmar agendamento no servidor.',
-            );
-          }
-
-          const newAppointment = confirmData.appointment as Appointment;
+          // Idempotente: recarregar esta pagina nao cria agendamento duplicado.
+          const { appointment } = await confirmPayment(paymentIntentId);
+          const newAppointment = appointment as Appointment;
           const invoice = await fetchInvoice(newAppointment.id);
 
           if (invoice) {
@@ -110,9 +87,13 @@ function PaymentStatusLogic() {
           );
         }
       } catch (err: any) {
-        console.error('[PaymentStatus] Erro:', err.message);
         setStatus('error');
-        setMessage(err.message || 'Ocorreu um erro ao processar o pagamento.');
+        setMessage(
+          getApiErrorMessage(
+            err,
+            err?.message || 'Ocorreu um erro ao processar o pagamento.',
+          ),
+        );
       }
     };
 

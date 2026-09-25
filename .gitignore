@@ -67,3 +67,6 @@ android/**/captures/
 android/build/reports/problems/
 android/hs_err_pid63855.log
 env.front.prod
+
+# Relatorios de teste
+coverage/

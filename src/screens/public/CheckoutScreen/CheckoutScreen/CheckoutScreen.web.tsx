@@ -15,7 +15,8 @@ import { NavigationParams } from '@screens/types';
 
 import { stripePromise } from '@lib/stripe/stripe';
 import { Elements } from '@stripe/react-stripe-js';
-import { HTTP_DOMAIN } from '@config/varEnvs';
+import { createPaymentIntent } from '@api/payments';
+import { getApiErrorMessage } from '@api/errors';
 
 import { useUserStore } from '@stores/User';
 import { Address } from '@stores/Address/types';
@@ -25,58 +26,6 @@ import { createStyles } from './styles';
 import CheckoutForm from '../CheckoutForm/CheckoutForm.web';
 
 type CheckoutRouteParams = NavigationParams['Checkout'];
-
-async function fetchPaymentIntent(
-  amount: number,
-  professionalId: number,
-  serviceId: number,
-  selectedTime: string,
-  addressId: number,
-  token: string | null,
-  appointmentId?: number,
-): Promise<string | null> {
-  if (!token) return null;
-
-  if (amount <= 0) {
-    console.error('[CheckoutScreen] Amount inválido:', amount);
-    return null;
-  }
-
-  try {
-    const response = await fetch(
-      `${HTTP_DOMAIN}/api/payments/create-payment-intent`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          amount,
-          currency: 'brl',
-          professionalId,
-          serviceId,
-          selectedTime,
-          addressId,
-          ...(appointmentId ? { appointmentId } : {}),
-        }),
-      },
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(
-        errorData.error || `Erro do servidor: ${response.status}`,
-      );
-    }
-
-    const data = await response.json();
-    return data.clientSecret;
-  } catch (e: any) {
-    console.error('[CheckoutScreen] Erro no PaymentIntent:', e.message);
-    return null;
-  }
-}
 
 function CheckoutScreen() {
   const navigation = useNavigation();
@@ -180,25 +129,20 @@ function CheckoutScreen() {
           return;
         }
 
-        console.log(
-          '[CheckoutScreen] Enviando amount (em reais):',
-          amountInReais,
-        );
-
-        const secret = await fetchPaymentIntent(
-          amountInReais,
-          professionalId,
-          service.id,
-          selectedTime,
-          selectedAddress.id,
-          token,
-          appointmentId,
-        );
-
-        if (secret) {
+        // O valor e calculado pelo servidor a partir do preco do servico.
+        try {
+          const secret = await createPaymentIntent({
+            professionalId,
+            serviceId: service.id,
+            selectedTime,
+            addressId: selectedAddress.id,
+            appointmentId,
+          });
           setClientSecret(secret);
-        } else {
-          setErrorIntent('Falha ao iniciar pagamento.');
+        } catch (error) {
+          setErrorIntent(
+            getApiErrorMessage(error, 'Falha ao iniciar pagamento.'),
+          );
         }
         setLoadingIntent(false);
       };

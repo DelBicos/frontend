@@ -70,7 +70,6 @@ export type UserStore = {
     user: User;
     address: Address | null;
   }) => void;
-  registerUser: (formData: RegisterFormData) => Promise<void>;
   updateUserProfile: (data: UpdateUserData) => Promise<void>;
   signInPassword: (email: string, password: string) => Promise<void>;
   changePassword: (

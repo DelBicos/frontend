@@ -11,10 +11,9 @@ import { useNavigation } from '@react-navigation/native';
 
 import LogoV3 from '@assets/LogoV3.png';
 import { createStyles } from './styles';
-import { HTTP_DOMAIN } from '@config/varEnvs';
 import { useUserStore } from '@stores/User';
-import { backendHttpClient } from '@lib/helpers/httpClient';
-import { Address } from '@stores/User/types';
+import { verifyCode } from '@api/auth';
+import { getApiErrorMessage } from '@api/errors';
 import { useColors } from '@theme/ThemeProvider';
 import { checkForNewNotifications } from '@utils/usePushNotifications';
 import { FeedbackModal } from '@components/ui/FeedbackModal';
@@ -152,72 +151,28 @@ function VerificationScreen() {
 
     setIsLoading(true);
     try {
-      const response = await backendHttpClient.post(
-        `${HTTP_DOMAIN}/auth/verify`,
-        {
-          email,
-          code: fullCode,
-        },
+      const session = await verifyCode(email, fullCode);
+      setLoggedInUser(session);
+      setVerificationEmail(null);
+
+      // Check notificações em background
+      setTimeout(() => {
+        checkForNewNotifications(
+          session.user.id.toString(),
+          new Date(Date.now() - 60000),
+          false,
+        ).catch(() => {});
+      }, 2000);
+
+      showFeedback('success', 'Sucesso!', 'Conta verificada com sucesso.', () =>
+        navigation.navigate('Home' as never),
       );
-      const data = response.data;
-
-      if (response.status === 200) {
-        const { token, user } = data;
-        if (!token || !user) throw new Error('Resposta inválida.');
-
-        const addressData: Address | null = user.address
-          ? {
-              id: user.address.id,
-              lat: user.address.lat,
-              lng: user.address.lng,
-              street: user.address.street,
-              number: user.address.number,
-              complement: user.address.complement,
-              neighborhood: user.address.neighborhood,
-              city: user.address.city,
-              state: user.address.state,
-              country_iso: user.address.country_iso,
-              postal_code: user.address.postal_code,
-            }
-          : null;
-
-        setLoggedInUser({
-          token,
-          user: {
-            id: user.id,
-            client_id: user.client_id,
-            name: user.name,
-            email: user.email,
-            phone: user.phone,
-            cpf: user.cpf,
-            avatar_uri: user.avatar_uri,
-          },
-          address: addressData,
-        });
-
-        setVerificationEmail(null);
-
-        // Check notificações em background
-        setTimeout(() => {
-          checkForNewNotifications(
-            user.id.toString(),
-            new Date(Date.now() - 60000),
-            false,
-          ).catch(() => {});
-        }, 2000);
-
-        showFeedback(
-          'success',
-          'Sucesso!',
-          'Conta verificada com sucesso.',
-          () => navigation.navigate('Home' as never),
-        );
-      }
-    } catch (error: any) {
-      console.error('Erro ao verificar:', error);
-      const msg =
-        error.response?.data?.error || 'Código incorreto ou expirado.';
-      showFeedback('error', 'Erro na Verificação', msg);
+    } catch (error) {
+      showFeedback(
+        'error',
+        'Erro na Verificação',
+        getApiErrorMessage(error, 'Código incorreto ou expirado.'),
+      );
     } finally {
       setIsLoading(false);
     }

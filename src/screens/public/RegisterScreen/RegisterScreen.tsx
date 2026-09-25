@@ -27,7 +27,8 @@ import { createStyles } from './styles';
 import { isValidCPF } from '@utils/validators';
 import { useUserStore } from '@stores/User';
 import { useColors } from '@theme/ThemeProvider';
-import { HTTP_DOMAIN } from '@config/varEnvs';
+import { register } from '@api/auth';
+import { getApiErrorMessage } from '@api/errors';
 import LogoV3 from '@assets/LogoV3.png';
 
 type RegisterFormData = {
@@ -107,46 +108,28 @@ function RegisterScreen() {
         },
       };
 
-      const response = await fetch(`${HTTP_DOMAIN}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+      await register(payload);
+
+      setVerificationEmail(formData.email);
+      setFeedbackData({
+        type: 'success',
+        title: 'Quase lá!',
+        message: `Enviamos um código de verificação para ${formData.email}. Verifique sua caixa de entrada.`,
+        onClose: () => {
+          setFeedbackVisible(false);
+          // @ts-ignore
+          navigation.navigate('VerificationScreen');
+        },
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setVerificationEmail(formData.email);
-
-        setFeedbackData({
-          type: 'success',
-          title: 'Quase lá!',
-          message: `Enviamos um código de verificação para ${formData.email}. Verifique sua caixa de entrada.`,
-          onClose: () => {
-            setFeedbackVisible(false);
-            // @ts-ignore
-            navigation.navigate('VerificationScreen');
-          },
-        });
-        setFeedbackVisible(true);
-      } else {
-        const errorMessage =
-          data.error || 'Ocorreu um problema ao realizar o cadastro.';
-        setFeedbackData({
-          type: 'error',
-          title: 'Erro no Cadastro',
-          message: errorMessage,
-          onClose: () => setFeedbackVisible(false),
-        });
-        setFeedbackVisible(true);
-      }
+      setFeedbackVisible(true);
     } catch (error) {
-      console.error('Erro de conexão:', error);
       setFeedbackData({
         type: 'error',
-        title: 'Erro de Conexão',
-        message:
-          'Não foi possível se conectar ao servidor. Verifique sua internet.',
+        title: 'Erro no Cadastro',
+        message: getApiErrorMessage(
+          error,
+          'Ocorreu um problema ao realizar o cadastro.',
+        ),
         onClose: () => setFeedbackVisible(false),
       });
       setFeedbackVisible(true);

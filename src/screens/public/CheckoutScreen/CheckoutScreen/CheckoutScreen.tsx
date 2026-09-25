@@ -14,7 +14,13 @@ import { useColors } from '@theme/ThemeProvider';
 import { formatBRLFromCents } from '@lib/helpers/formatCurrency';
 import { NavigationParams } from '@screens/types';
 import { StripeProvider, useStripe } from '@stripe/stripe-react-native';
-import { STRIPE_PUBLISHABLE_KEY, HTTP_DOMAIN } from '@config/varEnvs';
+import { STRIPE_PUBLISHABLE_KEY } from '@config/varEnvs';
+import {
+  confirmPayment,
+  createPaymentIntent,
+  paymentIntentIdFromSecret,
+} from '@api/payments';
+import { getApiErrorMessage } from '@api/errors';
 
 import { useUserStore } from '@stores/User';
 import { Address } from '@stores/Address/types';
@@ -42,53 +48,6 @@ function haversineKm(
       Math.cos((lat2 * Math.PI) / 180) *
       Math.sin(dLng / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-async function fetchPaymentIntent(
-  amount: number,
-  professionalId: number,
-  serviceId: number,
-  selectedTime: string,
-  addressId: number,
-  token: string | null,
-  appointmentId?: number,
-): Promise<string | null> {
-  if (!token) return null;
-
-  try {
-    const response = await fetch(
-      `${HTTP_DOMAIN}/api/payments/create-payment-intent`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          amount,
-          currency: 'brl',
-          professionalId,
-          serviceId,
-          selectedTime,
-          addressId,
-          ...(appointmentId ? { appointmentId } : {}),
-        }),
-      },
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(
-        errorData.error || `Erro do servidor: ${response.status}`,
-      );
-    }
-
-    const data = await response.json();
-    return data.clientSecret;
-  } catch (e: any) {
-    console.error('[CheckoutScreen] Erro no PaymentIntent:', e.message);
-    return null;
-  }
 }
 
 function CheckoutScreenContent() {
@@ -216,35 +175,33 @@ function CheckoutScreenContent() {
       setLoadingIntent(true);
       setErrorIntent(null);
 
-      const amountValue = (service as any).price_cents
-        ? (service as any).price_cents / 100
-        : Number(service.price);
-
-      const secret = await fetchPaymentIntent(
-        amountValue,
-        professionalId,
-        service.id,
-        selectedTime,
-        selectedAddress.id,
-        token,
-        appointmentId,
-      );
-
-      if (secret) {
-        setClientSecret(secret);
-
-        const { error } = await initPaymentSheet({
-          paymentIntentClientSecret: secret,
-          merchantDisplayName: 'DelBicos',
-          allowsDelayedPaymentMethods: false,
+      let secret: string;
+      try {
+        secret = await createPaymentIntent({
+          professionalId,
+          serviceId: service.id,
+          selectedTime,
+          addressId: selectedAddress.id,
+          appointmentId,
         });
+      } catch (error) {
+        setClientSecret(null);
+        setErrorIntent(
+          getApiErrorMessage(error, 'Falha ao iniciar pagamento.'),
+        );
+        setLoadingIntent(false);
+        return;
+      }
 
-        if (error) {
-          console.error('[CheckoutScreen] initPaymentSheet error:', error);
-          setErrorIntent('Falha ao inicializar pagamento.');
-        }
-      } else {
-        setErrorIntent('Falha ao iniciar pagamento.');
+      setClientSecret(secret);
+      const { error } = await initPaymentSheet({
+        paymentIntentClientSecret: secret,
+        merchantDisplayName: 'DelBicos',
+        allowsDelayedPaymentMethods: false,
+      });
+      if (error) {
+        console.error('[CheckoutScreen] initPaymentSheet error:', error);
+        setErrorIntent('Falha ao inicializar pagamento.');
       }
       setLoadingIntent(false);
     };
@@ -280,64 +237,22 @@ function CheckoutScreenContent() {
         return;
       }
 
-      // Pagamento aprovado — confirma no servidor
-      const paymentIntentId = clientSecret.split('_secret_')[0];
-
-      const confirmResponse = await fetch(
-        `${HTTP_DOMAIN}/api/payments/confirm`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            paymentIntentId,
-            userId: user.id,
-          }),
-        },
-      );
-
-      const confirmData = await confirmResponse.json();
-
-      if (!confirmResponse.ok) {
-        // Handle specific case: address out of professional radius
-        const msg =
-          confirmData.error ||
-          confirmData.message ||
-          'Falha ao confirmar agendamento no servidor.';
-        if (typeof msg === 'string' && msg.includes('fora do raio')) {
-          Alert.alert(
-            'Endereço fora do raio',
-            'O endereço selecionado está fora do raio de atendimento do profissional. Deseja escolher outro endereço ou procurar outro profissional?',
-            [
-              {
-                text: 'Escolher Endereço',
-                onPress: () => setIsAddressModalVisible(true),
-              },
-              {
-                text: 'Procurar Outro',
-                onPress: () => navigation.goBack(),
-              },
-            ],
-          );
-          setIsProcessingPayment(false);
-          return;
-        }
-
-        throw new Error(msg);
-      }
-
-      const newAppointment = confirmData.appointment as Appointment;
+      // Pagamento aprovado — confirma no servidor (idempotente). Se o
+      // agendamento nao puder ser criado, o servidor estorna e explica o motivo.
+      const paymentIntentId = paymentIntentIdFromSecret(clientSecret);
+      const { appointment } = await confirmPayment(paymentIntentId);
+      const newAppointment = appointment as Appointment;
 
       // @ts-ignore
       navigation.navigate('PaymentStatus', {
         appointmentId: newAppointment.id,
         paymentIntentId,
       });
-    } catch (err: any) {
-      console.error('[CheckoutScreen] Erro:', err.message);
-      Alert.alert('Erro', err.message || 'Falha ao processar pagamento.');
+    } catch (err) {
+      Alert.alert(
+        'Erro',
+        getApiErrorMessage(err, 'Falha ao confirmar agendamento no servidor.'),
+      );
     } finally {
       setIsProcessingPayment(false);
     }
