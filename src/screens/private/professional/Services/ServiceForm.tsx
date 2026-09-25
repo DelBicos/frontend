@@ -3,14 +3,16 @@ import {
   View,
   Text,
   TouchableOpacity,
+  Pressable,
   StyleSheet,
   ScrollView,
   Switch,
   Image,
-  Alert,
   ActivityIndicator,
   Animated,
+  Platform,
 } from 'react-native';
+import { FontAwesome } from '@expo/vector-icons';
 import { useForm, Controller } from 'react-hook-form';
 import * as ImagePicker from 'expo-image-picker';
 import CustomTextInput from '@components/ui/CustomTextInput';
@@ -70,6 +72,8 @@ const ServiceForm: React.FC<Props> = ({ initial, onClose }) => {
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
   const [subcategoryError, setSubcategoryError] = useState<string | null>(null);
+  // Erros mostrados no proprio formulario (Alert nao aparece no web).
+  const [formError, setFormError] = useState<string | null>(null);
   const saveBtnAnim = useRef(new Animated.Value(1)).current;
 
   // Anima o botão Salvar ao entrar/sair do estado desabilitado
@@ -122,10 +126,7 @@ const ServiceForm: React.FC<Props> = ({ initial, onClose }) => {
   const pickImage = useCallback(async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert(
-        'Permissão necessária',
-        'Permita acesso à galeria para adicionar foto.',
-      );
+      setFormError('Permita acesso à galeria para adicionar uma foto.');
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -161,7 +162,7 @@ const ServiceForm: React.FC<Props> = ({ initial, onClose }) => {
         setValue('banner_uri', fileUrl);
       } catch (e) {
         console.error('[ServiceForm] upload banner', e);
-        Alert.alert('Erro', 'Não foi possível enviar a foto. Tente novamente.');
+        setFormError('Não foi possível enviar a foto. Tente novamente.');
       } finally {
         setUploading(false);
       }
@@ -171,6 +172,7 @@ const ServiceForm: React.FC<Props> = ({ initial, onClose }) => {
   // Desabilita o botão imediatamente no toque, antes de react-hook-form validar
   const handleSave = useCallback(async () => {
     if (submittingRef.current || submitting) return;
+    setFormError(null);
     setSubmitting(true);
     submittingRef.current = true;
     // handleSubmit só chama onSubmit se a validação passar;
@@ -186,7 +188,7 @@ const ServiceForm: React.FC<Props> = ({ initial, onClose }) => {
     if (subcategoryError) {
       setSubmitting(false);
       submittingRef.current = false;
-      Alert.alert('Erro', subcategoryError);
+      setFormError(subcategoryError);
       return;
     }
 
@@ -251,7 +253,7 @@ const ServiceForm: React.FC<Props> = ({ initial, onClose }) => {
           console.error('Failed to sign out after 401', e);
         }
       }
-      Alert.alert('Erro', message);
+      setFormError(message);
     } finally {
       setSubmitting(false);
       submittingRef.current = false;
@@ -280,174 +282,234 @@ const ServiceForm: React.FC<Props> = ({ initial, onClose }) => {
     }
   }, [watch('category_id'), watch('subcategory_id'), subCategories]);
 
+  const section = (title: string, hint?: string) => (
+    <View style={styles.sectionHeader}>
+      <Text
+        style={styles.sectionTitle}
+        accessibilityRole="header"
+        {...({ 'aria-level': 2 } as object)}>
+        {title}
+      </Text>
+      {hint ? <Text style={styles.sectionHint}>{hint}</Text> : null}
+    </View>
+  );
+
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{ padding: 16 }}>
-      <Text style={styles.header}>
-        {initial ? 'Editar Serviço' : 'Novo Serviço'}
-      </Text>
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled">
+      <View style={styles.topBar}>
+        <Text
+          style={styles.header}
+          accessibilityRole="header"
+          {...({ 'aria-level': 1 } as object)}>
+          {initial ? 'Editar serviço' : 'Novo serviço'}
+        </Text>
+        <Pressable
+          onPress={onClose}
+          style={styles.closeBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Fechar sem salvar">
+          <FontAwesome name="close" size={20} color={colors.primaryBlack} />
+        </Pressable>
+      </View>
 
-      {/* Título */}
-      <Controller
-        control={control}
-        name="title"
-        rules={{ required: true }}
-        render={({ field: { onChange, value }, fieldState: { error } }) => (
-          <CustomTextInput
-            label="Título *"
-            value={value}
-            onChangeText={onChange}
-            error={error ? 'Campo obrigatório' : undefined}
-          />
-        )}
-      />
-
-      {/* Descrição */}
-      <Controller
-        control={control}
-        name="description"
-        rules={{ required: true }}
-        render={({ field: { onChange, value }, fieldState: { error } }) => (
-          <CustomTextInput
-            label="Descrição *"
-            value={value}
-            onChangeText={onChange}
-            multiline
-            numberOfLines={3}
-            error={error ? 'Campo obrigatório' : undefined}
-          />
-        )}
-      />
-
-      {/* Categoria */}
-      <Controller
-        control={control}
-        name="category_id"
-        rules={{ required: true }}
-        render={({ field: { onChange, value }, fieldState: { error } }) => (
-          <CustomSelect
-            label="Categoria *"
-            value={value}
-            options={categoryOptions}
-            onChange={(v) => {
-              onChange(v);
-              // limpar subcategoria ao trocar categoria
-              setValue('subcategory_id', '');
-            }}
-            placeholder="Selecione a categoria"
-            error={error}
-          />
-        )}
-      />
-
-      {/* Subcategoria */}
-      <Controller
-        control={control}
-        name="subcategory_id"
-        rules={{ required: true }}
-        render={({ field: { onChange, value }, fieldState: { error } }) => (
-          <CustomSelect
-            label="Subcategoria *"
-            value={value}
-            options={subCategoryOptions}
-            onChange={onChange}
-            placeholder="Selecione a subcategoria"
-            error={error ? 'Campo obrigatório' : subcategoryError}
-          />
-        )}
-      />
-
-      {/* Disponibilidades */}
-      <Text style={styles.fieldLabel}>Disponibilidades</Text>
-      <AvailabilityManager
-        control={control}
-        setValue={setValue}
-        watch={watch}
-      />
-
-      {/* Duração */}
-      <Controller
-        control={control}
-        name="duration"
-        rules={{ required: true }}
-        render={({ field: { onChange, value }, fieldState: { error } }) => (
-          <CustomSelect
-            label="Duração *"
-            value={value}
-            options={DURATION_OPTIONS}
-            onChange={onChange}
-            placeholder="Selecione a duração"
-            error={error}
-          />
-        )}
-      />
-
-      {/* Preço */}
-      <Controller
-        control={control}
-        name="price"
-        rules={{ required: true }}
-        render={({ field: { onChange, value }, fieldState: { error } }) => (
-          <CustomTextInput
-            label="Preço *"
-            value={value}
-            onChangeText={(text) => onChange(maskCurrency(text))}
-            keyboardType="numeric"
-            error={error ? 'Campo obrigatório' : undefined}
-          />
-        )}
-      />
-
-      {/* Foto do serviço */}
-      <Text style={styles.fieldLabel}>Foto do serviço</Text>
-      {uploading ? (
-        <View style={styles.imagePlaceholder}>
-          <ActivityIndicator color={colors.primaryOrange} />
-          <Text
-            style={[
-              styles.imagePlaceholderText,
-              { marginTop: 8, fontSize: 12 },
-            ]}>
-            Enviando foto…
-          </Text>
-        </View>
-      ) : bannerUri ? (
-        <TouchableOpacity onPress={pickImage} activeOpacity={0.8}>
-          <Image source={{ uri: bannerUri }} style={styles.bannerPreview} />
-          <Text style={styles.changePhotoText}>Trocar foto</Text>
-        </TouchableOpacity>
-      ) : (
-        <TouchableOpacity
-          style={styles.imagePlaceholder}
-          onPress={pickImage}
-          activeOpacity={0.8}>
-          <Text style={styles.imagePlaceholderText}>+ Adicionar foto</Text>
-        </TouchableOpacity>
-      )}
-
-      {/* Ativo */}
-      <Controller
-        control={control}
-        name="active"
-        render={({ field: { onChange, value } }) => (
-          <View style={styles.toggleRow}>
-            <Text style={styles.fieldLabel}>Serviço ativo</Text>
-            <Switch
+      {/* Sobre o servico */}
+      <View style={styles.card}>
+        {section('Sobre o serviço', 'Como o serviço aparece para os clientes.')}
+        <Controller
+          control={control}
+          name="title"
+          rules={{ required: true }}
+          render={({ field: { onChange, value }, fieldState: { error } }) => (
+            <CustomTextInput
+              label="Título *"
               value={value}
-              onValueChange={onChange}
-              trackColor={{
-                false: colors.borderColor,
-                true: colors.primaryOrange,
+              onChangeText={onChange}
+              placeholder="Ex.: Instalação de chuveiro"
+              error={error ? 'Campo obrigatório' : undefined}
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="description"
+          rules={{ required: true }}
+          render={({ field: { onChange, value }, fieldState: { error } }) => (
+            <CustomTextInput
+              label="Descrição *"
+              value={value}
+              onChangeText={onChange}
+              multiline
+              numberOfLines={3}
+              placeholder="O que está incluso, materiais, experiência..."
+              error={error ? 'Campo obrigatório' : undefined}
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="category_id"
+          rules={{ required: true }}
+          render={({ field: { onChange, value }, fieldState: { error } }) => (
+            <CustomSelect
+              label="Categoria *"
+              value={value}
+              options={categoryOptions}
+              onChange={(v) => {
+                onChange(v);
+                // limpar subcategoria ao trocar categoria
+                setValue('subcategory_id', '');
               }}
-              thumbColor="#fff"
+              placeholder="Selecione a categoria"
+              error={error}
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="subcategory_id"
+          rules={{ required: true }}
+          render={({ field: { onChange, value }, fieldState: { error } }) => (
+            <CustomSelect
+              label="Tipo de serviço *"
+              value={value}
+              options={subCategoryOptions}
+              onChange={onChange}
+              placeholder="Selecione o tipo de serviço"
+              error={error ? 'Campo obrigatório' : subcategoryError}
+            />
+          )}
+        />
+      </View>
+
+      {/* Preco e duracao */}
+      <View style={styles.card}>
+        {section('Preço e duração')}
+        <View style={styles.row}>
+          <View style={styles.rowItem}>
+            <Controller
+              control={control}
+              name="price"
+              rules={{ required: true }}
+              render={({
+                field: { onChange, value },
+                fieldState: { error },
+              }) => (
+                <CustomTextInput
+                  label="Preço *"
+                  value={value}
+                  onChangeText={(text) => onChange(maskCurrency(text))}
+                  keyboardType="numeric"
+                  placeholder="R$ 0,00"
+                  error={error ? 'Campo obrigatório' : undefined}
+                />
+              )}
             />
           </View>
+          <View style={styles.rowItem}>
+            <Controller
+              control={control}
+              name="duration"
+              rules={{ required: true }}
+              render={({
+                field: { onChange, value },
+                fieldState: { error },
+              }) => (
+                <CustomSelect
+                  label="Duração *"
+                  value={value}
+                  options={DURATION_OPTIONS}
+                  onChange={onChange}
+                  placeholder="Selecione"
+                  error={error}
+                />
+              )}
+            />
+          </View>
+        </View>
+      </View>
+
+      {/* Horarios */}
+      <View style={styles.card}>
+        {section(
+          'Horários de atendimento',
+          'Escolha os dias e o intervalo em que você aceita pedidos. Sem horários, o serviço não pode ser agendado.',
         )}
-      />
+        <AvailabilityManager
+          control={control}
+          setValue={setValue}
+          watch={watch}
+        />
+      </View>
+
+      {/* Foto */}
+      <View style={styles.card}>
+        {section('Foto', 'Opcional. Uma foto do seu trabalho passa confiança.')}
+        {uploading ? (
+          <View style={styles.imagePlaceholder}>
+            <ActivityIndicator color={colors.primaryOrange} />
+            <Text style={styles.imagePlaceholderText}>Enviando foto…</Text>
+          </View>
+        ) : bannerUri ? (
+          <Pressable
+            onPress={pickImage}
+            accessibilityRole="button"
+            accessibilityLabel="Trocar foto do serviço">
+            <Image source={{ uri: bannerUri }} style={styles.bannerPreview} />
+            <Text style={styles.changePhotoText}>Trocar foto</Text>
+          </Pressable>
+        ) : (
+          <Pressable
+            style={styles.imagePlaceholder}
+            onPress={pickImage}
+            accessibilityRole="button">
+            <FontAwesome name="camera" size={22} color={colors.textSecondary} />
+            <Text style={styles.imagePlaceholderText}>Adicionar foto</Text>
+          </Pressable>
+        )}
+      </View>
+
+      {/* Visibilidade */}
+      <View style={styles.card}>
+        <Controller
+          control={control}
+          name="active"
+          render={({ field: { onChange, value } }) => (
+            <View style={styles.toggleRow}>
+              <View style={styles.toggleTexts}>
+                <Text style={styles.sectionTitle}>Visível para clientes</Text>
+                <Text style={styles.sectionHint}>
+                  Desative para pausar o serviço sem perder os dados.
+                </Text>
+              </View>
+              <Switch
+                value={value}
+                onValueChange={onChange}
+                trackColor={{
+                  false: colors.borderColor,
+                  true: colors.primaryOrange,
+                }}
+                thumbColor="#fff"
+                accessibilityLabel="Serviço visível para clientes"
+              />
+            </View>
+          )}
+        />
+      </View>
+
+      {formError ? (
+        <View style={styles.errorBox} accessibilityLiveRegion="assertive">
+          <Text style={styles.errorText}>{formError}</Text>
+        </View>
+      ) : null}
 
       <View style={styles.actionsRow}>
-        <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
+        <TouchableOpacity
+          style={styles.cancelBtn}
+          onPress={onClose}
+          accessibilityRole="button">
           <Text style={styles.cancelText}>Cancelar</Text>
         </TouchableOpacity>
         <Animated.View
@@ -456,11 +518,14 @@ const ServiceForm: React.FC<Props> = ({ initial, onClose }) => {
             style={styles.saveBtn}
             onPress={handleSave}
             disabled={uploading || submitting}
-            activeOpacity={0.85}>
+            activeOpacity={0.85}
+            accessibilityRole="button">
             {submitting ? (
-              <ActivityIndicator size="small" color="#fff" />
+              <ActivityIndicator size="small" color="#000000" />
             ) : (
-              <Text style={styles.saveText}>Salvar</Text>
+              <Text style={styles.saveText}>
+                {initial ? 'Salvar alterações' : 'Cadastrar serviço'}
+              </Text>
             )}
           </TouchableOpacity>
         </Animated.View>
@@ -471,83 +536,141 @@ const ServiceForm: React.FC<Props> = ({ initial, onClose }) => {
 
 const createStyles = (colors: any) =>
   StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.inputBackground },
+    container: { flex: 1, backgroundColor: colors.secondaryGray },
+    content: { padding: 20, paddingBottom: 40, gap: 16 },
+    topBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 12,
+    },
     header: {
+      flex: 1,
       fontFamily: 'Afacad-Bold',
-      fontSize: 18,
-      marginBottom: 12,
+      fontSize: 26,
       color: colors.primaryBlack,
     },
-    fieldLabel: {
-      fontFamily: 'Afacad-SemiBold',
+    closeBtn: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.cardBackground,
+      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+    },
+    card: {
+      padding: 18,
+      borderRadius: 16,
+      backgroundColor: colors.cardBackground,
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+    },
+    sectionHeader: {
+      marginBottom: 8,
+      gap: 2,
+    },
+    sectionTitle: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 18,
+      color: colors.primaryBlack,
+    },
+    sectionHint: {
+      fontFamily: 'Afacad-Regular',
       fontSize: 14,
+      lineHeight: 20,
       color: colors.textSecondary,
-      marginTop: 12,
-      marginBottom: 4,
+    },
+    row: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+    },
+    rowItem: {
+      flexGrow: 1,
+      flexBasis: 200,
     },
     imagePlaceholder: {
       height: 140,
-      borderRadius: 10,
+      gap: 8,
+      borderRadius: 12,
       borderWidth: 1,
       borderStyle: 'dashed',
       borderColor: colors.borderColor,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: colors.cardBackground,
+      backgroundColor: colors.inputBackground,
+      ...Platform.select({ web: { cursor: 'pointer' } as any }),
     },
     imagePlaceholderText: {
       fontFamily: 'Afacad-SemiBold',
-      color: colors.primaryOrange,
+      color: colors.primaryBlack,
       fontSize: 15,
     },
     bannerPreview: {
       width: '100%',
-      height: 160,
-      borderRadius: 10,
+      height: 180,
+      borderRadius: 12,
       resizeMode: 'cover',
     },
     changePhotoText: {
       textAlign: 'center',
-      color: colors.primaryOrange,
+      color: colors.primaryBlack,
       fontFamily: 'Afacad-SemiBold',
-      marginTop: 6,
-      fontSize: 13,
+      textDecorationLine: 'underline',
+      marginTop: 8,
+      fontSize: 15,
     },
     toggleRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginTop: 16,
-      marginBottom: 8,
+      gap: 16,
+    },
+    toggleTexts: {
+      flex: 1,
+      gap: 2,
+    },
+    errorBox: {
+      padding: 14,
+      borderRadius: 12,
+      backgroundColor: colors.errorBackground,
+    },
+    errorText: {
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 15,
+      color: colors.errorText,
     },
     actionsRow: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginTop: 24,
-      marginBottom: 32,
+      gap: 12,
     },
     cancelBtn: {
       flex: 1,
-      marginRight: 8,
-      padding: 13,
-      borderRadius: 8,
-      backgroundColor: colors.cardBackground,
-      borderWidth: 1,
-      borderColor: colors.borderColor,
+      minHeight: 48,
+      borderRadius: 999,
+      borderWidth: 1.5,
+      borderColor: colors.primaryBlack,
       alignItems: 'center',
+      justifyContent: 'center',
     },
-    cancelText: { fontFamily: 'Afacad-SemiBold', color: colors.textSecondary },
+    cancelText: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 16,
+      color: colors.primaryBlack,
+    },
     saveBtnWrapper: {
       flex: 1,
-      marginLeft: 8,
     },
     saveBtn: {
-      padding: 13,
-      borderRadius: 8,
+      minHeight: 48,
+      borderRadius: 999,
       backgroundColor: colors.primaryOrange,
       alignItems: 'center',
+      justifyContent: 'center',
     },
-    saveText: { fontFamily: 'Afacad-SemiBold', color: '#fff' },
+    // Texto escuro sobre laranja (contraste AA).
+    saveText: { fontFamily: 'Afacad-Bold', fontSize: 16, color: '#000000' },
   });
 
 export default ServiceForm;

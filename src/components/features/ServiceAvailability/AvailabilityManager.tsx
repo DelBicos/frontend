@@ -5,7 +5,6 @@ import {
   Pressable,
   TouchableOpacity,
   StyleSheet,
-  Alert,
 } from 'react-native';
 import CustomSelect from '@components/ui/CustomSelect';
 import CustomTextInput from '@components/ui/CustomTextInput';
@@ -56,27 +55,27 @@ export default function AvailabilityManager({ control, setValue, watch }: any) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [hoveredDay, setHoveredDay] = useState<string | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  // Mensagem de validacao na propria tela (Alert nao aparece no web).
+  const [error, setError] = useState<string | null>(null);
 
   const addAvailability = () => {
+    setError(null);
     // strict validation: format and range
     const startP = padTime(start);
     const endP = padTime(end);
     if (!isValidTimeFormat(startP) || !isValidTimeFormat(endP)) {
-      Alert.alert('Horário inválido', 'Use o formato HH:MM (ex: 09:00)');
+      setError('Use o formato HH:MM (ex: 09:00)');
       return;
     }
     const s = timeToMinutes(startP);
     const e = timeToMinutes(endP);
     if (s >= e) {
-      Alert.alert(
-        'Horário inválido',
-        'Hora de início deve ser antes da hora de término.',
-      );
+      setError('Hora de início deve ser antes da hora de término.');
       return;
     }
     // selectedDays should contain one or more day strings
     if (!Array.isArray(selectedDays) || selectedDays.length === 0) {
-      Alert.alert('Dia inválido', 'Selecione ao menos um dia da semana.');
+      setError('Selecione ao menos um dia da semana.');
       return;
     }
 
@@ -95,10 +94,7 @@ export default function AvailabilityManager({ control, setValue, watch }: any) {
         },
       );
       if (overlapping) {
-        Alert.alert(
-          'Sobreposição',
-          'Já existe uma disponibilidade que se sobrepõe neste dia.',
-        );
+        setError('Já existe uma disponibilidade que se sobrepõe neste dia.');
         return;
       }
       const updated = (availabilities as any[]).map((a: any, i: number) =>
@@ -181,6 +177,9 @@ export default function AvailabilityManager({ control, setValue, watch }: any) {
                     : [...prev, d.value],
                 )
               }
+              accessibilityRole="button"
+              accessibilityLabel={d.label}
+              accessibilityState={{ selected: active }}
               onHoverIn={() => setHoveredDay(d.value)}
               onHoverOut={() => setHoveredDay(null)}
               style={[
@@ -226,6 +225,12 @@ export default function AvailabilityManager({ control, setValue, watch }: any) {
           />
         </View>
       </View>
+
+      {error ? (
+        <Text style={styles.errorText} accessibilityLiveRegion="assertive">
+          {error}
+        </Text>
+      ) : null}
 
       {/* ── Botão adicionar ── */}
       <TouchableOpacity style={styles.addBtn} onPress={addAvailability}>
@@ -282,6 +287,12 @@ export default function AvailabilityManager({ control, setValue, watch }: any) {
 
 const createStyles = (colors: any) =>
   StyleSheet.create({
+    errorText: {
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 14,
+      color: colors.errorText,
+      marginBottom: 8,
+    },
     container: {
       marginTop: 8,
       padding: 16,

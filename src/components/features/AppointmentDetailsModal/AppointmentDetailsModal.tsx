@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
-  Alert,
 } from 'react-native';
 import { useColors } from '@theme/ThemeProvider';
 import { Appointment } from '@stores/Appointment/types';
@@ -72,29 +71,6 @@ export function AppointmentDetailsModal({
       hour: '2-digit',
       minute: '2-digit',
     });
-  };
-
-  const handleCancelAppointment = () => {
-    Alert.alert(
-      'Cancelar Agendamento',
-      'Tem certeza que deseja cancelar este agendamento?',
-      [
-        {
-          text: 'Não',
-          style: 'cancel',
-        },
-        {
-          text: 'Sim, Cancelar',
-          style: 'destructive',
-          onPress: () => {
-            if (onCancel) {
-              onCancel();
-            }
-            onClose();
-          },
-        },
-      ],
-    );
   };
 
   const getStatusText = (status: string) => {
@@ -252,47 +228,11 @@ export function AppointmentDetailsModal({
                 style={styles.okButton}
                 onPress={onClose}
                 activeOpacity={0.8}>
-                <Text style={styles.okButtonText}>Ok</Text>
+                <Text style={styles.okButtonText}>Fechar</Text>
               </TouchableOpacity>
 
-              {onAccept && appointment.status === 'pending' ? (
-                <>
-                  <TouchableOpacity
-                    style={[
-                      styles.okButton,
-                      { backgroundColor: colors.successText, marginBottom: 10 },
-                    ]}
-                    onPress={() => {
-                      if (onAccept) onAccept();
-                      onClose();
-                    }}
-                    activeOpacity={0.8}>
-                    <Text style={styles.okButtonText}>Aceitar Serviço</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.cancelButton}
-                    onPress={() => {
-                      if (onReject) onReject();
-                      onClose();
-                    }}
-                    activeOpacity={0.8}>
-                    <Text style={styles.cancelButtonText}>Recusar Serviço</Text>
-                  </TouchableOpacity>
-                </>
-              ) : (
-                appointment.status !== 'completed' &&
-                appointment.status !== 'canceled' && (
-                  <TouchableOpacity
-                    style={styles.cancelButton}
-                    onPress={handleCancelAppointment}
-                    activeOpacity={0.8}>
-                    <Text style={styles.cancelButtonText}>
-                      Cancelar Agendamento
-                    </Text>
-                  </TouchableOpacity>
-                )
-              )}
+              {/* Aceitar/recusar ficam no card da Agenda. Cancelamento pelo
+                  cliente ainda nao existe no backend, entao nao ha botao. */}
             </View>
           </ScrollView>
         </View>

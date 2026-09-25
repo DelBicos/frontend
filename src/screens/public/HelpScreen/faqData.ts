@@ -48,7 +48,7 @@ export const FAQ_TOPICS: FaqTopic[] = [
       {
         id: 'p2',
         q: 'Posso cancelar um agendamento?',
-        a: 'Sim, você pode cancelar um agendamento na tela "Meus Agendamentos". Note que podem haver taxas de cancelamento dependendo da antecedência.',
+        a: 'Ainda não é possível cancelar pelo app. Converse com o profissional em "Conversas": enquanto o pedido estiver pendente, ele pode recusá-lo e o valor pago é estornado automaticamente.',
       },
       {
         id: 'p3',

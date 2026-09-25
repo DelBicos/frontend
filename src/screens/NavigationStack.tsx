@@ -27,7 +27,6 @@ import AdminAnalytics from './private/admin/AdminAnalytics';
 import ProfessionalDashboard from './private/ProfessionalDashboard';
 import ProfileScreen from '@screens/private/client/Profile/Tabs/ProfileScreen';
 import ServicesListScreen from '@screens/private/professional/Services/ServicesList';
-import ProfessionalRadiusScreen from '@screens/private/professional/RadiusScreen/ProfessionalRadiusScreen';
 import ChatListScreen from '@screens/private/chat/ChatListScreen';
 import ChatThreadScreen from '@screens/private/chat/ChatThreadScreen';
 import ChatBotScreen from '@screens/private/chatbot/ChatBotScreen';
@@ -282,12 +281,6 @@ const RootStack = createNativeStackNavigator({
       },
       options: {
         title: 'Analytics',
-      },
-    },
-    ProfessionalArea: {
-      screen: ProfessionalRadiusScreen,
-      options: {
-        title: 'Área de Atendimento',
       },
     },
     ChatList: {

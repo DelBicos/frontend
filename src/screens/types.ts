@@ -59,13 +59,11 @@ export type NavigationParams = {
   ProfessionalSchedulesTab: undefined;
   ProfessionalEarningsTab: undefined;
   ProfessionalServicesTab: undefined;
-  ProfessionalAvailabilityTab: undefined;
   ProfessionalProfileTab: undefined;
   Help: undefined;
   AboutUs: undefined;
   AdminDashboard: undefined;
   AdminAnalytics: undefined;
-  ProfessionalArea: undefined;
   ChatList: undefined;
   ChatThread: {
     roomId: number;

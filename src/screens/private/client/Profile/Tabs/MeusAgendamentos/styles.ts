@@ -1,83 +1,91 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { ColorsType } from '@theme/types';
 
 export const createStyles = (colors: ColorsType) =>
   StyleSheet.create({
-    container: {
-      flex: 1,
-      padding: 16,
-      backgroundColor: 'transparent',
-    },
-    pageTitle: {
-      fontSize: 24,
-      fontFamily: 'Afacad-Bold',
-      color: colors.primaryBlack,
+    tabs: {
       marginBottom: 24,
     },
-    section: {
-      marginBottom: 32,
+    loader: {
+      paddingVertical: 48,
     },
-    sectionHeader: {
-      backgroundColor: colors.primaryBlue,
-      paddingVertical: 10,
-      paddingHorizontal: 16,
-      borderRadius: 8,
-      marginBottom: 16,
-      flexDirection: 'row',
-      alignItems: 'center',
+    day: {
+      marginBottom: 24,
     },
-    sectionTitle: {
-      fontSize: 16,
+    dayTitle: {
       fontFamily: 'Afacad-Bold',
-      color: colors.primaryWhite,
+      fontSize: 20,
+      color: colors.primaryBlack,
+      marginBottom: 10,
     },
-    grid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 16,
+    list: {
+      gap: 12,
     },
-    gridItem: {
-      width: '100%',
-    },
-    emptyContainer: {
-      padding: 32,
+    empty: {
       alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.inputBackground,
-      borderRadius: 12,
+      gap: 12,
+      paddingVertical: 40,
+      paddingHorizontal: 24,
+      borderRadius: 16,
       borderWidth: 1,
-      borderColor: colors.borderColor,
       borderStyle: 'dashed',
+      borderColor: colors.borderColor,
     },
     emptyText: {
-      fontSize: 16,
       fontFamily: 'Afacad-Regular',
+      fontSize: 17,
+      lineHeight: 24,
       color: colors.textSecondary,
       textAlign: 'center',
     },
-    filterContainer: {
-      flexDirection: 'row',
-      marginBottom: 20,
-      gap: 10,
+    errorBox: {
+      padding: 14,
+      borderRadius: 12,
+      marginBottom: 16,
+      backgroundColor: colors.errorBackground,
     },
-    filterChip: {
-      paddingVertical: 8,
-      paddingHorizontal: 16,
+    errorText: {
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 15,
+      color: colors.errorText,
+    },
+
+    // --- Sem login ---
+    gate: {
+      alignItems: 'center',
+      gap: 12,
+      padding: 28,
       borderRadius: 20,
-      backgroundColor: colors.inputBackground,
+      backgroundColor: colors.cardBackground,
       borderWidth: 1,
       borderColor: colors.borderColor,
     },
-    filterChipActive: {
-      backgroundColor: colors.primaryBlue,
-      borderColor: colors.primaryBlue,
+    gateTitle: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 24,
+      textAlign: 'center',
+      color: colors.primaryBlack,
     },
-    filterText: {
-      fontSize: 14,
-      fontFamily: 'Afacad-Medium',
+    gateText: {
+      fontFamily: 'Afacad-Regular',
+      fontSize: 17,
+      lineHeight: 24,
+      textAlign: 'center',
       color: colors.textSecondary,
     },
-    filterTextActive: {
-      color: colors.primaryWhite,
+    primaryButton: {
+      minHeight: 48,
+      paddingHorizontal: 28,
+      borderRadius: 999,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.primaryOrange,
+      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+    },
+    primaryButtonText: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 17,
+      // Texto escuro sobre laranja (contraste AA).
+      color: '#000000',
     },
   });

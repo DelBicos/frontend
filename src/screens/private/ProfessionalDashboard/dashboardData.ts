@@ -1,5 +1,13 @@
 import { Appointment, AppointmentStatus } from '@stores/Appointment/types';
 import { EarningsMonth } from '@stores/Dashboard/types';
+import { isSameDay } from '@lib/appointments';
+
+export {
+  appointmentPrice,
+  formatCurrency,
+  formatDayLabel,
+  formatTimeRange,
+} from '@lib/appointments';
 
 export interface DashboardAppointments {
   /** Pedidos que o profissional ainda precisa aceitar ou recusar. */
@@ -12,14 +20,6 @@ export interface DashboardAppointments {
 
 const byStartAsc = (a: Appointment, b: Appointment) =>
   new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
-
-export function isSameDay(a: Date, b: Date) {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
-}
 
 export function splitAppointments(
   appointments: Appointment[],
@@ -100,40 +100,4 @@ export function currentMonthEarnings(
 
 export function firstName(name?: string | null) {
   return name?.trim().split(/\s+/)[0] || '';
-}
-
-export const formatCurrency = (value: number) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-    value,
-  );
-
-const pad = (n: number) => String(n).padStart(2, '0');
-
-export function formatTimeRange(start: string, end?: string | null) {
-  const s = new Date(start);
-  const from = `${pad(s.getHours())}:${pad(s.getMinutes())}`;
-  if (!end) return from;
-  const e = new Date(end);
-  return `${from}–${pad(e.getHours())}:${pad(e.getMinutes())}`;
-}
-
-/** "Hoje", "Amanhã" ou "sex., 26/09". */
-export function formatDayLabel(date: string, now: Date = new Date()) {
-  const d = new Date(date);
-  if (isSameDay(d, now)) return 'Hoje';
-  const tomorrow = new Date(now);
-  tomorrow.setDate(now.getDate() + 1);
-  if (isSameDay(d, tomorrow)) return 'Amanhã';
-  const weekday = new Intl.DateTimeFormat('pt-BR', { weekday: 'short' }).format(
-    d,
-  );
-  return `${weekday}, ${pad(d.getDate())}/${pad(d.getMonth() + 1)}`;
-}
-
-export function appointmentPrice(appointment: Appointment) {
-  const value =
-    appointment.final_price != null
-      ? Number(appointment.final_price)
-      : Number(appointment.Service?.price);
-  return Number.isFinite(value) ? value : null;
 }

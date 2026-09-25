@@ -151,6 +151,8 @@ export interface AppointmentStore {
     appointmentId: number,
     status: AppointmentStatus,
   ) => Promise<boolean>;
+  /** Profissional marca um atendimento confirmado como concluido. */
+  completeAppointment: (appointmentId: number) => Promise<boolean>;
 
   fetchInvoice: (appointmentId: number) => Promise<InvoiceData | null>;
 }

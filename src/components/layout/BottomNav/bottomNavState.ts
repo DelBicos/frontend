@@ -77,7 +77,6 @@ const ROUTE_SECTIONS: Record<string, BottomNavSection> = {
   ChatList: 'profile',
   Help: 'profile',
   AboutUs: 'profile',
-  ProfessionalArea: 'home',
   AdminDashboard: 'profile',
   AdminAnalytics: 'profile',
 };

@@ -118,6 +118,20 @@ export const useAppointmentStore = create<AppointmentStore>()((set) => ({
     }
   },
 
+  completeAppointment: async (appointmentId) => {
+    try {
+      await backendHttpClient.post(
+        `api/appointments/${appointmentId}/complete`,
+      );
+      const store = useAppointmentStore.getState();
+      await store.fetchAppointments(store.activeRole);
+      return true;
+    } catch (error) {
+      console.error('Failed to complete appointment:', error);
+      return false;
+    }
+  },
+
   updateAppointmentStatus: async (appointmentId, status) => {
     try {
       const response = await backendHttpClient.put(

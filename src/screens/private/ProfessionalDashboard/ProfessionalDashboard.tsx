@@ -269,13 +269,7 @@ const ProfessionalDashboard: React.FC = () => {
 
   const upcomingSection = (
     <View style={styles.section}>
-      <SectionHeader
-        title="Próximos atendimentos"
-        action={{
-          label: 'Ver agenda',
-          onPress: () => goTo('ProfessionalSchedulesTab'),
-        }}
-      />
+      <SectionHeader title="Próximos atendimentos" />
       {loadingAppointments && appointments.length === 0 ? (
         <ActivityIndicator color={colors.primaryOrange} style={styles.loader} />
       ) : upcoming.length === 0 ? (
@@ -307,29 +301,8 @@ const ProfessionalDashboard: React.FC = () => {
 
   const actionsSection = (
     <View style={styles.section}>
-      <SectionHeader title="Gerenciar" />
+      <SectionHeader title="Atalhos" />
       <View style={styles.list}>
-        <ActionItem
-          icon="wrench"
-          title="Meus serviços"
-          description="Preços, descrição e horários de cada serviço"
-          onPress={() => goTo('ProfessionalServicesTab')}
-          styles={styles}
-        />
-        <ActionItem
-          icon="plus"
-          title="Novo serviço"
-          description="Ofereça um novo tipo de trabalho"
-          onPress={() => goTo('ProfessionalServicesTab', { openCreate: true })}
-          styles={styles}
-        />
-        <ActionItem
-          icon="map-marker"
-          title="Área de atendimento"
-          description="Até onde você se desloca"
-          onPress={() => goTo('ProfessionalArea')}
-          styles={styles}
-        />
         <ActionItem
           icon="comments-o"
           title="Conversas"
