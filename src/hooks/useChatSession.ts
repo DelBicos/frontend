@@ -8,9 +8,10 @@ import { formatBRLFromCents } from '@lib/helpers/formatCurrency';
 import {
   getClientTimezone,
   getClientUtcOffsetMinutes,
-  localDateTimeToISO,
+  localDateTimeInTimeZoneToISO,
   parseLocalDateTime,
   parseSlotParts,
+  resolveBotSelectedTimeIso,
 } from '@lib/helpers/datetime';
 import { isValidChatBotSessionId } from '@utils/validators';
 import {
@@ -225,10 +226,7 @@ function deriveQuickReplies(
       value: String(option.index),
     }));
   }
-  if (
-    state === 'AGUARDANDO_ID_AGENDAMENTO' &&
-    context.serviceOptions?.length
-  ) {
+  if (state === 'AGUARDANDO_ID_AGENDAMENTO' && context.serviceOptions?.length) {
     return context.serviceOptions.map((option, i) => ({
       label: option,
       value: String(i + 1),
@@ -322,21 +320,15 @@ function deriveBotAction(
   const ctxTime = (context as any).time ?? context.selectedTime;
   const startTime =
     ctxDate && ctxTime
-      ? localDateTimeToISO(ctxDate, ctxTime)
+      ? localDateTimeInTimeZoneToISO(ctxDate, ctxTime)
       : new Date().toISOString();
 
-  // Calcula endTime a partir de serviceDuration (minutos), se disponivel no contexto
-  let endTime = startTime;
-  if (
-    context.serviceDuration &&
-    typeof context.serviceDuration === 'number' &&
-    ctxDate &&
-    ctxTime
-  ) {
-    const end = parseLocalDateTime(ctxDate, ctxTime);
-    end.setMinutes(end.getMinutes() + context.serviceDuration);
-    endTime = end.toISOString();
-  }
+  // Calcula endTime a partir do instante já normalizado em São Paulo.
+  const durationMinutes =
+    typeof context.serviceDuration === 'number' ? context.serviceDuration : 0;
+  const endTime = new Date(
+    new Date(startTime).getTime() + durationMinutes * 60_000,
+  ).toISOString();
 
   // Backend usa `servicePrice` (centavos) — fallback para `price`
   const rawPrice = (context as any).servicePrice ?? context.price;
@@ -403,52 +395,6 @@ function resolveVoiceError(status: number | undefined): string {
     return 'A transcrição de voz está temporariamente indisponível. Tente novamente em instantes.';
   }
   return resolveGenericError(status);
-}
-
-/**
- * Deriva ISO UTC do horário selecionado, alinhado ao checkout.
- * Enviado ao backend para gravar start_time corretamente no banco.
- */
-function resolveSelectedTimeIso(
-  messageText: string,
-  state: ChatBotState | null,
-  context: ChatBotContext | null,
-): string | undefined {
-  if (!state || !context) return undefined;
-
-  const ctxDate = (context as any).date ?? context.selectedDate;
-  const ctxTime = (context as any).time ?? context.selectedTime;
-
-  if (state === 'CONFIRMACAO' && ctxDate && ctxTime) {
-    try {
-      return localDateTimeToISO(ctxDate, ctxTime);
-    } catch (e) {
-      console.warn('[useChatSession] Error formatting ISO for CONFIRMACAO:', e);
-    }
-  }
-
-  if (state === 'COLETANDO_HORARIO') {
-    const slotParts = parseSlotParts(messageText.trim(), ctxDate);
-    if (slotParts && slotParts.time && slotParts.time.includes(':')) {
-      try {
-        return localDateTimeToISO(slotParts.date, slotParts.time);
-      } catch (e) {
-        console.warn('[useChatSession] Error formatting ISO for slotParts:', e);
-      }
-    }
-    if (ctxDate && /^\d{1,2}:\d{2}$/.test(messageText.trim())) {
-      try {
-        return localDateTimeToISO(ctxDate, messageText.trim());
-      } catch (e) {
-        console.warn(
-          '[useChatSession] Error formatting ISO for time string:',
-          e,
-        );
-      }
-    }
-  }
-
-  return undefined;
 }
 
 /**
@@ -659,7 +605,7 @@ export function useChatSession() {
       setLastSentText(messageText);
 
       try {
-        const selectedTime = resolveSelectedTimeIso(
+        const selectedTime = resolveBotSelectedTimeIso(
           messageText,
           conversationState,
           conversationContext,
@@ -748,7 +694,7 @@ export function useChatSession() {
         // impede que o segundo áudio volte ao início por enviar sessionId e
         // contexto obsoletos.
         const currentConversation = useChatBotStore.getState();
-        const selectedTime = resolveSelectedTimeIso(
+        const selectedTime = resolveBotSelectedTimeIso(
           '',
           currentConversation.conversationState,
           currentConversation.conversationContext,
@@ -770,9 +716,7 @@ export function useChatSession() {
               'Idempotency-Key': attempt.idempotencyKey,
               ...(isValidChatBotSessionId(currentConversation.sessionId)
                 ? {
-                    'X-Voice-Session-Id': String(
-                      currentConversation.sessionId,
-                    ),
+                    'X-Voice-Session-Id': String(currentConversation.sessionId),
                   }
                 : {}),
               ...(selectedTime
