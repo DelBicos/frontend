@@ -3,32 +3,66 @@ import { ColorsType } from '@theme/types';
 
 export const createStyles = (colors: ColorsType) =>
   StyleSheet.create({
-    container: {
-      width: '100%',
-      alignItems: 'center',
-      marginVertical: 10,
-    },
-    sliderWrapper: {
-      width: '100%',
-    },
-    listContent: {
-      paddingHorizontal: 16,
-      paddingVertical: 16,
-      flexGrow: 1,
-      gap: 16, // gap between items (supported in React Native 0.71+)
-    },
-    // --- GRID STYLE (MOBILE) ---
-    gridContainer: {
+    grid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      justifyContent: 'center',
-      paddingHorizontal: 16,
-      gap: 20, // gap for react native 0.71+
     },
-    // --- BUBBLE STYLE (MOBILE) ---
+
+    // --- Card com imagem (tablet/desktop) ---
+    card: {
+      aspectRatio: 16 / 10,
+      borderRadius: 16,
+      overflow: 'hidden',
+      backgroundColor: colors.cardBackground,
+      ...Platform.select({
+        web: {
+          boxShadow: '0px 6px 18px rgba(0, 0, 0, 0.12)',
+          cursor: 'pointer',
+          transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+        } as any,
+        default: { elevation: 3 },
+      }),
+    },
+    cardHovered: {
+      transform: [{ translateY: -3 }],
+      ...Platform.select({
+        web: { boxShadow: '0px 12px 24px rgba(0, 0, 0, 0.2)' } as any,
+      }),
+    },
+    cardImage: {
+      flex: 1,
+      justifyContent: 'flex-end',
+    },
+    cardIcon: {
+      position: 'absolute',
+      top: 16,
+      left: 16,
+      width: 52,
+      height: 52,
+      borderRadius: 26,
+      backgroundColor: 'rgba(255,255,255,0.18)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    cardGradient: {
+      paddingHorizontal: 14,
+      paddingTop: 28,
+      paddingBottom: 14,
+    },
+    cardTitle: {
+      fontSize: 18,
+      lineHeight: 22,
+      fontFamily: 'Afacad-Bold',
+      color: '#FFFFFF',
+      textShadowColor: 'rgba(0, 0, 0, 0.6)',
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 3,
+    },
+
+    // --- Bolha com icone (celular) ---
     bubbleCard: {
       alignItems: 'center',
-      width: 80,
+      minHeight: 44,
     },
     bubble: {
       width: 64,
@@ -37,53 +71,13 @@ export const createStyles = (colors: ColorsType) =>
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: 8,
-      // Usando a nova propriedade boxShadow do React Native (0.74+) que funciona no Android
-      // para criar sombras com direção (offset) real, ignorando a limitação do elevation.
-      boxShadow: '-4px 4px 10px rgba(204, 104, 0, 0.3)',
     },
     bubbleTitle: {
-      fontSize: 12,
+      fontSize: 14,
+      lineHeight: 17,
       fontFamily: 'Afacad-SemiBold',
       textAlign: 'center',
       color: colors.primaryBlack,
-      lineHeight: 14,
-    },
-
-    // --- IMAGE CARD STYLE (WEB) ---
-    webCard: {
-      width: 220,
-      height: 140,
-      borderRadius: 16,
-      overflow: 'hidden',
-      backgroundColor: colors.cardBackground,
-      ...Platform.select({
-        web: {
-          boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.12)',
-          cursor: 'pointer',
-          transition: 'transform 0.2s ease',
-        } as any,
-      }),
-    },
-    webCardHovered: {
-      transform: [{ scale: 1.03 }],
-    },
-    webCardImage: {
-      width: '100%',
-      height: '100%',
-      justifyContent: 'flex-end',
-    },
-    webCardGradient: {
-      height: '50%',
-      justifyContent: 'flex-end',
-      padding: 16,
-    },
-    webCardTitle: {
-      fontSize: 18,
-      fontFamily: 'Afacad-Bold',
-      color: '#FFFFFF',
-      textShadowColor: 'rgba(0, 0, 0, 0.75)',
-      textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 3,
     },
 
     loadingContainer: {

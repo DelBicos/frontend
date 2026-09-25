@@ -1,86 +1,263 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
+import { ColorsType } from '@theme/types';
 
-export const createStyles = (colors: any) =>
+const cardShadow = Platform.select({
+  web: { boxShadow: '0px 4px 14px rgba(0, 0, 0, 0.08)' } as any,
+  default: {
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+});
+
+export const createStyles = (colors: ColorsType) =>
   StyleSheet.create({
-    listContainer: {
-      paddingVertical: 8,
+    // --- Filtros ---
+    chipsRow: {
+      gap: 8,
+      paddingVertical: 4,
+    },
+    chip: {
+      minHeight: 40,
+      paddingHorizontal: 16,
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+      backgroundColor: colors.cardBackground,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+    },
+    chipSelected: {
+      backgroundColor: colors.primaryOrange,
+      borderColor: colors.primaryOrange,
+    },
+    chipSecondarySelected: {
+      backgroundColor: colors.primaryBlack,
+      borderColor: colors.primaryBlack,
+    },
+    chipText: {
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 15,
+      color: colors.primaryBlack,
+    },
+    chipTextSelected: {
+      // Texto escuro sobre laranja (contraste AA).
+      color: '#000000',
+    },
+    chipTextSecondarySelected: {
+      color: colors.primaryWhite,
+    },
+    filterGroup: {
+      gap: 8,
+      marginBottom: 16,
+    },
+    toggleRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+
+    // --- Resultados ---
+    grid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+    },
+    tileFill: {
+      flex: 1,
+    },
+    carousel: {
+      gap: 12,
+      paddingBottom: 8,
     },
     loadingContainer: {
-      padding: 24,
+      paddingVertical: 32,
       alignItems: 'center',
       justifyContent: 'center',
     },
     emptyContainer: {
-      padding: 24,
+      paddingVertical: 32,
+      paddingHorizontal: 16,
       alignItems: 'center',
       justifyContent: 'center',
+      gap: 12,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderStyle: 'dashed',
+      borderColor: colors.borderColor,
     },
     emptyText: {
-      color: colors.textTertiary,
+      fontFamily: 'Afacad-Regular',
+      fontSize: 16,
+      color: colors.textSecondary,
+      textAlign: 'center',
     },
-    card: {
+    showMore: {
+      alignSelf: 'center',
+      marginTop: 16,
+      minHeight: 44,
+      paddingHorizontal: 24,
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: colors.primaryBlack,
+      justifyContent: 'center',
+      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+    },
+    showMoreText: {
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 16,
+      color: colors.primaryBlack,
+    },
+
+    // --- Card em linha (listas, ex.: resultado de busca) ---
+    row: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: 12,
+      padding: 16,
       marginHorizontal: 16,
       marginVertical: 6,
-      backgroundColor: colors.backgroundCard || '#fff',
-      borderRadius: 8,
-      shadowColor: '#000',
-      shadowOpacity: 0.05,
-      shadowRadius: 6,
-      elevation: 2,
+      backgroundColor: colors.cardBackground,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+      ...cardShadow,
     },
     info: {
       flex: 1,
       marginRight: 12,
+      gap: 4,
     },
     title: {
-      color: colors.textPrimary,
-      fontWeight: '700',
-      marginBottom: 4,
+      fontFamily: 'Afacad-Bold',
+      fontSize: 17,
+      color: colors.primaryBlack,
     },
-    description: {
-      color: colors.textTertiary,
+
+    // --- Card vertical (grade da pagina inicial) ---
+    tile: {
+      padding: 16,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+      backgroundColor: colors.cardBackground,
+      gap: 8,
+      ...cardShadow,
+    },
+    tileHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 8,
+      minHeight: 24,
+    },
+    categoryTag: {
+      flexShrink: 1,
+      fontFamily: 'Afacad-SemiBold',
       fontSize: 13,
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.4,
+    },
+    tileTitle: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 19,
+      lineHeight: 23,
+      minHeight: 46,
+      color: colors.primaryBlack,
+    },
+    tileFooter: {
+      marginTop: 'auto',
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: colors.borderColor,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 12,
+    },
+    priceLabel: {
+      fontFamily: 'Afacad-Regular',
+      fontSize: 13,
+      color: colors.textSecondary,
+    },
+
+    // --- Comum ---
+    description: {
+      fontFamily: 'Afacad-Regular',
+      fontSize: 15,
+      lineHeight: 20,
+      minHeight: 40,
+      color: colors.textSecondary,
+    },
+    availabilityRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
     },
     availability: {
-      marginTop: 6,
+      flexShrink: 1,
+      fontFamily: 'Afacad-Regular',
+      fontSize: 14,
       color: colors.textSecondary,
-      fontSize: 12,
     },
     noAvailability: {
-      marginTop: 6,
-      color: '#ef4444',
-      fontSize: 12,
-      fontWeight: '700',
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 14,
+      color: colors.primaryRed,
     },
-    availableNow: {
-      marginTop: 6,
-      backgroundColor: '#16a34a',
-      color: '#fff',
+    nowBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
       paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 8,
-      fontSize: 12,
+      paddingVertical: 3,
+      borderRadius: 999,
+      backgroundColor: colors.successBackground,
+    },
+    nowBadgeInline: {
       alignSelf: 'flex-start',
-      overflow: 'hidden',
+    },
+    nowDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: colors.primaryGreen,
+    },
+    nowBadgeText: {
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 13,
+      color: colors.successText,
     },
     price: {
-      marginTop: 6,
-      color: colors.primaryOrange,
-      fontWeight: '700',
+      fontFamily: 'Afacad-Bold',
+      fontSize: 20,
+      color: colors.primaryBlack,
     },
     actionButton: {
+      minHeight: 44,
+      paddingHorizontal: 20,
+      borderRadius: 999,
+      justifyContent: 'center',
       backgroundColor: colors.primaryOrange,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: 6,
+      ...Platform.select({
+        web: {
+          cursor: 'pointer',
+          transition: 'background-color 0.15s ease',
+        } as any,
+      }),
+    },
+    actionButtonActive: {
+      backgroundColor: colors.primaryOrangeHover,
     },
     actionText: {
-      color: '#fff',
-      fontWeight: '700',
+      fontFamily: 'Afacad-Bold',
+      fontSize: 18,
+      // Texto escuro sobre laranja (contraste AA).
+      color: '#000000',
     },
   });
 
