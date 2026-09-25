@@ -23,6 +23,7 @@ import {
 import InvoiceTemplate from '@components/features/InvoiceTemplate';
 import { generatePDF } from '@lib/helpers/fileGenerator';
 import { downloadFile } from '@lib/helpers/shareHelperSimple';
+import { isAppointmentValidationError } from '@lib/helpers/paymentErrors';
 import { useColors } from '@theme/ThemeProvider';
 import { useThemeStore, ThemeMode } from '@stores/Theme';
 
@@ -32,7 +33,7 @@ function PaymentStatusLogic() {
   const navigation = useNavigation();
   const stripe = useStripe();
   const { user } = useUserStore();
-  const { fetchInvoice } = useAppointmentStore();
+  const { fetchInvoice, fetchAppointments } = useAppointmentStore();
 
   const [status, setStatus] = useState<StatusType>('loading');
   const [message, setMessage] = useState('Verificando seu pagamento...');
@@ -81,7 +82,6 @@ function PaymentStatusLogic() {
               },
               body: JSON.stringify({
                 paymentIntentId: paymentIntentId,
-                userId: user.id,
               }),
             },
           );
@@ -89,10 +89,21 @@ function PaymentStatusLogic() {
           const confirmData = await confirmResponse.json();
 
           if (!confirmResponse.ok) {
-            throw new Error(
+            const msg =
               confirmData.error ||
-                'Falha ao confirmar agendamento no servidor.',
-            );
+              confirmData.message ||
+              'Falha ao confirmar agendamento no servidor.';
+
+            // Falha na validação de posse/estado do agendamento: não retenta a
+            // mesma chamada, recarrega o estado real e orienta a reiniciar o checkout.
+            if (isAppointmentValidationError(msg)) {
+              await fetchAppointments('client');
+              throw new Error(
+                `${msg} Reinicie o processo de agendamento para verificar a situação atual antes de tentar novamente.`,
+              );
+            }
+
+            throw new Error(msg);
           }
 
           const newAppointment = confirmData.appointment as Appointment;
