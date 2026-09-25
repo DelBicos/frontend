@@ -225,6 +225,15 @@ function deriveQuickReplies(
       value: String(option.index),
     }));
   }
+  if (
+    state === 'AGUARDANDO_ID_AGENDAMENTO' &&
+    context.serviceOptions?.length
+  ) {
+    return context.serviceOptions.map((option, i) => ({
+      label: option,
+      value: String(i + 1),
+    }));
+  }
   if (state === 'CONFIRMACAO') {
     return [
       { label: 'Sim, confirmar', value: 'sim' },

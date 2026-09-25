@@ -348,7 +348,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             color={colors.warningText}
           />
           <Text style={[styles.hintText, { color: colors.warningText }]}>
-            {'Digite o ID do agendamento (disponível em “Meus Agendamentos”)'}
+            {conversationContext?.serviceOptions?.length
+              ? 'Selecione uma opção acima ou digite o número/ID do agendamento'
+              : 'Digite o ID do agendamento (disponível em “Meus Agendamentos”)'}
           </Text>
         </View>
       )}
