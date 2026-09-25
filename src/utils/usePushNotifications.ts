@@ -1,6 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
-import { HTTP_DOMAIN } from '@config/varEnvs';
+import { backendHttpClient } from '@lib/helpers/httpClient';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -65,13 +65,10 @@ export async function checkForNewNotifications(
   showLogs: boolean = false,
 ): Promise<boolean> {
   try {
-    const response = await fetch(`${HTTP_DOMAIN}/api/notifications/${userId}`);
-
-    if (!response.ok) {
-      throw new Error(`Erro HTTP: ${response.status}`);
-    }
-
-    const notifications = await response.json();
+    // backendHttpClient envia o JWT (a rota exige autenticacao).
+    const { data: notifications } = await backendHttpClient.get<any[]>(
+      `/api/notifications/${userId}`,
+    );
 
     const newNotifications = notifications.filter((notification: any) => {
       const notificationDate = new Date(notification.createdAt);
