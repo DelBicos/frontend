@@ -19,13 +19,8 @@ export const createStyles = (colors: ColorsType, isCompact: boolean) =>
     },
 
     // --- Filtros ---
-    chipsScroll: {
-      flexGrow: 0,
+    chipsGroup: {
       marginBottom: isCompact ? 24 : 32,
-    },
-    chipsRow: {
-      gap: 8,
-      paddingVertical: 2,
     },
     resultCount: {
       fontFamily: 'Afacad-SemiBold',

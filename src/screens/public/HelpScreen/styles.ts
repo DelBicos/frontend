@@ -3,13 +3,8 @@ import { ColorsType } from '@theme/types';
 
 export const createStyles = (colors: ColorsType, isCompact: boolean) =>
   StyleSheet.create({
-    chipsScroll: {
-      flexGrow: 0,
+    chipsGroup: {
       marginBottom: isCompact ? 24 : 32,
-    },
-    chipsRow: {
-      gap: 8,
-      paddingVertical: 2,
     },
     resultCount: {
       fontFamily: 'Afacad-SemiBold',

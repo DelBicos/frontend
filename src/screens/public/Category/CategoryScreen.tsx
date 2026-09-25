@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Platform,
   Pressable,
-  ScrollView,
   Text,
   View,
 } from 'react-native';
@@ -23,7 +22,7 @@ import { getCategoryGradient, getCategoryIconName } from '@lib/categoryVisuals';
 import { getIconForSubCategory } from '@utils/icons';
 import PageContainer, { PageHeader } from '@components/layout/PageContainer';
 import SearchField from '@components/ui/SearchField';
-import Chip from '@components/ui/Chip';
+import Chip, { ChipGroup } from '@components/ui/Chip';
 import { createStyles } from './styles';
 
 type Status = 'loading' | 'ready' | 'error';
@@ -194,12 +193,9 @@ function CategoryScreen() {
 
       {status === 'ready' && (
         <>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.chipsScroll}
-            contentContainerStyle={styles.chipsRow}
-            accessibilityLabel="Filtrar por categoria">
+          <ChipGroup
+            accessibilityLabel="Filtrar por categoria"
+            style={styles.chipsGroup}>
             <Chip
               label="Todas"
               selected={selectedCategory == null}
@@ -217,7 +213,7 @@ function CategoryScreen() {
                 }
               />
             ))}
-          </ScrollView>
+          </ChipGroup>
 
           {term ? (
             <View>

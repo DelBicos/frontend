@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useColors } from '@theme/ThemeProvider';
@@ -7,7 +7,7 @@ import { useUserStore } from '@stores/User';
 import { useBreakpoint } from '@lib/hooks/useBreakpoint';
 import { normalizeSearchText } from '@lib/hooks/useServiceSearch';
 import AccordionItem from '@components/ui/AccordionItem';
-import Chip from '@components/ui/Chip';
+import Chip, { ChipGroup } from '@components/ui/Chip';
 import SearchField from '@components/ui/SearchField';
 import PageContainer, { PageHeader } from '@components/layout/PageContainer';
 import { FAQ_TOPICS } from './faqData';
@@ -65,12 +65,9 @@ function HelpScreen() {
         />
       </PageHeader>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.chipsScroll}
-        contentContainerStyle={styles.chipsRow}
-        accessibilityLabel="Filtrar por assunto">
+      <ChipGroup
+        accessibilityLabel="Filtrar por assunto"
+        style={styles.chipsGroup}>
         <Chip
           label="Todos"
           selected={topicId == null}
@@ -87,7 +84,7 @@ function HelpScreen() {
             }
           />
         ))}
-      </ScrollView>
+      </ChipGroup>
 
       {term ? (
         <Text style={styles.resultCount} accessibilityLiveRegion="polite">

@@ -15,10 +15,6 @@ const cardShadow = Platform.select({
 export const createStyles = (colors: ColorsType) =>
   StyleSheet.create({
     // --- Filtros ---
-    chipsRow: {
-      gap: 8,
-      paddingVertical: 4,
-    },
     filterGroup: {
       gap: 8,
       marginBottom: 16,

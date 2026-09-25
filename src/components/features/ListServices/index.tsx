@@ -6,7 +6,6 @@ import {
   Pressable,
   ScrollView,
 } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
 import { createStyles } from './styles';
 import { useColors } from '@theme/ThemeProvider';
 import useServicesStore from '@stores/Services/Services';
@@ -17,7 +16,7 @@ import { useSubCategoryStore } from '@stores/SubCategory';
 import { useIsFocused } from '@react-navigation/native';
 import { initSSE } from '@lib/sse';
 import { useBreakpoint } from '@lib/hooks/useBreakpoint';
-import Chip from '@components/ui/Chip';
+import Chip, { ChipGroup } from '@components/ui/Chip';
 
 const POLLING_INTERVAL_MS = 15000;
 /** Quantos cards aparecem antes do "Mostrar mais" (tablet/desktop). */
@@ -232,11 +231,7 @@ const ListServices: React.FC = () => {
   return (
     <View>
       <View style={styles.filterGroup}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipsRow}
-          accessibilityLabel="Filtrar por categoria">
+        <ChipGroup accessibilityLabel="Filtrar por categoria">
           <Chip
             label="Todas"
             selected={selectedCategory === null}
@@ -250,14 +245,10 @@ const ListServices: React.FC = () => {
               onPress={() => handleSelectCategory(cat.id)}
             />
           ))}
-        </ScrollView>
+        </ChipGroup>
 
         {selectedCategory && subCategoriesForSelected.length > 0 ? (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.chipsRow}
-            accessibilityLabel="Filtrar por subcategoria">
+          <ChipGroup accessibilityLabel="Filtrar por subcategoria">
             {subCategoriesForSelected.map((sub) => (
               <Chip
                 key={sub.id}
@@ -271,7 +262,7 @@ const ListServices: React.FC = () => {
                 }
               />
             ))}
-          </ScrollView>
+          </ChipGroup>
         ) : null}
 
         <View style={styles.toggleRow}>
