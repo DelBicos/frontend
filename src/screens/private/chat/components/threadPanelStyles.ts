@@ -3,6 +3,19 @@ import { ColorsType } from '@theme/types';
 
 export const createThreadPanelStyles = (colors: ColorsType) =>
   StyleSheet.create({
+    daySeparator: {
+      alignSelf: 'center',
+      marginVertical: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      borderRadius: 999,
+      backgroundColor: colors.inputBackground,
+    },
+    daySeparatorText: {
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 13,
+      color: colors.textSecondary,
+    },
     container: {
       flex: 1,
       backgroundColor: colors.primaryWhite,
@@ -92,7 +105,8 @@ export const createThreadPanelStyles = (colors: ColorsType) =>
     bubbleTextMine: {
       fontSize: 15,
       fontFamily: 'Afacad-Regular',
-      color: colors.primaryWhite,
+      // Texto escuro sobre laranja (contraste AA).
+      color: '#000000',
     },
     bubbleTextTheirs: {
       fontSize: 15,
@@ -106,7 +120,7 @@ export const createThreadPanelStyles = (colors: ColorsType) =>
       alignSelf: 'flex-end',
     },
     bubbleTimeMine: {
-      color: 'rgba(255,255,255,0.85)',
+      color: 'rgba(0,0,0,0.65)',
     },
     bubbleTimeTheirs: {
       color: colors.textTertiary,

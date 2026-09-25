@@ -24,6 +24,23 @@ import { createThreadPanelStyles } from './threadPanelStyles';
 
 const PAGE_SIZE = 20;
 
+const dayKey = (iso: string) => new Date(iso).toDateString();
+
+/** "Hoje", "Ontem" ou "12 de setembro". */
+function dayLabel(iso: string) {
+  const date = new Date(iso);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+  if (date.toDateString() === today.toDateString()) return 'Hoje';
+  if (date.toDateString() === yesterday.toDateString()) return 'Ontem';
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: 'numeric',
+    month: 'long',
+    ...(date.getFullYear() !== today.getFullYear() ? { year: 'numeric' } : {}),
+  }).format(date);
+}
+
 export type ChatThreadPanelProps = {
   roomId: number;
   correspondent: ChatCorrespondent | null;
@@ -158,34 +175,51 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
     setInput('');
   };
 
-  const renderItem = ({ item }: { item: ChatMessage }) => {
+  const renderItem = ({
+    item,
+    index,
+  }: {
+    item: ChatMessage;
+    index: number;
+  }) => {
     const isMine = item.sender_user_id === user?.id;
+    const older = messages[index + 1];
+    const startsDay = !older || dayKey(older.sent_at) !== dayKey(item.sent_at);
     return (
-      <View
-        style={[
-          styles.bubbleRow,
-          isMine ? styles.bubbleRowMine : styles.bubbleRowTheirs,
-        ]}>
+      <View>
+        {startsDay ? (
+          <View style={styles.daySeparator}>
+            <Text style={styles.daySeparatorText}>
+              {dayLabel(item.sent_at)}
+            </Text>
+          </View>
+        ) : null}
         <View
           style={[
-            styles.bubble,
-            isMine ? styles.bubbleMine : styles.bubbleTheirs,
+            styles.bubbleRow,
+            isMine ? styles.bubbleRowMine : styles.bubbleRowTheirs,
           ]}>
-          <Text
-            style={isMine ? styles.bubbleTextMine : styles.bubbleTextTheirs}>
-            {item.text}
-          </Text>
-          <Text
+          <View
             style={[
-              styles.bubbleTime,
-              isMine ? styles.bubbleTimeMine : styles.bubbleTimeTheirs,
+              styles.bubble,
+              isMine ? styles.bubbleMine : styles.bubbleTheirs,
             ]}>
-            {new Date(item.sent_at).toLocaleTimeString('pt-BR', {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-            {item.pending ? ' · enviando…' : ''}
-          </Text>
+            <Text
+              style={isMine ? styles.bubbleTextMine : styles.bubbleTextTheirs}>
+              {item.text}
+            </Text>
+            <Text
+              style={[
+                styles.bubbleTime,
+                isMine ? styles.bubbleTimeMine : styles.bubbleTimeTheirs,
+              ]}>
+              {new Date(item.sent_at).toLocaleTimeString('pt-BR', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+              {item.pending ? ' · enviando…' : ''}
+            </Text>
+          </View>
         </View>
       </View>
     );
@@ -222,7 +256,7 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
           />
         ) : (
           <View style={styles.headerAvatarFallback}>
-            <FontAwesome name="user" size={18} color={colors.primaryWhite} />
+            <FontAwesome name="user" size={18} color="#000000" />
           </View>
         )}
 
@@ -267,7 +301,7 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
         {roomStatus === 'archived' ? (
           <View style={styles.archivedBar}>
             <Text style={styles.archivedBarText}>
-              Esta conversa está arquivada e não aceita novas mensagens.
+              Conversa encerrada: o atendimento foi concluído ou cancelado.
             </Text>
           </View>
         ) : (
@@ -279,6 +313,20 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
               value={input}
               onChangeText={setInput}
               multiline
+              accessibilityLabel="Mensagem"
+              {...(Platform.OS === 'web'
+                ? {
+                    onKeyPress: (e: any) => {
+                      if (
+                        e.nativeEvent.key === 'Enter' &&
+                        !e.nativeEvent.shiftKey
+                      ) {
+                        e.preventDefault();
+                        handleSend();
+                      }
+                    },
+                  }
+                : {})}
             />
             <TouchableOpacity
               style={[
@@ -289,7 +337,7 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
               disabled={!input.trim()}
               accessibilityRole="button"
               accessibilityLabel="Enviar mensagem">
-              <FontAwesome name="send" size={18} color={colors.primaryWhite} />
+              <FontAwesome name="send" size={18} color="#000000" />
             </TouchableOpacity>
           </View>
         )}
