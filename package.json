@@ -43,7 +43,9 @@
     "docker:clean": "docker-compose down -v && docker system prune -f",
     "docker:rebuild": "docker-compose down && docker-compose build --no-cache && docker-compose up",
     "docker:copy:env": "docker cp .env webapp-delbicos:/app/.env",
-    "docker:network": "docker network create delbicos-shared-network"
+    "docker:network": "docker network create delbicos-shared-network",
+    "test:coverage": "jest --coverage",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",

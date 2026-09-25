@@ -1,5 +1,14 @@
 module.exports = {
   preset: 'jest-expo',
+  // Cobertura sobre todo o src, nao so sobre os arquivos importados pelos testes.
+  collectCoverageFrom: [
+    'src/**/*.{ts,tsx}',
+    '!src/**/*.d.ts',
+    '!src/**/__tests__/**',
+    '!src/**/*.test.{ts,tsx}',
+    '!src/assets/**',
+  ],
+  coverageReporters: ['text-summary', 'lcov'],
   transformIgnorePatterns: [
     'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)',
   ],
