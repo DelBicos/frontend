@@ -19,21 +19,47 @@ import ProfessionalResultCard, {
 } from '@components/features/ProfessionalResultCard';
 import { useProfessionalStore } from '@stores/Professional';
 import { useLocation } from '@lib/hooks/LocationContext';
+import { useServicesStore, type ServiceItem } from '@stores/Services/Services';
+import ServiceCard from '@components/features/ListServices/ServiceCard';
 // radius filters removed (RF04 reverted)
+
+type SearchResultParams = {
+  subCategoryId?: number;
+  date?: string;
+  query?: string;
+};
+
+function resolveSemanticSearchError(error: unknown): string {
+  if (error && typeof error === 'object' && 'response' in error) {
+    const status = (error as { response?: { status?: number } }).response
+      ?.status;
+    if (status === 429) {
+      return 'Muitas buscas realizadas. Aguarde alguns minutos e tente novamente.';
+    }
+    if (status === 503) {
+      return 'A busca semântica está temporariamente indisponível. Tente novamente.';
+    }
+  }
+  return 'Não foi possível buscar os serviços agora. Tente novamente.';
+}
 
 function SearchResultScreen() {
   const route = useRoute();
-  const { subCategoryId, date } = route.params as {
-    subCategoryId: number;
-    date: string;
-  };
+  const { subCategoryId, date, query } = route.params as SearchResultParams;
+  const semanticQuery = query?.trim() ?? '';
+  const isSemanticSearch = semanticQuery.length >= 2;
 
   const { fetchProfessionalsByAvailability } = useProfessionalStore();
+  const { searchServicesSemantically } = useServicesStore();
   const { address } = useLocation();
   const { width } = useWindowDimensions();
 
   const [isLoading, setIsLoading] = useState(true);
   const [results, setResults] = useState<ProfessionalResult[]>([]);
+  const [semanticServices, setSemanticServices] = useState<ServiceItem[]>([]);
+  const [semanticTotal, setSemanticTotal] = useState(0);
+  const [semanticResultsLimited, setSemanticResultsLimited] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   // radius filter removed
 
   const numColumns = width > 1100 ? 3 : width > 768 ? 2 : 1;
@@ -41,6 +67,33 @@ function SearchResultScreen() {
   useEffect(() => {
     const loadResults = async () => {
       setIsLoading(true);
+      setSearchError(null);
+
+      if (isSemanticSearch) {
+        try {
+          const semanticResult =
+            await searchServicesSemantically(semanticQuery);
+          setSemanticServices(semanticResult.services);
+          setSemanticTotal(semanticResult.total);
+          setSemanticResultsLimited(semanticResult.resultsLimited);
+        } catch (error) {
+          setSemanticServices([]);
+          setSemanticTotal(0);
+          setSearchError(resolveSemanticSearchError(error));
+        } finally {
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      if (!subCategoryId || !date) {
+        setResults([]);
+        setSearchError(
+          'Informe um serviço e uma data para encontrar profissionais.',
+        );
+        setIsLoading(false);
+        return;
+      }
 
       const lat = address?.lat ? parseFloat(String(address.lat)) : undefined;
       const lng = address?.lng ? parseFloat(String(address.lng)) : undefined;
@@ -55,13 +108,24 @@ function SearchResultScreen() {
         setResults(data || []);
       } catch (error) {
         console.error('Erro ao buscar profissionais:', error);
+        setSearchError(
+          'Não foi possível buscar profissionais agora. Tente novamente.',
+        );
       } finally {
         setIsLoading(false);
       }
     };
 
     loadResults();
-  }, [subCategoryId, date, fetchProfessionalsByAvailability, address]);
+  }, [
+    address,
+    date,
+    fetchProfessionalsByAvailability,
+    isSemanticSearch,
+    searchServicesSemantically,
+    semanticQuery,
+    subCategoryId,
+  ]);
 
   const colors = useColors();
   const { theme } = useThemeStore();
@@ -111,6 +175,55 @@ function SearchResultScreen() {
     </ScrollView>
   );
 
+  if (isSemanticSearch) {
+    return (
+      <View style={styles.container}>
+        {isLoading ? (
+          <ActivityIndicator
+            size="large"
+            color={colors.primaryBlue}
+            style={{ flex: 1 }}
+          />
+        ) : (
+          <FlatList
+            style={styles.list}
+            contentContainerStyle={styles.contentContainer}
+            data={semanticServices}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => <ServiceCard service={item} />}
+            ListHeaderComponent={
+              <>
+                <Text style={styles.title}>
+                  {semanticTotal} resultado{semanticTotal === 1 ? '' : 's'} para
+                  “{semanticQuery}”
+                </Text>
+                {semanticResultsLimited && (
+                  <Text style={styles.searchInfo}>
+                    Exibindo os resultados mais relevantes para sua busca.
+                  </Text>
+                )}
+              </>
+            }
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>
+                  {searchError ??
+                    'Nenhum serviço relevante foi encontrado. Tente descrever o que você precisa de outra forma.'}
+                </Text>
+              </View>
+            }
+            ListFooterComponent={
+              <Text style={styles.footer}>
+                © DelBicos - {new Date().getFullYear()} - Todos os direitos
+                reservados.
+              </Text>
+            }
+          />
+        )}
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       {isLoading ? (
@@ -137,13 +250,19 @@ function SearchResultScreen() {
               <Text style={styles.title}>
                 {results.length} Resultados Encontrados
               </Text>
+              {searchError && (
+                <Text style={styles.searchInfo}>{searchError}</Text>
+              )}
               {renderFilterBar()}
             </>
           }
           renderItem={({ item }) => (
             <View
               style={[styles.cardWrapper, { width: `${100 / numColumns}%` }]}>
-              <ProfessionalResultCard professional={item} selectedDate={date} />
+              <ProfessionalResultCard
+                professional={item}
+                selectedDate={date ?? ''}
+              />
             </View>
           )}
           ListFooterComponent={
@@ -155,7 +274,8 @@ function SearchResultScreen() {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>
-                Nenhum profissional encontrado para esta data ou serviço.
+                {searchError ??
+                  'Nenhum profissional encontrado para esta data ou serviço.'}
               </Text>
             </View>
           }

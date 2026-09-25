@@ -117,15 +117,23 @@ const ProfessionalDashboard: React.FC = () => {
       showsVerticalScrollIndicator={false}>
       {/* 1. Header do Prestador */}
       <View style={styles.topHeader}>
-        <View style={styles.avatarContainer}>
-          <Image
-            source={{
-              uri:
-                user?.avatar_uri ||
-                'https://ui-avatars.com/api/?name=' + (user?.name || 'P'),
-            }}
-            style={styles.avatar}
-          />
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity
+            style={{ marginRight: 12, padding: 4 }}
+            onPress={() => navigation.navigate('Home' as never)}
+          >
+            <FontAwesome name="arrow-left" size={20} color={colors.primaryOrange} />
+          </TouchableOpacity>
+          <View style={styles.avatarContainer}>
+            <Image
+              source={{
+                uri:
+                  user?.avatar_uri ||
+                  'https://ui-avatars.com/api/?name=' + (user?.name || 'P'),
+              }}
+              style={styles.avatar}
+            />
+          </View>
         </View>
 
         <TouchableOpacity

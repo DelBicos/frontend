@@ -30,6 +30,13 @@ export const createStyles = (
       color: colors.primaryBlue,
       marginBottom: 16,
     },
+    searchInfo: {
+      color: colors.textSecondary,
+      fontSize: 15,
+      fontFamily: 'Afacad-Regular',
+      marginTop: -8,
+      marginBottom: 16,
+    },
 
     // Filtros
     filterBarContainer: {

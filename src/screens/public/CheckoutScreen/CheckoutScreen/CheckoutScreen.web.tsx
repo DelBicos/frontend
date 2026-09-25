@@ -20,6 +20,7 @@ import { HTTP_DOMAIN } from '@config/varEnvs';
 import { useUserStore } from '@stores/User';
 import { Address } from '@stores/Address/types';
 import { useProfessionalStore } from '@stores/Professional';
+import { AppointmentStatus, useAppointmentStore } from '@stores/Appointment';
 import AddressSelectionModal from '@components/features/AddressSelectionModal';
 import { createStyles } from './styles';
 import CheckoutForm from '../CheckoutForm/CheckoutForm.web';
@@ -33,6 +34,7 @@ async function fetchPaymentIntent(
   selectedTime: string,
   addressId: number,
   token: string | null,
+  appointmentId?: number,
 ): Promise<string | null> {
   if (!token) return null;
 
@@ -57,6 +59,7 @@ async function fetchPaymentIntent(
           serviceId,
           selectedTime,
           addressId,
+          ...(appointmentId ? { appointmentId } : {}),
         }),
       },
     );
@@ -80,7 +83,8 @@ function CheckoutScreen() {
   const navigation = useNavigation();
   const route =
     useRoute<RouteProp<{ params: CheckoutRouteParams }, 'params'>>();
-  const { professionalId, selectedTime, imageUrl, serviceId } = route.params;
+  const { professionalId, selectedTime, imageUrl, serviceId, appointmentId } =
+    route.params;
 
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [loadingIntent, setLoadingIntent] = useState(false);
@@ -93,6 +97,7 @@ function CheckoutScreen() {
   const { user, token } = useUserStore();
   const { selectedProfessional, fetchProfessionalById } =
     useProfessionalStore();
+  const { fetchAppointments } = useAppointmentStore();
 
   const colors = useColors();
   const styles = createStyles(colors);
@@ -170,12 +175,98 @@ function CheckoutScreen() {
         setErrorIntent(null);
 
         if (amountInReais <= 0) {
-          setErrorIntent('Valor do serviço inválido. Entre em contato com o suporte.');
+          setErrorIntent(
+            'Valor do serviço inválido. Entre em contato com o suporte.',
+          );
           setLoadingIntent(false);
           return;
         }
 
-        console.log('[CheckoutScreen] Enviando amount (em reais):', amountInReais);
+        // Nunca confia no appointmentId vindo de rota/deep link/cache: revalida
+        // contra o estado atual do próprio usuário antes de usá-lo no pagamento.
+        let validatedAppointmentId: number | undefined = appointmentId;
+        if (appointmentId) {
+          // fetchAppointments engole erros internamente (ex.: usuário ainda não
+          // carregado no store) e só esvazia o array — sem essa checagem prévia
+          // isso vira um falso "agendamento não encontrado" sem nenhuma request.
+          if (!user) {
+            console.warn(
+              '[CheckoutScreen] Validação de appointmentId abortada: usuário ainda não carregado no store.',
+              { appointmentId },
+            );
+            setErrorIntent(
+              'Não foi possível verificar seu agendamento agora. Aguarde um instante e tente novamente.',
+            );
+            setLoadingIntent(false);
+            return;
+          }
+
+          console.log(
+            '[CheckoutScreen] Validando appointmentId antes do create-payment-intent:',
+            { appointmentId, userId: user.id },
+          );
+
+          try {
+            await fetchAppointments('client');
+          } catch (fetchErr: any) {
+            console.error(
+              '[CheckoutScreen] fetchAppointments lançou exceção inesperada:',
+              fetchErr,
+            );
+            setErrorIntent(
+              'Não foi possível verificar seu agendamento agora. Tente novamente em instantes.',
+            );
+            setLoadingIntent(false);
+            return;
+          }
+
+          const fetchedAppointments =
+            useAppointmentStore.getState().appointments;
+          const idsList = fetchedAppointments
+            .map((a) => `${a.numeric_id}(${a.status})`)
+            .join(', ');
+          const matchFound = fetchedAppointments.some(
+            (a) => Number(a.numeric_id) === Number(appointmentId),
+          );
+          console.log(
+            `[CheckoutScreen] fetchAppointments concluído: total=${fetchedAppointments.length} ids=[${idsList}] procurando=${appointmentId} (${typeof appointmentId}) encontrado=${matchFound}`,
+          );
+
+          const ownedAppointment = fetchedAppointments.find(
+            (a) => Number(a.numeric_id) === Number(appointmentId),
+          );
+
+          if (!ownedAppointment) {
+            setErrorIntent(
+              'Não foi possível localizar este agendamento na sua conta. Reinicie o processo de agendamento.',
+            );
+            setLoadingIntent(false);
+            return;
+          }
+          if (
+            ownedAppointment.status === AppointmentStatus.COMPLETED ||
+            ownedAppointment.status === AppointmentStatus.CANCELED
+          ) {
+            setErrorIntent(
+              `Este agendamento não pode mais receber pagamento (status atual: ${ownedAppointment.status}).`,
+            );
+            setLoadingIntent(false);
+            return;
+          }
+          if (ownedAppointment.payment_intent_id) {
+            setErrorIntent(
+              'Este agendamento já possui outro pagamento registrado.',
+            );
+            setLoadingIntent(false);
+            return;
+          }
+          validatedAppointmentId = ownedAppointment.numeric_id;
+        }
+
+        console.log(
+          '[CheckoutScreen] Enviando amount (em reais):',
+          amountInReais,
+        );
 
         const secret = await fetchPaymentIntent(
           amountInReais,
@@ -184,6 +275,7 @@ function CheckoutScreen() {
           selectedTime,
           selectedAddress.id,
           token,
+          validatedAppointmentId,
         );
 
         if (secret) {
@@ -195,7 +287,17 @@ function CheckoutScreen() {
       };
       initPayment();
     }
-  }, [service, selectedAddress, professionalId, selectedTime, token, amountInReais]);
+  }, [
+    service,
+    selectedAddress,
+    professionalId,
+    selectedTime,
+    token,
+    amountInReais,
+    appointmentId,
+    fetchAppointments,
+    user,
+  ]);
 
   const stripeOptions = useMemo(
     () => ({
@@ -204,7 +306,6 @@ function CheckoutScreen() {
     }),
     [clientSecret],
   );
-
 
   if (isLoadingProfessional) {
     return (
