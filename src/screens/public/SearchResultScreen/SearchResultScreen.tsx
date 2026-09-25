@@ -27,6 +27,8 @@ type SearchResultParams = {
   subCategoryId?: number;
   date?: string;
   query?: string;
+  professionalId?: number;
+  professionalName?: string;
 };
 
 function resolveSemanticSearchError(error: unknown): string {
@@ -45,7 +47,8 @@ function resolveSemanticSearchError(error: unknown): string {
 
 function SearchResultScreen() {
   const route = useRoute();
-  const { subCategoryId, date, query } = route.params as SearchResultParams;
+  const { subCategoryId, date, query, professionalId, professionalName } =
+    route.params as SearchResultParams;
   const semanticQuery = query?.trim() ?? '';
   const isSemanticSearch = semanticQuery.length >= 2;
 
@@ -56,6 +59,9 @@ function SearchResultScreen() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [results, setResults] = useState<ProfessionalResult[]>([]);
+  // Vindo do perfil de um profissional, mostra so ele (com opcao de ver todos).
+  const [showAll, setShowAll] = useState(false);
+  const isSingleProfessional = !!professionalId && !showAll;
   const [semanticServices, setSemanticServices] = useState<ServiceItem[]>([]);
   const [semanticTotal, setSemanticTotal] = useState(0);
   const [semanticResultsLimited, setSemanticResultsLimited] = useState(false);
@@ -236,7 +242,12 @@ function SearchResultScreen() {
         <FlatList
           style={styles.list}
           contentContainerStyle={styles.contentContainer}
-          data={results}
+          data={
+            isSingleProfessional
+              ? // Parametros vindos da URL (web) chegam como texto.
+                results.filter((r) => r.id === Number(professionalId))
+              : results
+          }
           keyExtractor={(item) => item.id.toString()}
           initialNumToRender={6}
           maxToRenderPerBatch={8}
@@ -248,8 +259,20 @@ function SearchResultScreen() {
           ListHeaderComponent={
             <>
               <Text style={styles.title}>
-                {results.length} Resultados Encontrados
+                {isSingleProfessional
+                  ? `Horários de ${professionalName ?? 'profissional'}`
+                  : `${results.length} Resultados Encontrados`}
               </Text>
+              {isSingleProfessional ? (
+                <TouchableOpacity
+                  onPress={() => setShowAll(true)}
+                  accessibilityRole="button"
+                  style={styles.showAllButton}>
+                  <Text style={styles.showAllText}>
+                    Ver outros profissionais para este serviço
+                  </Text>
+                </TouchableOpacity>
+              ) : null}
               {searchError && (
                 <Text style={styles.searchInfo}>{searchError}</Text>
               )}
@@ -275,7 +298,9 @@ function SearchResultScreen() {
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>
                 {searchError ??
-                  'Nenhum profissional encontrado para esta data ou serviço.'}
+                  (isSingleProfessional
+                    ? `${professionalName ?? 'Este profissional'} não tem horários livres nesse dia. Volte e escolha outra data, ou veja outros profissionais.`
+                    : 'Nenhum profissional encontrado para esta data ou serviço.')}
               </Text>
             </View>
           }

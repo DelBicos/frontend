@@ -35,9 +35,19 @@ export type NavigationParams = {
     categoryTitle?: string;
     serviceId?: number;
     singleSubCategory?: { id: number; title: string };
+    /** Vindo do perfil de um profissional: mostra so os horarios dele. */
+    professionalId?: number;
+    professionalName?: string;
   };
   ClientProfile: { subroute?: ClientProfileSubRoutes };
-  SearchResult: { subCategoryId: number; date: string } | { query: string };
+  SearchResult:
+    | {
+        subCategoryId: number;
+        date: string;
+        professionalId?: number;
+        professionalName?: string;
+      }
+    | { query: string };
   Checkout: {
     professionalId: number;
     priceFrom?: number;

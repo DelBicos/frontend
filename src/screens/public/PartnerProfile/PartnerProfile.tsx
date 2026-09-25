@@ -1,247 +1,336 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  ImageBackground,
-  Text,
-  TouchableOpacity,
-  View,
   ActivityIndicator,
-  StatusBar,
   Image,
-  ScrollView,
+  ImageBackground,
+  Platform,
+  Pressable,
+  Text,
+  View,
 } from 'react-native';
-
-// Componentes de Conteúdo das Abas
+import { FontAwesome } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { useProfessionalStore } from '@stores/Professional';
+import { useFavoriteStore } from '@stores/Favorite';
+import { useUserStore } from '@stores/User';
+import { useColors } from '@theme/ThemeProvider';
+import { useBreakpoint } from '@lib/hooks/useBreakpoint';
+import PageContainer from '@components/layout/PageContainer';
 import { SobreContent } from './SobreContent';
 import { ServicosContent } from './ServicosContent';
 import { GaleriaContent } from './GaleriaContent';
 import { AvaliacoesContent } from './AvaliacoesContent';
-
-import { useProfessionalStore } from '@stores/Professional';
-import { useColors } from '@theme/ThemeProvider';
-import { useThemeStore, ThemeMode } from '@stores/Theme';
+import Stars from './components/Stars';
 import { createStyles } from './styles';
 
 type TabType = 'sobre' | 'servicos' | 'galeria' | 'avaliacoes';
 
-function PartnerProfileScreen() {
-  const navigation = useNavigation();
-  const route = useRoute();
-  const { id } = route.params as { id: number };
+const TAB_LABELS: Record<TabType, string> = {
+  sobre: 'Sobre',
+  servicos: 'Serviços',
+  galeria: 'Galeria',
+  avaliacoes: 'Avaliações',
+};
 
-  const [activeTab, setActiveTab] = useState<TabType>('sobre');
-  const { selectedProfessional, fetchProfessionalById } =
-    useProfessionalStore();
-  const [isLoading, setIsLoading] = useState(true);
+function PartnerProfileScreen() {
+  const navigation = useNavigation<any>();
+  const route = useRoute();
+  const id = Number((route.params as { id: number | string }).id);
 
   const colors = useColors();
-  const { theme } = useThemeStore();
-  const isDark = theme === ThemeMode.DARK;
-  const isHighContrast = theme === ThemeMode.LIGHT_HI_CONTRAST;
-  const styles = createStyles(colors, isDark, isHighContrast);
+  const { isCompact } = useBreakpoint();
+  const styles = useMemo(
+    () => createStyles(colors, isCompact),
+    [colors, isCompact],
+  );
 
-  // 1. Effect para carregar dados
+  const { selectedProfessional, fetchProfessionalById } =
+    useProfessionalStore();
+  const user = useUserStore((s) => s.user);
+  const { isFavorite, addFavorite, removeFavorite } = useFavoriteStore();
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<TabType>('servicos');
+
   useEffect(() => {
-    const loadProfessional = async () => {
-      setIsLoading(true);
-      await fetchProfessionalById(id);
-      setIsLoading(false);
+    let active = true;
+    setIsLoading(true);
+    fetchProfessionalById(id).finally(() => active && setIsLoading(false));
+    return () => {
+      active = false;
     };
-    loadProfessional();
   }, [id, fetchProfessionalById]);
 
-  const parceiro = selectedProfessional;
+  const parceiro =
+    selectedProfessional?.id === id ? selectedProfessional : null;
 
-  // 2. useMemo declarado ANTES de qualquer retorno condicional
+  // Fotos da galeria e dos servicos, sem repetir.
   const galleryImages = useMemo(() => {
-    // Se não tiver parceiro carregado ainda, retorna vazio
     if (!parceiro) return [];
-
-    // Acessando Gallery via cast 'as any' para evitar erro de tipagem se a interface estiver desatualizada
-    const galleryFromBackend = (parceiro as any).Gallery || [];
-
-    const imgs = [
-      parceiro.User.banner_uri,
-      parceiro.User.avatar_uri,
-      ...(parceiro.Services?.map((s) => s.banner_uri) || []),
-      ...galleryFromBackend.map((g: any) => g.uri),
-    ].filter(Boolean) as string[];
-
-    return imgs.map((url, index) => ({ id: String(index), url }));
+    const items = [
+      ...(parceiro.Gallery ?? []).map((g) => ({
+        url: g.url,
+        descricao: g.description,
+      })),
+      ...(parceiro.Services ?? [])
+        .filter((s) => s.active && s.banner_uri)
+        .map((s) => ({ url: s.banner_uri as string, descricao: s.title })),
+    ];
+    const seen = new Set<string>();
+    return items
+      .filter((img) => img.url && !seen.has(img.url) && seen.add(img.url))
+      .map((img, index) => ({ ...img, id: String(index) }));
   }, [parceiro]);
 
-  // 3. Early Returns (Loading e Erro) agora podem acontecer seguramente
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={styles.centered}>
         <ActivityIndicator size="large" color={colors.primaryOrange} />
-        <Text style={styles.loadingText}>Carregando perfil...</Text>
       </View>
     );
   }
 
   if (!parceiro) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Profissional não encontrado.</Text>
-        <TouchableOpacity
-          style={styles.backButtonError}
-          onPress={() => navigation.goBack()}>
-          <Text style={styles.backButtonTextError}>Voltar</Text>
-        </TouchableOpacity>
+      <View style={styles.centered}>
+        <Text style={styles.notFound}>Profissional não encontrado.</Text>
+        <Pressable
+          onPress={() =>
+            navigation.canGoBack()
+              ? navigation.goBack()
+              : navigation.navigate('Home')
+          }
+          style={styles.secondaryButton}
+          accessibilityRole="button">
+          <Text style={styles.secondaryButtonText}>Voltar</Text>
+        </Pressable>
       </View>
     );
   }
 
-  // --- Variáveis de Renderização ---
+  const name = parceiro.User.name;
+  const isOwner = user?.professional_id === parceiro.id;
+  const canFavorite = !!user && !isOwner;
+  const favorited = isFavorite(parceiro.id);
+  const activeServices = (parceiro.Services ?? []).filter((s) => s.active);
+  const reviews = (parceiro.Appointments ?? []).filter((a) => a.rating);
+  const location = parceiro.MainAddress
+    ? [parceiro.MainAddress.neighborhood, parceiro.MainAddress.city]
+        .filter(Boolean)
+        .join(', ')
+    : null;
 
-  const coverImageUri =
-    parceiro.User.banner_uri ||
-    parceiro.User.avatar_uri ||
-    `https://via.placeholder.com/800x600`;
+  const counts: Record<TabType, number | null> = {
+    sobre: null,
+    servicos: activeServices.length,
+    galeria: galleryImages.length,
+    avaliacoes: reviews.length,
+  };
 
-  const avatarUri = parceiro.User.avatar_uri;
-
-  const addressShort = parceiro.MainAddress
-    ? `${parceiro.MainAddress.city}, ${parceiro.MainAddress.state}`
-    : 'Localização não informada';
+  const toggleFavorite = () => {
+    if (favorited) {
+      removeFavorite(parceiro.id);
+      return;
+    }
+    addFavorite({
+      professionalId: parceiro.id,
+      professionalName: name,
+      professionalAvatar: parceiro.User.avatar_uri || undefined,
+      serviceTitle: activeServices[0]?.title,
+      addedAt: new Date().toISOString(),
+    });
+  };
 
   const renderContent = () => {
     switch (activeTab) {
       case 'sobre':
         return (
           <SobreContent
-            nome={parceiro.User.name}
+            nome={name}
             descricao={parceiro.description}
             endereco={parceiro.MainAddress}
+            raioKm={parceiro.service_radius_km}
+            desde={parceiro.createdAt}
+            totalServicos={activeServices.length}
+            totalAvaliacoes={reviews.length}
           />
         );
       case 'servicos':
-        return <ServicosContent servicos={parceiro.Services || []} />;
+        return (
+          <ServicosContent
+            servicos={parceiro.Services ?? []}
+            professionalId={parceiro.id}
+            professionalName={name}
+            isOwner={isOwner}
+          />
+        );
       case 'galeria':
         return <GaleriaContent imagens={galleryImages} />;
-      case 'avaliacoes':
-        return <AvaliacoesContent avaliacoes={parceiro.Appointments || []} />;
       default:
-        return null;
+        return <AvaliacoesContent avaliacoes={parceiro.Appointments ?? []} />;
     }
   };
 
+  const cover = parceiro.User.banner_uri;
+  const coverContent = (
+    <LinearGradient
+      colors={['rgba(0,0,0,0.35)', 'transparent']}
+      style={styles.coverOverlay}>
+      {/* No app nao ha cabecalho: botao de voltar sobre a capa. */}
+      {Platform.OS !== 'web' && navigation.canGoBack() ? (
+        <Pressable
+          onPress={() => navigation.goBack()}
+          style={styles.coverButton}
+          accessibilityRole="button"
+          accessibilityLabel="Voltar">
+          <FontAwesome name="arrow-left" size={18} color="#FFFFFF" />
+        </Pressable>
+      ) : (
+        <View />
+      )}
+      {canFavorite ? (
+        <Pressable
+          onPress={toggleFavorite}
+          style={styles.coverButton}
+          accessibilityRole="button"
+          accessibilityState={{ selected: favorited }}
+          accessibilityLabel={
+            favorited ? `Remover ${name} dos favoritos` : `Favoritar ${name}`
+          }>
+          <FontAwesome
+            name={favorited ? 'heart' : 'heart-o'}
+            size={18}
+            color={favorited ? '#FF6B6B' : '#FFFFFF'}
+          />
+        </Pressable>
+      ) : null}
+    </LinearGradient>
+  );
+
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }}
-      showsVerticalScrollIndicator={false}>
-      <StatusBar
-        barStyle="light-content"
-        translucent
-        backgroundColor="transparent"
-      />
+    <PageContainer maxWidth={960}>
+      {isOwner ? (
+        <View style={styles.ownerBanner}>
+          <FontAwesome name="eye" size={16} color={colors.primaryBlack} />
+          <Text style={styles.ownerText}>
+            Este é o seu perfil, como os clientes veem.
+          </Text>
+          <Pressable
+            onPress={() =>
+              navigation.navigate('ProfessionalTabs', {
+                screen: 'ProfessionalServicesTab',
+              })
+            }
+            accessibilityRole="link">
+            <Text style={styles.ownerLink}>Editar serviços</Text>
+          </Pressable>
+        </View>
+      ) : null}
 
-      {/* Header Imersivo com Imagem de Capa */}
-      <View style={styles.headerWrapper}>
+      {cover ? (
         <ImageBackground
-          source={{ uri: coverImageUri }}
-          style={styles.headerImage}
-          resizeMode="cover">
-          <LinearGradient
-            colors={['rgba(0,0,0,0.6)', 'transparent', 'rgba(0,0,0,0.4)']}
-            style={styles.gradientOverlay}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}>
-              <MaterialIcons name="arrow-back" size={24} color="white" />
-            </TouchableOpacity>
-          </LinearGradient>
+          source={{ uri: cover }}
+          style={styles.cover}
+          imageStyle={styles.coverImage}
+          accessibilityIgnoresInvertColors>
+          {coverContent}
         </ImageBackground>
+      ) : (
+        <LinearGradient
+          colors={['#005A93', '#0B7FC4']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.cover, styles.coverImage]}>
+          {coverContent}
+        </LinearGradient>
+      )}
 
-        {/* Card Flutuante com Avatar e Informações */}
-        <View style={styles.floatingInfoCard}>
-          <View style={styles.floatingCardContentRow}>
-            {/* Avatar do Profissional */}
-            <View style={styles.avatarContainer}>
-              {avatarUri ? (
-                <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
-              ) : (
-                <View style={[styles.avatarImage, styles.avatarFallback]}>
-                  <FontAwesome
-                    name="user"
-                    size={32}
-                    color={colors.textTertiary}
-                  />
-                </View>
-              )}
-            </View>
-
-            {/* Coluna de Informações (Nome, Rating, Local) */}
-            <View style={styles.infoColumn}>
-              <View style={styles.cardHeaderRow}>
-                <Text style={styles.profileName} numberOfLines={2}>
-                  {parceiro.User.name}
+      <View style={styles.identity}>
+        {parceiro.User.avatar_uri ? (
+          <Image
+            source={{ uri: parceiro.User.avatar_uri }}
+            style={styles.avatar}
+            accessibilityLabel={`Foto de ${name}`}
+          />
+        ) : (
+          <View style={[styles.avatar, styles.avatarFallback]}>
+            <Text style={styles.avatarInitial}>
+              {name.charAt(0).toUpperCase()}
+            </Text>
+          </View>
+        )}
+        <View style={styles.identityTexts}>
+          <Text
+            style={styles.name}
+            accessibilityRole="header"
+            {...({ 'aria-level': 1 } as object)}>
+            {name}
+          </Text>
+          <View style={styles.metaRow}>
+            {parceiro.rating ? (
+              <View
+                style={styles.metaItem}
+                accessible
+                accessibilityLabel={`Nota ${parceiro.rating.toFixed(1)} de 5, ${parceiro.ratings_count} avaliações`}>
+                <Stars value={parceiro.rating} size={14} />
+                <Text style={styles.metaStrong}>
+                  {parceiro.rating.toFixed(1).replace('.', ',')}
                 </Text>
-                {/* Badge de Rating */}
-                <View style={styles.ratingBadge}>
-                  <FontAwesome name="star" size={14} color="#FFC107" />
-                  <Text style={styles.ratingValue}>
-                    {parceiro.rating?.toFixed(1) || '0.0'}
-                  </Text>
-                </View>
+                <Text style={styles.metaText}>({parceiro.ratings_count})</Text>
               </View>
-
-              <View style={styles.locationRow}>
+            ) : (
+              <View style={[styles.badge]}>
+                <Text style={styles.badgeText}>Novo no DelBicos</Text>
+              </View>
+            )}
+            {location ? (
+              <View style={styles.metaItem}>
                 <FontAwesome
                   name="map-marker"
                   size={14}
-                  color={colors.textTertiary}
+                  color={colors.textSecondary}
                 />
-                <Text style={styles.locationText}>{addressShort}</Text>
-                {parceiro.service_radius_km != null && (
-                  <Text style={[styles.reviewCount, { marginLeft: 8 }]}>
-                    • Atende até {parceiro.service_radius_km} km
-                  </Text>
-                )}
-                {parceiro.ratings_count ? (
-                  <Text style={styles.reviewCount}>
-                    • {parceiro.ratings_count} avaliações
-                  </Text>
-                ) : null}
+                <Text style={styles.metaText}>{location}</Text>
               </View>
-            </View>
+            ) : null}
           </View>
         </View>
       </View>
 
-      {/* Menu de Navegação (Tabs) */}
-      <View style={styles.tabsContainer}>
-        {(['sobre', 'servicos', 'galeria', 'avaliacoes'] as TabType[]).map(
-          (tab) => (
-            <TouchableOpacity
+      <View
+        style={styles.tabs}
+        accessibilityRole="tablist"
+        accessibilityLabel="Seções do perfil">
+        {(Object.keys(TAB_LABELS) as TabType[]).map((tab) => {
+          const selected = activeTab === tab;
+          const count = counts[tab];
+          return (
+            <Pressable
               key={tab}
-              style={[
-                styles.tabItem,
-                activeTab === tab && styles.tabItemActive,
-              ]}
               onPress={() => setActiveTab(tab)}
-              activeOpacity={0.7}
+              style={({ hovered }: any) => [
+                styles.tab,
+                selected && styles.tabSelected,
+                hovered && !selected && styles.tabHovered,
+              ]}
               accessibilityRole="tab"
-              accessibilityState={{ selected: activeTab === tab }}>
+              accessibilityState={{ selected }}
+              accessibilityLabel={
+                count != null ? `${TAB_LABELS[tab]}, ${count}` : TAB_LABELS[tab]
+              }>
               <Text
-                style={[
-                  styles.tabText,
-                  activeTab === tab && styles.tabTextActive,
-                ]}>
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                style={[styles.tabText, selected && styles.tabTextSelected]}>
+                {TAB_LABELS[tab]}
+                {/* No celular so o nome cabe; a contagem fica no rotulo acessivel. */}
+                {count && !isCompact ? ` (${count})` : ''}
               </Text>
-            </TouchableOpacity>
-          ),
-        )}
+            </Pressable>
+          );
+        })}
       </View>
 
-      {/* Conteúdo da Aba */}
-      <View style={styles.contentWrapper}>{renderContent()}</View>
-    </ScrollView>
+      <View style={styles.content}>{renderContent()}</View>
+    </PageContainer>
   );
 }
 

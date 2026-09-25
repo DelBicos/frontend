@@ -13,17 +13,21 @@ export interface ListedProfessional {
   offeredServices: string[];
 }
 
+/**
+ * Endereco do perfil publico: so bairro/cidade/estado e coordenadas
+ * aproximadas (o backend nao expoe rua, numero nem CEP).
+ */
 export interface Address {
-  id: number;
+  id?: number;
   lat?: number;
   lng?: number;
-  street: string;
-  number: string;
+  street?: string;
+  number?: string;
   complement?: string;
-  neighborhood: string;
+  neighborhood?: string;
   city: string;
   state: string;
-  zipcode: string;
+  zipcode?: string;
 }
 
 export interface Subcategory {
@@ -60,8 +64,12 @@ export interface Review {
   id: number;
   rating?: number;
   review?: string;
-  start_time: string;
+  /** Legado: o perfil publico envia createdAt/updatedAt. */
+  start_time?: string;
+  createdAt?: string;
+  updatedAt?: string;
   Client: AppointmentClient;
+  Service?: { title: string };
 }
 
 export interface GalleryItem {

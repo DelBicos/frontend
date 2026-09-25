@@ -30,6 +30,19 @@ export const createStyles = (
       color: colors.primaryBlue,
       marginBottom: 16,
     },
+    showAllButton: {
+      alignSelf: 'flex-start',
+      minHeight: 44,
+      justifyContent: 'center',
+      marginTop: -8,
+      marginBottom: 12,
+    },
+    showAllText: {
+      fontSize: 16,
+      fontFamily: 'Afacad-SemiBold',
+      color: colors.primaryBlack,
+      textDecorationLine: 'underline',
+    },
     searchInfo: {
       color: colors.textSecondary,
       fontSize: 15,

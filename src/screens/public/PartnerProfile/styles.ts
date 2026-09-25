@@ -1,211 +1,192 @@
-import { StyleSheet, Platform } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { ColorsType } from '@theme/types';
 
-export const createStyles = (
-  colors: ColorsType,
-  isDark: boolean = false,
-  isHighContrast: boolean = false,
-) =>
+export const createStyles = (colors: ColorsType, isCompact: boolean) =>
   StyleSheet.create({
-    container: {
+    centered: {
       flex: 1,
-      backgroundColor: isDark
-        ? colors.secondaryGray
-        : isHighContrast
-          ? colors.primaryWhite
-          : '#DDE6F0',
-    },
-
-    // --- Header Imersivo ---
-    headerWrapper: {
-      position: 'relative',
-      marginBottom: 70,
-      backgroundColor: colors.primaryBlack,
-    },
-    headerImage: {
-      width: '100%',
-      height: 220,
-    },
-    gradientOverlay: {
-      flex: 1,
-      paddingTop: Platform.OS === 'android' ? 45 : 25,
-      paddingHorizontal: 16,
-    },
-    backButton: {
-      width: 40,
-      height: 40,
-      justifyContent: 'center',
       alignItems: 'center',
-      borderRadius: 20,
-      backgroundColor: 'rgba(0,0,0,0.3)',
+      justifyContent: 'center',
+      gap: 16,
+      padding: 24,
+      backgroundColor: colors.secondaryGray,
+    },
+    notFound: {
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 18,
+      color: colors.primaryBlack,
     },
 
-    // --- Card Flutuante ---
-    floatingInfoCard: {
-      position: 'absolute',
-      bottom: -50,
-      left: 16,
-      right: 16,
-      backgroundColor: colors.cardBackground,
-      borderRadius: 16,
-      ...Platform.select({
-        ios: {
-          shadowColor: colors.primaryBlack,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.15,
-          shadowRadius: 8,
-        },
-        android: {
-          elevation: 6,
-        },
-        web: {
-          boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
-        },
-      }),
-    },
-    floatingCardContentRow: {
+    ownerBanner: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
       alignItems: 'center',
-      padding: 16,
+      gap: 10,
+      padding: 14,
+      marginBottom: 16,
+      borderRadius: 12,
+      backgroundColor: colors.warningBackground,
     },
-    avatarContainer: {
-      marginRight: 16,
-      ...Platform.select({
-        ios: {
-          shadowColor: colors.primaryBlack,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-        },
-        android: { elevation: 3 },
-      }),
-    },
-    avatarImage: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      borderWidth: 3,
-      borderColor: colors.cardBackground,
-      backgroundColor: colors.inputBackground,
-    },
-    avatarFallback: {
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    infoColumn: {
+    ownerText: {
       flex: 1,
-      justifyContent: 'center',
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 15,
+      color: colors.primaryBlack,
     },
-    cardHeaderRow: {
+    ownerLink: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 15,
+      color: colors.primaryBlack,
+      textDecorationLine: 'underline',
+    },
+
+    // --- Capa ---
+    cover: {
+      height: isCompact ? 150 : 220,
+      width: '100%',
+    },
+    coverImage: {
+      borderRadius: isCompact ? 16 : 20,
+      overflow: 'hidden',
+    },
+    coverOverlay: {
+      flex: 1,
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'flex-start',
-      marginBottom: 6,
+      padding: 12,
+      borderRadius: isCompact ? 16 : 20,
     },
-    profileName: {
-      fontSize: 20,
-      fontFamily: 'Afacad-Bold',
-      color: colors.primaryBlack,
-      flex: 1,
-      marginRight: 8,
-      lineHeight: 24,
-    },
-    ratingBadge: {
-      flexDirection: 'row',
+    coverButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       alignItems: 'center',
-      backgroundColor: colors.inputBackground,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 8,
-      gap: 4,
+      justifyContent: 'center',
+      backgroundColor: 'rgba(0,0,0,0.45)',
+      ...Platform.select({ web: { cursor: 'pointer' } as any }),
     },
-    ratingValue: {
-      fontSize: 14,
+
+    // --- Identidade ---
+    identity: {
+      flexDirection: isCompact ? 'column' : 'row',
+      alignItems: 'flex-start',
+      gap: isCompact ? 10 : 20,
+      marginTop: isCompact ? -44 : -56,
+      paddingHorizontal: isCompact ? 12 : 24,
+      marginBottom: 24,
+    },
+    avatar: {
+      width: isCompact ? 88 : 112,
+      height: isCompact ? 88 : 112,
+      borderRadius: isCompact ? 44 : 56,
+      borderWidth: 4,
+      borderColor: colors.secondaryGray,
+      backgroundColor: colors.cardBackground,
+    },
+    avatarFallback: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    avatarInitial: {
       fontFamily: 'Afacad-Bold',
-      color: colors.primaryOrange,
+      fontSize: 40,
+      color: colors.primaryBlack,
     },
-    locationRow: {
+    identityTexts: {
+      flex: isCompact ? undefined : 1,
+      gap: 6,
+      // So a foto sobrepoe a capa; o texto comeca abaixo dela.
+      paddingTop: isCompact ? 0 : 64,
+    },
+    name: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: isCompact ? 28 : 34,
+      lineHeight: isCompact ? 32 : 40,
+      color: colors.primaryBlack,
+    },
+    metaRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      gap: 16,
+    },
+    metaItem: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
-      flexWrap: 'wrap',
     },
-    locationText: {
-      fontSize: 14,
+    metaStrong: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 16,
+      color: colors.primaryBlack,
+    },
+    metaText: {
       fontFamily: 'Afacad-Regular',
+      fontSize: 16,
       color: colors.textSecondary,
     },
-    reviewCount: {
+    badge: {
+      paddingHorizontal: 10,
+      paddingVertical: 3,
+      borderRadius: 999,
+      backgroundColor: colors.successBackground,
+    },
+    badgeText: {
+      fontFamily: 'Afacad-SemiBold',
       fontSize: 14,
-      fontFamily: 'Afacad-Regular',
-      color: colors.textTertiary,
+      color: colors.successText,
     },
-    tabsContainer: {
+
+    // --- Abas ---
+    tabs: {
       flexDirection: 'row',
-      backgroundColor: colors.cardBackground,
       borderBottomWidth: 1,
-      borderBottomColor: colors.divider,
-      paddingHorizontal: 16,
-      marginTop: 8,
+      borderBottomColor: colors.borderColor,
+      marginBottom: 20,
     },
-    tabItem: {
-      flex: 1,
+    tab: {
+      flex: isCompact ? 1 : undefined,
+      minHeight: 48,
+      paddingHorizontal: isCompact ? 4 : 18,
       alignItems: 'center',
-      paddingVertical: 14,
+      justifyContent: 'center',
       borderBottomWidth: 3,
       borderBottomColor: 'transparent',
+      marginBottom: -1,
+      ...Platform.select({ web: { cursor: 'pointer' } as any }),
     },
-    tabItemActive: {
+    tabSelected: {
       borderBottomColor: colors.primaryOrange,
     },
+    tabHovered: {
+      backgroundColor: colors.inputBackground,
+    },
     tabText: {
-      fontSize: 15,
-      fontFamily: 'Afacad-Regular',
-      color: colors.textTertiary,
-    },
-    tabTextActive: {
-      fontFamily: 'Afacad-Bold',
-      color: colors.primaryOrange,
-    },
-    contentWrapper: {
-      flex: 1,
-      backgroundColor: colors.inputBackground,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: colors.inputBackground,
-    },
-    loadingText: {
-      marginTop: 12,
-      fontSize: 16,
-      fontFamily: 'Afacad-Regular',
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: isCompact ? 14 : 16,
       color: colors.textSecondary,
     },
-    errorContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 20,
-      backgroundColor: colors.inputBackground,
-    },
-    errorText: {
-      fontSize: 18,
+    tabTextSelected: {
       fontFamily: 'Afacad-Bold',
-      color: colors.errorText,
-      marginBottom: 20,
-      textAlign: 'center',
+      color: colors.primaryBlack,
     },
-    backButtonError: {
-      backgroundColor: colors.primaryBlue,
-      paddingHorizontal: 24,
-      paddingVertical: 12,
-      borderRadius: 8,
+    content: {
+      minHeight: 200,
     },
-    backButtonTextError: {
-      color: colors.primaryWhite,
+
+    secondaryButton: {
+      minHeight: 44,
+      paddingHorizontal: 22,
+      borderRadius: 999,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1.5,
+      borderColor: colors.primaryBlack,
+    },
+    secondaryButtonText: {
       fontFamily: 'Afacad-Bold',
       fontSize: 16,
+      color: colors.primaryBlack,
     },
   });

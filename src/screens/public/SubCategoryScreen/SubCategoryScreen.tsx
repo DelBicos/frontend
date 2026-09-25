@@ -25,6 +25,8 @@ type SubCategoryRouteParams = {
   categoryTitle: string;
   serviceId?: number;
   singleSubCategory?: { id: number; title: string };
+  professionalId?: number;
+  professionalName?: string;
 };
 
 LocaleConfig.locales['pt-br'] = {
@@ -138,8 +140,14 @@ const SubCategoryButton: React.FC<{
 function SubCategoryScreen() {
   const navigation = useNavigation();
   const route = useRoute();
-  const { categoryId, categoryTitle, serviceId, singleSubCategory } =
-    route.params as SubCategoryRouteParams;
+  const {
+    categoryId,
+    categoryTitle,
+    serviceId,
+    singleSubCategory,
+    professionalId,
+    professionalName,
+  } = route.params as SubCategoryRouteParams;
   const { width } = useWindowDimensions();
   const { theme } = useThemeStore();
 
@@ -191,6 +199,8 @@ function SubCategoryScreen() {
     navigation.navigate('SearchResult', {
       subCategoryId: selectedSubCategory,
       date: selectedDate,
+      professionalId,
+      professionalName,
     });
   };
 
