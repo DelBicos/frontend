@@ -19,8 +19,13 @@ import { STRIPE_PUBLISHABLE_KEY, HTTP_DOMAIN } from '@config/varEnvs';
 import { useUserStore } from '@stores/User';
 import { Address } from '@stores/Address/types';
 import { useProfessionalStore } from '@stores/Professional';
-import { Appointment } from '@stores/Appointment';
+import {
+  Appointment,
+  AppointmentStatus,
+  useAppointmentStore,
+} from '@stores/Appointment';
 import AddressSelectionModal from '@components/features/AddressSelectionModal';
+import { isAppointmentValidationError } from '@lib/helpers/paymentErrors';
 import { createStyles } from './styles';
 import CheckoutForm from '@screens/public/CheckoutScreen/CheckoutForm';
 
@@ -95,7 +100,8 @@ function CheckoutScreenContent() {
   const navigation = useNavigation();
   const route =
     useRoute<RouteProp<{ params: CheckoutRouteParams }, 'params'>>();
-  const { professionalId, selectedTime, imageUrl, serviceId, appointmentId } = route.params;
+  const { professionalId, selectedTime, imageUrl, serviceId, appointmentId } =
+    route.params;
 
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
@@ -113,6 +119,7 @@ function CheckoutScreenContent() {
   const { user, token } = useUserStore();
   const { selectedProfessional, fetchProfessionalById } =
     useProfessionalStore();
+  const { fetchAppointments } = useAppointmentStore();
 
   const colors = useColors();
   const styles = createStyles(colors);
@@ -215,6 +222,86 @@ function CheckoutScreenContent() {
       setLoadingIntent(true);
       setErrorIntent(null);
 
+      // Nunca confia no appointmentId vindo de rota/deep link/cache: revalida
+      // contra o estado atual do próprio usuário antes de usá-lo no pagamento.
+      let validatedAppointmentId: number | undefined = appointmentId;
+      if (appointmentId) {
+        // fetchAppointments engole erros internamente (ex.: usuário ainda não
+        // carregado no store) e só esvazia o array — sem essa checagem prévia
+        // isso vira um falso "agendamento não encontrado" sem nenhuma request.
+        if (!user) {
+          console.warn(
+            '[CheckoutScreen] Validação de appointmentId abortada: usuário ainda não carregado no store.',
+            { appointmentId },
+          );
+          setErrorIntent(
+            'Não foi possível verificar seu agendamento agora. Aguarde um instante e tente novamente.',
+          );
+          setLoadingIntent(false);
+          return;
+        }
+
+        console.log(
+          '[CheckoutScreen] Validando appointmentId antes do create-payment-intent:',
+          { appointmentId, userId: user.id },
+        );
+
+        try {
+          await fetchAppointments('client');
+        } catch (fetchErr: any) {
+          console.error(
+            '[CheckoutScreen] fetchAppointments lançou exceção inesperada:',
+            fetchErr,
+          );
+          setErrorIntent(
+            'Não foi possível verificar seu agendamento agora. Tente novamente em instantes.',
+          );
+          setLoadingIntent(false);
+          return;
+        }
+
+        const fetchedAppointments = useAppointmentStore.getState().appointments;
+        const idsList = fetchedAppointments
+          .map((a) => `${a.numeric_id}(${a.status})`)
+          .join(', ');
+        const matchFound = fetchedAppointments.some(
+          (a) => Number(a.numeric_id) === Number(appointmentId),
+        );
+        console.log(
+          `[CheckoutScreen] fetchAppointments concluído: total=${fetchedAppointments.length} ids=[${idsList}] procurando=${appointmentId} (${typeof appointmentId}) encontrado=${matchFound}`,
+        );
+
+        const ownedAppointment = fetchedAppointments.find(
+          (a) => Number(a.numeric_id) === Number(appointmentId),
+        );
+
+        if (!ownedAppointment) {
+          setErrorIntent(
+            'Não foi possível localizar este agendamento na sua conta. Reinicie o processo de agendamento.',
+          );
+          setLoadingIntent(false);
+          return;
+        }
+        if (
+          ownedAppointment.status === AppointmentStatus.COMPLETED ||
+          ownedAppointment.status === AppointmentStatus.CANCELED
+        ) {
+          setErrorIntent(
+            `Este agendamento não pode mais receber pagamento (status atual: ${ownedAppointment.status}).`,
+          );
+          setLoadingIntent(false);
+          return;
+        }
+        if (ownedAppointment.payment_intent_id) {
+          setErrorIntent(
+            'Este agendamento já possui outro pagamento registrado.',
+          );
+          setLoadingIntent(false);
+          return;
+        }
+        validatedAppointmentId = ownedAppointment.numeric_id;
+      }
+
       const amountValue = (service as any).price_cents
         ? (service as any).price_cents / 100
         : Number(service.price);
@@ -226,7 +313,7 @@ function CheckoutScreenContent() {
         selectedTime,
         selectedAddress.id,
         token,
-        appointmentId,
+        validatedAppointmentId,
       );
 
       if (secret) {
@@ -257,6 +344,8 @@ function CheckoutScreenContent() {
     token,
     initPaymentSheet,
     appointmentId,
+    fetchAppointments,
+    user,
   ]);
 
   // 4. Apresenta PaymentSheet e confirma no servidor
@@ -292,7 +381,6 @@ function CheckoutScreenContent() {
           },
           body: JSON.stringify({
             paymentIntentId,
-            userId: user.id,
           }),
         },
       );
@@ -319,6 +407,19 @@ function CheckoutScreenContent() {
                 onPress: () => navigation.goBack(),
               },
             ],
+          );
+          setIsProcessingPayment(false);
+          return;
+        }
+
+        // Falha na validação de posse/estado do agendamento: não retenta a
+        // mesma chamada, apenas recarrega o estado real e orienta a reiniciar.
+        if (typeof msg === 'string' && isAppointmentValidationError(msg)) {
+          await fetchAppointments('client');
+          Alert.alert(
+            'Não foi possível concluir o pagamento',
+            `${msg}\n\nReinicie o processo de agendamento para verificar a situação atual antes de tentar novamente.`,
+            [{ text: 'Entendi', onPress: () => navigation.goBack() }],
           );
           setIsProcessingPayment(false);
           return;

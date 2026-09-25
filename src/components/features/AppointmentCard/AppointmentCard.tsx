@@ -66,7 +66,7 @@ const AppointmentCardComponent: React.FC<AppointmentCardProps> = ({
       professionalId: appointment.professional_id,
       selectedTime: appointment.start_time,
       serviceId: appointment.Service.id,
-      appointmentId: appointment.id,
+      appointmentId: appointment.numeric_id,
       imageUrl: appointment.Service.banner_uri || undefined,
       professionalName: appointment.Professional?.User?.name,
     });
@@ -126,8 +126,11 @@ const AppointmentCardComponent: React.FC<AppointmentCardProps> = ({
           resizeMode="cover"
         />
 
-        <View style={[styles.statusBadge, { backgroundColor: displayStatusColor }]}>
-          <Text style={styles.statusText}>{displayStatusLabel.toUpperCase()}</Text>
+        <View
+          style={[styles.statusBadge, { backgroundColor: displayStatusColor }]}>
+          <Text style={styles.statusText}>
+            {displayStatusLabel.toUpperCase()}
+          </Text>
         </View>
 
         {statusVariant === AppointmentStatus.COMPLETED && (

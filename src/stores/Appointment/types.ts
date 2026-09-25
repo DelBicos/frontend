@@ -81,6 +81,8 @@ export interface Address {
  */
 export interface Appointment {
   id: number;
+  /** Identificador numérico real (PK) usado no fluxo de pagamento; `id` acima é o short_id de exibição. */
+  numeric_id: number;
   professional_id: number;
   client_id: number;
   service_id: number;

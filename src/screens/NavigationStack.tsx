@@ -312,6 +312,11 @@ const RootStack = createNativeStackNavigator({
       screen: CheckoutScreen,
       linking: {
         path: 'checkout', // A URL será algo como /checkout?professionalId=...&time=...
+        parse: {
+          professionalId: (value) => Number(value),
+          serviceId: (value) => Number(value),
+          appointmentId: (value) => Number(value),
+        },
       },
       options: {
         headerShown: false, // Opcional: Esconde o header padrão
@@ -321,6 +326,9 @@ const RootStack = createNativeStackNavigator({
       screen: PaymentStatusScreen,
       linking: {
         path: 'payment-status', // <-- Esta é a URL de retorno
+        parse: {
+          appointmentId: (value) => Number(value),
+        },
       },
       options: {
         headerShown: false, // Sem header
@@ -342,9 +350,6 @@ const RootStack = createNativeStackNavigator({
           ProfessionalServicesTab: 'services',
           ProfessionalProfileTab: 'profile',
         },
-      },
-      options: {
-        headerShown: false,
       },
     },
     Help: {
