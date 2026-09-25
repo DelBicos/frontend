@@ -29,7 +29,7 @@ export type SemanticServiceSearchResult = {
 };
 
 /** Normaliza os formatos históricos e o retorno da busca semântica do backend. */
-function normalizeService(raw: any): ServiceItem {
+export function normalizeService(raw: any): ServiceItem {
   return {
     id: raw.id,
     title: raw.title,
