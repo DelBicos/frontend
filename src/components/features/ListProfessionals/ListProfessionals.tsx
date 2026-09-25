@@ -17,6 +17,7 @@ import { usePagination } from '@lib/hooks/usePagination';
 import { useColors } from '@theme/ThemeProvider';
 import { createStyles } from './styles';
 import { useLocation } from '@lib/hooks/LocationContext';
+import { useWebScrollGutter } from '@components/layout/PageContainer';
 import { CONTENT_MAX_WIDTH, useBreakpoint } from '@lib/hooks/useBreakpoint';
 
 /** Margem externa do ProfessionalCard (compensada no container para alinhar as bordas). */
@@ -40,6 +41,7 @@ const ListProfessionals = ({ listHeader, style }: ListProfessionalsProps) => {
   const styles = createStyles(colors);
   const { fetchProfessionals } = useProfessionalStore();
   const { gutter, contentWidth } = useBreakpoint();
+  const scrollGutter = useWebScrollGutter();
   const numColumns = getProfessionalColumns(contentWidth);
   const { address } = useLocation();
 
@@ -115,6 +117,7 @@ const ListProfessionals = ({ listHeader, style }: ListProfessionalsProps) => {
   return (
     <View style={[styles.container, style]}>
       <FlatList
+        style={scrollGutter}
         data={professionals}
         keyExtractor={(item) => item.id.toString()}
         numColumns={numColumns}

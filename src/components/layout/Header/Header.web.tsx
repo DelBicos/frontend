@@ -58,7 +58,7 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = () => {
   } = useLocation();
 
   const navigation = useNavigation();
-  const { width, isCompact, gutter } = useBreakpoint();
+  const { width, isCompact, sideInset } = useBreakpoint();
   // Abaixo do desktop, links e acoes ficam em um menu recolhivel.
   const isCollapsed = width < HEADER_FULL_MIN_WIDTH;
   const [menuOpen, setMenuOpen] = useState(false);
@@ -400,7 +400,9 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = () => {
       <View
         style={[
           styles.topBar,
-          isCollapsed && { height: 64, paddingHorizontal: gutter },
+          // Mesmo alinhamento lateral do conteudo das paginas.
+          { paddingHorizontal: sideInset },
+          isCollapsed && { height: 64 },
         ]}>
         <TouchableOpacity
           onPress={() => navigateTo('Feed')}
@@ -441,7 +443,7 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = () => {
       </View>
 
       {isCollapsed && menuOpen && (
-        <View style={[styles.collapsedPanel, { paddingHorizontal: gutter }]}>
+        <View style={[styles.collapsedPanel, { paddingHorizontal: sideInset }]}>
           <View style={styles.collapsedNav}>{navLinks}</View>
           <View style={styles.collapsedDivider} />
           <View style={styles.collapsedRow}>
@@ -452,11 +454,7 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = () => {
         </View>
       )}
 
-      <View
-        style={[
-          styles.searchBar,
-          isCollapsed && { paddingHorizontal: gutter },
-        ]}>
+      <View style={[styles.searchBar, { paddingHorizontal: sideInset }]}>
         {user && !isCompact && (
           <Text style={styles.searchText}>
             Olá, {user.name.split(' ')[0]}! Como podemos te ajudar hoje?

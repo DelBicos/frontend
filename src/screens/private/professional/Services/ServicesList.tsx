@@ -121,7 +121,7 @@ const ServicesList: React.FC = () => {
   }
 
   return (
-    <PageContainer maxWidth={960}>
+    <PageContainer>
       <PageHeader
         title="Meus serviços"
         subtitle="O que você oferece, por quanto, em quais horários e até onde você atende.">

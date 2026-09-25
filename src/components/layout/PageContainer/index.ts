@@ -1,1 +1,1 @@
-export { default, PageHeader } from './PageContainer';
+export { default, PageHeader, useWebScrollGutter } from './PageContainer';

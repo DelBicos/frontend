@@ -19,6 +19,8 @@ import { useThemeStore, ThemeMode } from '@stores/Theme';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 import { getIconForSubCategory } from '@utils/icons';
+import { CONTENT_MAX_WIDTH, useBreakpoint } from '@lib/hooks/useBreakpoint';
+import { useWebScrollGutter } from '@components/layout/PageContainer';
 
 type SubCategoryRouteParams = {
   categoryId: number;
@@ -149,6 +151,8 @@ function SubCategoryScreen() {
     professionalName,
   } = route.params as SubCategoryRouteParams;
   const { width } = useWindowDimensions();
+  const { gutter } = useBreakpoint();
+  const scrollGutter = useWebScrollGutter();
   const { theme } = useThemeStore();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -219,10 +223,17 @@ function SubCategoryScreen() {
 
   return (
     <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.scrollContainer}
+      style={[styles.container, scrollGutter]}
+      contentContainerStyle={[
+        styles.scrollContainer,
+        { paddingHorizontal: gutter },
+      ]}
       showsVerticalScrollIndicator={false}>
-      <View style={styles.mainContent}>
+      <View
+        style={[
+          styles.mainContent,
+          { maxWidth: CONTENT_MAX_WIDTH, alignSelf: 'center' },
+        ]}>
         <View style={styles.leftColumn}>
           <Text style={styles.pageTitle}>{categoryTitle || 'Serviços'}</Text>
 

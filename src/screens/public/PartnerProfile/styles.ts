@@ -73,7 +73,8 @@ export const createStyles = (colors: ColorsType, isCompact: boolean) =>
       alignItems: 'flex-start',
       gap: isCompact ? 10 : 20,
       marginTop: isCompact ? -44 : -56,
-      paddingHorizontal: isCompact ? 12 : 24,
+      // No celular, alinhado a margem padrao da pagina.
+      paddingHorizontal: isCompact ? 0 : 24,
       marginBottom: 24,
     },
     avatar: {

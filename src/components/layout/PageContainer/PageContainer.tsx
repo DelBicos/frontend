@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Platform,
   ScrollView,
   ScrollViewProps,
   StyleProp,
@@ -13,9 +14,26 @@ import { useThemeStore, ThemeMode } from '@stores/Theme';
 import { CONTENT_MAX_WIDTH, useBreakpoint } from '@lib/hooks/useBreakpoint';
 import { ColorsType } from '@theme/types';
 
+/**
+ * Web: com o conteudo centralizado (janela maior que 1200px + margens),
+ * reserva o espaco da barra de rolagem dos dois lados para ele ficar na
+ * mesma posicao do cabecalho, que nao tem barra. Em telas menores o
+ * conteudo ja comeca na margem, e a reserva a esquerda o deslocaria.
+ */
+export function useWebScrollGutter() {
+  const { width, gutter } = useBreakpoint();
+  if (Platform.OS !== 'web' || width < CONTENT_MAX_WIDTH + gutter * 2) {
+    return null;
+  }
+  return { scrollbarGutter: 'stable both-edges' } as any;
+}
+
 interface PageContainerProps extends ScrollViewProps {
   children: React.ReactNode;
-  /** Largura maxima do conteudo (padrao: a mesma da pagina inicial). */
+  /**
+   * Largura maxima do conteudo dentro do contêiner padrao (alinhado a
+   * esquerda). Padrao: a largura toda.
+   */
   maxWidth?: number;
   contentStyle?: StyleProp<ViewStyle>;
 }
@@ -33,6 +51,7 @@ function PageContainer({
   const colors = useColors();
   const theme = useThemeStore((s) => s.theme);
   const { gutter, isCompact } = useBreakpoint();
+  const scrollGutter = useWebScrollGutter();
   const background =
     theme === ThemeMode.LIGHT_HI_CONTRAST
       ? colors.primaryWhite
@@ -40,7 +59,7 @@ function PageContainer({
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: background }}
+      style={[{ flex: 1, backgroundColor: background }, scrollGutter]}
       contentContainerStyle={{
         paddingHorizontal: gutter,
         paddingTop: isCompact ? 16 : 32,
@@ -48,12 +67,18 @@ function PageContainer({
       }}
       keyboardShouldPersistTaps="handled"
       {...scrollProps}>
+      {/* Contêiner igual em todas as paginas (mesma borda esquerda do
+          cabecalho); paginas de leitura limitam a largura, alinhadas a
+          esquerda, em vez de centralizar numa largura propria. */}
       <View
-        style={[
-          { width: '100%', maxWidth, alignSelf: 'center' },
-          contentStyle,
-        ]}>
-        {children}
+        style={{
+          width: '100%',
+          maxWidth: CONTENT_MAX_WIDTH,
+          alignSelf: 'center',
+        }}>
+        <View style={[{ width: '100%', maxWidth }, contentStyle]}>
+          {children}
+        </View>
       </View>
     </ScrollView>
   );

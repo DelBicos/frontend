@@ -22,6 +22,12 @@ export interface BreakpointInfo {
   gutter: number;
   /** Largura util do conteudo (ja descontadas as margens e o limite maximo). */
   contentWidth: number;
+  /**
+   * Distancia da borda da janela ate o inicio do conteudo: a margem lateral
+   * ou, em telas largas, a sobra de centralizar os 1200px. Use para alinhar
+   * elementos de largura total (ex.: cabecalho) com o conteudo das paginas.
+   */
+  sideInset: number;
 }
 
 export function getBreakpoint(width: number): Breakpoint {
@@ -42,6 +48,7 @@ export function getBreakpointInfo(width: number): BreakpointInfo {
     isExpanded: breakpoint === 'expanded',
     gutter,
     contentWidth: Math.min(width - gutter * 2, CONTENT_MAX_WIDTH),
+    sideInset: Math.max(gutter, (width - CONTENT_MAX_WIDTH) / 2),
   };
 }
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import { CONTENT_MAX_WIDTH, useBreakpoint } from '@lib/hooks/useBreakpoint';
 import {
   View,
   Platform,
@@ -37,6 +38,8 @@ const ProfileWrapper: React.FC<{ user: UserProfileProps }> = ({ user }) => {
   const navigation = useNavigation();
   const { width } = useWindowDimensions();
   const isMobile = width < 900;
+  // Mesmo contêiner e margens das demais paginas.
+  const { gutter } = useBreakpoint();
 
   const colors = useColors();
   const { theme } = useThemeStore();
@@ -89,7 +92,7 @@ const ProfileWrapper: React.FC<{ user: UserProfileProps }> = ({ user }) => {
       // Exibe a subtela com botão de voltar
       return (
         <View style={styles.mobileContainer}>
-          <View style={styles.mobileHeader}>
+          <View style={[styles.mobileHeader, { paddingHorizontal: gutter }]}>
             <TouchableOpacity
               style={styles.backButton}
               // @ts-ignore
@@ -106,7 +109,10 @@ const ProfileWrapper: React.FC<{ user: UserProfileProps }> = ({ user }) => {
           </View>
 
           <ScrollView
-            contentContainerStyle={styles.mobileContentScroll}
+            contentContainerStyle={[
+              styles.mobileContentScroll,
+              { padding: gutter },
+            ]}
             showsVerticalScrollIndicator={false}>
             {renderContent()}
           </ScrollView>
@@ -118,7 +124,10 @@ const ProfileWrapper: React.FC<{ user: UserProfileProps }> = ({ user }) => {
     return (
       <ScrollView
         style={styles.mobileContainer}
-        contentContainerStyle={styles.mobileMenuScroll}>
+        contentContainerStyle={[
+          styles.mobileMenuScroll,
+          { paddingHorizontal: gutter },
+        ]}>
         <View style={styles.mobileMenuHeader}>
           <Text style={styles.mobileMenuTitle}>Meu Perfil</Text>
           <Text style={styles.mobileMenuSubtitle}>
@@ -135,7 +144,14 @@ const ProfileWrapper: React.FC<{ user: UserProfileProps }> = ({ user }) => {
   // --- RENDERIZAÇÃO DESKTOP (Sidebar + Conteúdo) ---
   return (
     <View style={styles.desktopContainer}>
-      <View style={styles.desktopWrapper}>
+      <View
+        style={[
+          styles.desktopWrapper,
+          {
+            maxWidth: CONTENT_MAX_WIDTH + gutter * 2,
+            paddingHorizontal: gutter,
+          },
+        ]}>
         {/* Sidebar Fixa */}
         <View style={styles.desktopSidebar}>
           <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>

@@ -208,7 +208,7 @@ function PartnerProfileScreen() {
   );
 
   return (
-    <PageContainer maxWidth={960}>
+    <PageContainer>
       {isOwner ? (
         <View style={styles.ownerBanner}>
           <FontAwesome name="eye" size={16} color={colors.primaryBlack} />

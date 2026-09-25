@@ -17,12 +17,10 @@ export const createStyles = (
       alignItems: 'center',
     },
     contentContainer: {
-      paddingHorizontal: 16,
       paddingVertical: 20,
     },
     list: {
       width: '100%',
-      maxWidth: 1200,
     },
     title: {
       fontSize: 28,

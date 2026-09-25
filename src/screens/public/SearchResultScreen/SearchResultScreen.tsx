@@ -19,6 +19,7 @@ import ProfessionalResultCard, {
 } from '@components/features/ProfessionalResultCard';
 import { useProfessionalStore } from '@stores/Professional';
 import { useLocation } from '@lib/hooks/LocationContext';
+import { CONTENT_MAX_WIDTH, useBreakpoint } from '@lib/hooks/useBreakpoint';
 import { useServicesStore, type ServiceItem } from '@stores/Services/Services';
 import ServiceCard from '@components/features/ListServices/ServiceCard';
 // radius filters removed (RF04 reverted)
@@ -30,6 +31,8 @@ type SearchResultParams = {
   professionalId?: number;
   professionalName?: string;
 };
+
+const CARD_PADDING = 8;
 
 function resolveSemanticSearchError(error: unknown): string {
   if (error && typeof error === 'object' && 'response' in error) {
@@ -56,6 +59,8 @@ function SearchResultScreen() {
   const { searchServicesSemantically } = useServicesStore();
   const { address } = useLocation();
   const { width } = useWindowDimensions();
+  // Mesmo contêiner das demais paginas (cards tem 8px de respiro proprio).
+  const { gutter } = useBreakpoint();
 
   const [isLoading, setIsLoading] = useState(true);
   const [results, setResults] = useState<ProfessionalResult[]>([]);
@@ -192,8 +197,11 @@ function SearchResultScreen() {
           />
         ) : (
           <FlatList
-            style={styles.list}
-            contentContainerStyle={styles.contentContainer}
+            style={[styles.list, { maxWidth: CONTENT_MAX_WIDTH + gutter * 2 }]}
+            contentContainerStyle={[
+              styles.contentContainer,
+              { paddingHorizontal: gutter },
+            ]}
             data={semanticServices}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => <ServiceCard service={item} />}
@@ -240,8 +248,11 @@ function SearchResultScreen() {
         />
       ) : (
         <FlatList
-          style={styles.list}
-          contentContainerStyle={styles.contentContainer}
+          style={[styles.list, { maxWidth: CONTENT_MAX_WIDTH + gutter * 2 }]}
+          contentContainerStyle={[
+            styles.contentContainer,
+            { paddingHorizontal: gutter - CARD_PADDING },
+          ]}
           data={
             isSingleProfessional
               ? // Parametros vindos da URL (web) chegam como texto.
@@ -257,7 +268,7 @@ function SearchResultScreen() {
           key={`grid-${numColumns}`}
           columnWrapperStyle={numColumns > 1 ? styles.columnWrapper : undefined}
           ListHeaderComponent={
-            <>
+            <View style={{ paddingHorizontal: CARD_PADDING }}>
               <Text style={styles.title}>
                 {isSingleProfessional
                   ? `Horários de ${professionalName ?? 'profissional'}`
@@ -277,7 +288,7 @@ function SearchResultScreen() {
                 <Text style={styles.searchInfo}>{searchError}</Text>
               )}
               {renderFilterBar()}
-            </>
+            </View>
           }
           renderItem={({ item }) => (
             <View
