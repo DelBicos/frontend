@@ -13,8 +13,6 @@ import PageContainer, { PageHeader } from '@components/layout/PageContainer';
 import { FAQ_TOPICS } from './faqData';
 import { createStyles } from './styles';
 
-const CONTENT_WIDTH = 880;
-
 function HelpScreen() {
   const colors = useColors();
   const navigation = useNavigation();
@@ -52,7 +50,7 @@ function HelpScreen() {
   };
 
   return (
-    <PageContainer maxWidth={CONTENT_WIDTH}>
+    <PageContainer>
       <PageHeader
         eyebrow="FAQ"
         title="Central de Ajuda"

@@ -210,7 +210,7 @@ function MeusAgendamentos({ role = 'client' }: MeusAgendamentosProps) {
   const items = groups[tab];
 
   return (
-    <PageContainer maxWidth={880}>
+    <PageContainer>
       <PageHeader
         title={isPro ? 'Agenda' : 'Meus agendamentos'}
         subtitle={
