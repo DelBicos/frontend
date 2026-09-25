@@ -17,48 +17,12 @@ import { useSubCategoryStore } from '@stores/SubCategory';
 import { useIsFocused } from '@react-navigation/native';
 import { initSSE } from '@lib/sse';
 import { useBreakpoint } from '@lib/hooks/useBreakpoint';
+import Chip from '@components/ui/Chip';
 
 const POLLING_INTERVAL_MS = 15000;
 /** Quantos cards aparecem antes do "Mostrar mais" (tablet/desktop). */
 const INITIAL_VISIBLE_ROWS = 2;
 const GRID_GAP = 16;
-
-interface ChipProps {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-  icon?: React.ComponentProps<typeof FontAwesome>['name'];
-  tone?: 'primary' | 'secondary';
-}
-
-function Chip({ label, selected, onPress, icon, tone = 'primary' }: ChipProps) {
-  const colors = useColors();
-  const styles = createStyles(colors);
-  const selectedStyle =
-    tone === 'primary' ? styles.chipSelected : styles.chipSecondarySelected;
-  const selectedText =
-    tone === 'primary'
-      ? styles.chipTextSelected
-      : styles.chipTextSecondarySelected;
-  const textColor = selected
-    ? (selectedText.color as string)
-    : colors.primaryBlack;
-
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.chip,
-        selected && selectedStyle,
-        pressed && { opacity: 0.75 },
-      ]}
-      accessibilityRole="button"
-      accessibilityState={{ selected }}>
-      {icon ? <FontAwesome name={icon} size={14} color={textColor} /> : null}
-      <Text style={[styles.chipText, selected && selectedText]}>{label}</Text>
-    </Pressable>
-  );
-}
 
 const ListServices: React.FC = () => {
   const colors = useColors();

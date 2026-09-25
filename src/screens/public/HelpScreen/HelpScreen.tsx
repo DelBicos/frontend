@@ -1,134 +1,159 @@
-import React, { useState, useMemo } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TextInput,
-  TouchableOpacity,
-} from 'react-native';
-import { createStyles } from './styles';
-import { useColors } from '@theme/ThemeProvider';
-import { useThemeStore, ThemeMode } from '@stores/Theme';
+import React, { useMemo, useState } from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { useColors } from '@theme/ThemeProvider';
+import { useUserStore } from '@stores/User';
+import { useBreakpoint } from '@lib/hooks/useBreakpoint';
+import { normalizeSearchText } from '@lib/hooks/useServiceSearch';
 import AccordionItem from '@components/ui/AccordionItem';
+import Chip from '@components/ui/Chip';
+import SearchField from '@components/ui/SearchField';
+import PageContainer, { PageHeader } from '@components/layout/PageContainer';
+import { FAQ_TOPICS } from './faqData';
+import { createStyles } from './styles';
 
-const FAQ_DATA = [
-  {
-    category: 'Conta e Perfil',
-    questions: [
-      {
-        id: 'c1',
-        q: 'Como faço para alterar minha senha?',
-        a: 'Você pode alterar sua senha na tela "Meu Perfil", clicando na aba "Segurança". Você precisará da sua senha atual para definir uma nova.',
-      },
-      {
-        id: 'c2',
-        q: 'Como atualizo meu endereço de cadastro?',
-        a: 'Na tela "Meu Perfil", acesse a aba "Endereços". Lá você pode editar seu endereço principal ou adicionar novos.',
-      },
-      {
-        id: 'c3',
-        q: 'Esqueci minha senha, e agora?',
-        a: 'Na tela de login, clique em "Esqueci minha senha" e siga as instruções enviadas para o seu e-mail.',
-      },
-    ],
-  },
-  {
-    category: 'Agendamentos e Pagamentos',
-    questions: [
-      {
-        id: 'p1',
-        q: 'Como funciona o pagamento?',
-        a: 'O pagamento é processado de forma segura através do Stripe. Aceitamos Cartão de Crédito e Pix. O valor é pré-autorizado no agendamento e cobrado após a confirmação do serviço.',
-      },
-      {
-        id: 'p2',
-        q: 'Posso cancelar um agendamento?',
-        a: 'Sim, você pode cancelar um agendamento na tela "Meus Agendamentos". Note que podem haver taxas de cancelamento dependendo da antecedência.',
-      },
-      {
-        id: 'p3',
-        q: 'Onde encontro meu recibo?',
-        a: 'Após o pagamento, o recibo fica disponível na tela "Meus Agendamentos", no card do serviço concluído, clicando em "Ver Recibo".',
-      },
-    ],
-  },
-];
+const CONTENT_WIDTH = 880;
 
 function HelpScreen() {
-  const [searchTerm, setSearchTerm] = useState('');
   const colors = useColors();
-  const { theme } = useThemeStore();
-  const isDark = theme === ThemeMode.DARK;
-  const isHighContrast = theme === ThemeMode.LIGHT_HI_CONTRAST;
-  const styles = createStyles(colors, isDark, isHighContrast);
+  const navigation = useNavigation();
+  const user = useUserStore((s) => s.user);
+  const { isCompact } = useBreakpoint();
+  const styles = useMemo(
+    () => createStyles(colors, isCompact),
+    [colors, isCompact],
+  );
+  const [searchTerm, setSearchTerm] = useState('');
+  const [topicId, setTopicId] = useState<string | null>(null);
 
-  const filteredData = useMemo(() => {
-    if (!searchTerm) {
-      return FAQ_DATA;
-    }
-    const lowerCaseSearch = searchTerm.toLowerCase();
+  const term = normalizeSearchText(searchTerm);
 
-    return FAQ_DATA.map((section) => {
-      const filteredQuestions = section.questions.filter(
-        (item) =>
-          item.q.toLowerCase().includes(lowerCaseSearch) ||
-          item.a.toLowerCase().includes(lowerCaseSearch),
-      );
-      return { ...section, questions: filteredQuestions };
-    }).filter((section) => section.questions.length > 0);
-  }, [searchTerm]);
+  const topics = useMemo(
+    () =>
+      FAQ_TOPICS.filter((topic) => !topicId || topic.id === topicId)
+        .map((topic) => ({
+          ...topic,
+          questions: term
+            ? topic.questions.filter((item) =>
+                normalizeSearchText(`${item.q} ${item.a}`).includes(term),
+              )
+            : topic.questions,
+        }))
+        .filter((topic) => topic.questions.length > 0),
+    [term, topicId],
+  );
+
+  const resultCount = topics.reduce((sum, t) => sum + t.questions.length, 0);
+
+  const openAssistant = () => {
+    // @ts-ignore
+    navigation.navigate(user ? 'ChatBot' : 'Login');
+  };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.contentContainer}>
-        <View style={styles.mainContent}>
-          <Text style={styles.title}>Central de Ajuda</Text>
+    <PageContainer maxWidth={CONTENT_WIDTH}>
+      <PageHeader
+        eyebrow="FAQ"
+        title="Central de Ajuda"
+        subtitle="Respostas rápidas sobre agendamentos, pagamentos, sua conta e como oferecer seus serviços.">
+        <SearchField
+          value={searchTerm}
+          onChangeText={setSearchTerm}
+          placeholder="Sobre o que você precisa de ajuda?"
+          accessibilityLabel="Buscar nas perguntas frequentes"
+        />
+      </PageHeader>
 
-          <View style={styles.searchBarContainer}>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Sobre o que você precisa de ajuda?"
-              placeholderTextColor={colors.textTertiary}
-              value={searchTerm}
-              onChangeText={setSearchTerm}
-              accessibilityLabel="Buscar ajuda"
-            />
-            <TouchableOpacity
-              style={styles.searchButton}
-              onPress={() => {}}
-              activeOpacity={0.8}
-              accessibilityRole="button"
-              accessibilityLabel="Pesquisar">
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.chipsScroll}
+        contentContainerStyle={styles.chipsRow}
+        accessibilityLabel="Filtrar por assunto">
+        <Chip
+          label="Todos"
+          selected={topicId == null}
+          onPress={() => setTopicId(null)}
+        />
+        {FAQ_TOPICS.map((topic) => (
+          <Chip
+            key={topic.id}
+            label={topic.title}
+            icon={topic.icon as any}
+            selected={topicId === topic.id}
+            onPress={() =>
+              setTopicId((current) => (current === topic.id ? null : topic.id))
+            }
+          />
+        ))}
+      </ScrollView>
+
+      {term ? (
+        <Text style={styles.resultCount} accessibilityLiveRegion="polite">
+          {resultCount === 0
+            ? `Nenhuma pergunta encontrada para “${searchTerm.trim()}”`
+            : `${resultCount} ${resultCount === 1 ? 'resposta encontrada' : 'respostas encontradas'}`}
+        </Text>
+      ) : null}
+
+      {topics.map((topic) => (
+        <View key={topic.id} style={styles.topic}>
+          <View style={styles.topicHeader}>
+            <View style={styles.topicIcon}>
               <FontAwesome
-                name="search"
-                size={20}
-                color={colors.primaryWhite}
+                name={topic.icon as any}
+                size={18}
+                color={'#000000'}
               />
-            </TouchableOpacity>
+            </View>
+            <Text
+              style={styles.topicTitle}
+              accessibilityRole="header"
+              {...({ 'aria-level': 2 } as object)}>
+              {topic.title}
+            </Text>
           </View>
-
-          <View style={styles.faqSection}>
-            {filteredData.length > 0 ? (
-              filteredData.map((section) => (
-                <View key={section.category} style={styles.faqSection}>
-                  <Text style={styles.categoryTitle}>{section.category}</Text>
-                  {section.questions.map((item) => (
-                    <AccordionItem key={item.id} title={item.q}>
-                      {item.a}
-                    </AccordionItem>
-                  ))}
-                </View>
-              ))
-            ) : (
-              <Text style={styles.notFoundText}>
-                {`Nenhum resultado encontrado para "${searchTerm}"`}
-              </Text>
-            )}
-          </View>
+          {topic.questions.map((item) => (
+            // A chave muda com a busca para abrir as respostas encontradas.
+            <AccordionItem
+              key={`${item.id}-${term ? 'open' : 'closed'}`}
+              title={item.q}
+              defaultOpen={!!term}>
+              {item.a}
+            </AccordionItem>
+          ))}
         </View>
+      ))}
+
+      <View style={styles.contactCard}>
+        <View style={styles.contactTexts}>
+          <Text
+            style={styles.contactTitle}
+            accessibilityRole="header"
+            {...({ 'aria-level': 2 } as object)}>
+            Ainda precisa de ajuda?
+          </Text>
+          <Text style={styles.contactText}>
+            {user
+              ? 'Converse com o assistente virtual do DelBicos: ele tira dúvidas e ajuda a agendar serviços.'
+              : 'Entre na sua conta para conversar com o assistente virtual do DelBicos.'}
+          </Text>
+        </View>
+        <Pressable
+          onPress={openAssistant}
+          style={({ pressed }) => [
+            styles.contactButton,
+            pressed && { opacity: 0.8 },
+          ]}
+          accessibilityRole="button">
+          <FontAwesome name="comments-o" size={18} color="#000000" />
+          <Text style={styles.contactButtonText}>
+            {user ? 'Falar com o assistente' : 'Entrar'}
+          </Text>
+        </Pressable>
       </View>
-    </ScrollView>
+    </PageContainer>
   );
 }
 

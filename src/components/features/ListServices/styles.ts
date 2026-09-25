@@ -19,38 +19,6 @@ export const createStyles = (colors: ColorsType) =>
       gap: 8,
       paddingVertical: 4,
     },
-    chip: {
-      minHeight: 40,
-      paddingHorizontal: 16,
-      borderRadius: 999,
-      borderWidth: 1,
-      borderColor: colors.borderColor,
-      backgroundColor: colors.cardBackground,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
-    },
-    chipSelected: {
-      backgroundColor: colors.primaryOrange,
-      borderColor: colors.primaryOrange,
-    },
-    chipSecondarySelected: {
-      backgroundColor: colors.primaryBlack,
-      borderColor: colors.primaryBlack,
-    },
-    chipText: {
-      fontFamily: 'Afacad-SemiBold',
-      fontSize: 15,
-      color: colors.primaryBlack,
-    },
-    chipTextSelected: {
-      // Texto escuro sobre laranja (contraste AA).
-      color: '#000000',
-    },
-    chipTextSecondarySelected: {
-      color: colors.primaryWhite,
-    },
     filterGroup: {
       gap: 8,
       marginBottom: 16,

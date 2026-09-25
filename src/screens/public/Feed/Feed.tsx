@@ -16,7 +16,7 @@ import { useCategoryStore } from '@stores/Category';
 import { SubCategory } from '@stores/SubCategory/types';
 import { getIconForSubCategory } from '@utils/icons';
 import { HeroCarousel } from './components/HeroCarousel';
-import { SectionHeader } from './components/SectionHeader';
+import SectionHeader from '@components/ui/SectionHeader';
 
 /** Destaques da pagina inicial; cada um leva a uma categoria. */
 const HIGHLIGHTS: (Omit<HighlightItem, 'link'> & { categoryTitle: string })[] =

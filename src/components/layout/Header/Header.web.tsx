@@ -35,6 +35,9 @@ import {
 import DelBicosLogoDark from '../../../../assets/DelBicos_git.png';
 import { createStyles } from './styles';
 
+// Logo, links, tema, local e botoes so cabem lado a lado a partir daqui.
+const HEADER_FULL_MIN_WIDTH = 1200;
+
 const HeaderWeb: React.FC<NativeStackHeaderProps> = () => {
   const { theme } = useThemeStore();
   const isDark = theme === ThemeMode.DARK;
@@ -55,9 +58,9 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = () => {
   } = useLocation();
 
   const navigation = useNavigation();
-  const { isExpanded, isCompact, gutter } = useBreakpoint();
+  const { width, isCompact, gutter } = useBreakpoint();
   // Abaixo do desktop, links e acoes ficam em um menu recolhivel.
-  const isCollapsed = !isExpanded;
+  const isCollapsed = width < HEADER_FULL_MIN_WIDTH;
   const [menuOpen, setMenuOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [isMapModalVisible, setIsMapModalVisible] = useState(false);

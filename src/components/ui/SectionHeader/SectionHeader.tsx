@@ -6,12 +6,19 @@ import { ColorsType } from '@theme/types';
 
 interface SectionHeaderProps {
   title: string;
+  /** Nivel do heading no web (h2 por padrao; a pagina tem um unico h1). */
+  level?: 2 | 3;
   subtitle?: string;
   action?: { label: string; onPress: () => void };
 }
 
-/** Titulo de secao padronizado da pagina inicial (heading para leitores de tela). */
-export function SectionHeader({ title, subtitle, action }: SectionHeaderProps) {
+/** Titulo de secao padronizado (heading para leitores de tela). */
+export function SectionHeader({
+  title,
+  subtitle,
+  action,
+  level = 2,
+}: SectionHeaderProps) {
   const colors = useColors();
   const styles = createStyles(colors);
 
@@ -21,8 +28,7 @@ export function SectionHeader({ title, subtitle, action }: SectionHeaderProps) {
         <Text
           style={styles.title}
           accessibilityRole="header"
-          // Titulos de secao sao h2 no web (a pagina tem um unico h1).
-          {...({ 'aria-level': 2 } as object)}>
+          {...({ 'aria-level': level } as object)}>
           {title}
         </Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
@@ -85,3 +91,5 @@ const createStyles = (colors: ColorsType) =>
       textDecorationLine: 'underline',
     },
   });
+
+export default SectionHeader;

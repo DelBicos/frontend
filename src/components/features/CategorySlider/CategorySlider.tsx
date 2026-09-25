@@ -4,6 +4,7 @@ import { useCategoryStore } from '@stores/Category/Category';
 import { Category } from '@stores/Category/types';
 import { useColors } from '@theme/ThemeProvider';
 import { useBreakpoint } from '@lib/hooks/useBreakpoint';
+import { getCategoryGradient, getCategoryIconName } from '@lib/categoryVisuals';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
 import {
@@ -14,30 +15,6 @@ import {
   View,
 } from 'react-native';
 import { createStyles } from './styles';
-
-// Icones por categoria ate que venham do backend.
-const CATEGORY_ICONS: Record<number, string> = {
-  1: 'heartbeat',
-  2: 'cut',
-  3: 'tools',
-  4: 'lightbulb',
-  5: 'home',
-  6: 'paw',
-};
-
-// Cores de fundo quando a imagem nao existe ou falha ao carregar.
-const FALLBACK_GRADIENTS: [string, string][] = [
-  ['#005A93', '#0B7FC4'],
-  ['#C75B00', '#FC8200'],
-  ['#1F6F54', '#2E9E74'],
-  ['#5B3A99', '#7F5AC8'],
-  ['#8A2E4B', '#C0476B'],
-  ['#34495E', '#52708D'],
-];
-
-function getCategoryIconName(id: number) {
-  return CATEGORY_ICONS[id] || 'shapes';
-}
 
 interface CategoryCardProps {
   category: Category;
@@ -60,8 +37,7 @@ function CategoryCard({
   const [isHovered, setIsHovered] = useState(false);
   const [imageFailed, setImageFailed] = useState(!category.imageUrl);
   const iconName = getCategoryIconName(category.id);
-  const gradient =
-    FALLBACK_GRADIENTS[(category.id - 1) % FALLBACK_GRADIENTS.length];
+  const gradient = getCategoryGradient(category.id);
 
   const label = (
     <LinearGradient

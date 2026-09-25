@@ -239,6 +239,9 @@ const RootStack = createNativeStackNavigator({
     },
     Help: {
       screen: HelpScreen,
+      linking: {
+        path: 'help',
+      },
       options: {
         title: 'Central de Ajuda',
       },

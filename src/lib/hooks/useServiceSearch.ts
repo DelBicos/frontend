@@ -31,15 +31,24 @@ export function resetSubCategoryCache() {
   inFlight = null;
 }
 
+/** Minusculas e sem acentos, para "eletrica" encontrar "Elétrica". */
+export function normalizeSearchText(text: string) {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
 export function filterSubCategories(
   all: SubCategory[],
   term: string,
   limit = MAX_RESULTS,
 ): SubCategory[] {
-  const needle = term.toLowerCase().trim();
+  const needle = normalizeSearchText(term);
   if (!needle) return [];
   return all
-    .filter((sub) => sub.title.toLowerCase().includes(needle))
+    .filter((sub) => normalizeSearchText(sub.title).includes(needle))
     .slice(0, limit);
 }
 
