@@ -1,121 +1,153 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View,
+  ActivityIndicator,
+  Pressable,
   Text,
-  ScrollView,
-  Image,
-  TouchableOpacity,
+  View,
   useWindowDimensions,
 } from 'react-native';
-import { useFavoriteStore } from '@stores/Favorite';
-import { useColors } from '@theme/ThemeProvider';
 import { FontAwesome } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useFavoriteStore } from '@stores/Favorite';
+import { FavoriteProfessional } from '@stores/Favorite/types';
+import { useColors } from '@theme/ThemeProvider';
+import Avatar from '@components/ui/Avatar';
+import ActionButton from '@components/ui/ActionButton';
+import EmptyState from '@components/ui/EmptyState';
+import ProfilePage from '../../components/ProfilePage';
 import { createStyles } from './styles';
 
+/** Profissionais favoritos, com atalho para o perfil e desfazer remocao. */
 const FavoritosTab: React.FC = () => {
   const colors = useColors();
   const styles = createStyles(colors);
-  const { favorites, removeFavorite, syncWithServer } = useFavoriteStore();
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const { width } = useWindowDimensions();
-
-  const isDesktop = width >= 768;
+  const columns = width >= 1100 ? 2 : 1;
+  const { favorites, loading, removeFavorite, addFavorite, syncWithServer } =
+    useFavoriteStore();
+  const [removed, setRemoved] = useState<FavoriteProfessional | null>(null);
 
   useEffect(() => {
     syncWithServer();
   }, [syncWithServer]);
 
-  const handleViewProfile = (professionalId: number) => {
-    // @ts-ignore
-    navigation.navigate('PartnerProfile', { id: professionalId });
+  const remove = async (fav: FavoriteProfessional) => {
+    setRemoved(fav);
+    await removeFavorite(fav.professionalId);
   };
 
-  if (favorites.length === 0) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.pageTitle}>Meus Favoritos</Text>
-        <View style={styles.emptyContainer}>
-          <FontAwesome name="heart-o" size={64} color={colors.textTertiary} />
-          <Text style={styles.emptyText}>
-            Você ainda não tem profissionais favoritos.
-          </Text>
-          <Text style={styles.emptySubtext}>
-            Adicione profissionais aos favoritos após um agendamento para
-            encontrá-los facilmente aqui.
-          </Text>
-        </View>
+  const undo = async () => {
+    if (!removed) return;
+    const fav = removed;
+    setRemoved(null);
+    await addFavorite(fav);
+  };
+
+  let body: React.ReactNode;
+  if (loading && favorites.length === 0) {
+    body = (
+      <ActivityIndicator
+        size="large"
+        color={colors.primaryBlack}
+        style={styles.loading}
+      />
+    );
+  } else if (favorites.length === 0) {
+    body = (
+      <EmptyState
+        icon="heart-o"
+        title="Nenhum favorito ainda"
+        text="Toque no coração no perfil de um profissional para encontrá-lo rápido aqui.">
+        <ActionButton
+          label="Explorar serviços"
+          variant="secondary"
+          onPress={() => navigation.navigate('Category')}
+        />
+      </EmptyState>
+    );
+  } else {
+    body = (
+      <View style={styles.grid}>
+        {favorites.map((fav) => (
+          <View
+            key={fav.professionalId}
+            style={[styles.gridItem, { width: `${100 / columns}%` }]}>
+            <View style={styles.card}>
+              <Pressable
+                onPress={() =>
+                  navigation.navigate('PartnerProfile', {
+                    id: fav.professionalId,
+                  })
+                }
+                style={({ pressed }) => [
+                  styles.main,
+                  pressed && { opacity: 0.8 },
+                ]}
+                accessibilityRole="link"
+                accessibilityLabel={`Ver perfil de ${fav.professionalName}`}>
+                <Avatar
+                  uri={fav.professionalAvatar}
+                  name={fav.professionalName}
+                  size={56}
+                />
+                <View style={styles.texts}>
+                  <Text style={styles.name} numberOfLines={1}>
+                    {fav.professionalName}
+                  </Text>
+                  {fav.category ? (
+                    <Text style={styles.meta} numberOfLines={1}>
+                      {fav.category}
+                    </Text>
+                  ) : null}
+                  {fav.serviceTitle ? (
+                    <Text style={styles.meta} numberOfLines={1}>
+                      Último serviço: {fav.serviceTitle}
+                    </Text>
+                  ) : null}
+                </View>
+                <FontAwesome
+                  name="angle-right"
+                  size={22}
+                  color={colors.textSecondary}
+                />
+              </Pressable>
+              <Pressable
+                onPress={() => remove(fav)}
+                style={({ pressed, hovered }: any) => [
+                  styles.heart,
+                  (pressed || hovered) && styles.heartPressed,
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={`Remover ${fav.professionalName} dos favoritos`}>
+                <FontAwesome name="heart" size={20} color={colors.errorText} />
+              </Pressable>
+            </View>
+          </View>
+        ))}
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.pageTitle}>Meus Favoritos</Text>
-
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}>
-        <View style={styles.grid}>
-          {favorites.map((favorite) => (
-            <View
-              key={favorite.professionalId}
-              style={[styles.cardWrapper, isDesktop && { width: '48%' }]}>
-              <View style={styles.favCard}>
-                <View style={styles.favCardHeader}>
-                  <Image
-                    source={{
-                      uri:
-                        favorite.professionalAvatar ||
-                        'https://via.placeholder.com/80',
-                    }}
-                    style={styles.favAvatar}
-                  />
-
-                  <View style={styles.favInfoContainer}>
-                    <Text style={styles.favName} numberOfLines={1}>
-                      {favorite.professionalName}
-                    </Text>
-                    {favorite.category && (
-                      <Text style={styles.favCategory} numberOfLines={1}>
-                        {favorite.category}
-                      </Text>
-                    )}
-                    {favorite.serviceTitle && (
-                      <Text style={styles.favServiceTitle} numberOfLines={1}>
-                        {favorite.serviceTitle}
-                      </Text>
-                    )}
-                  </View>
-
-                  <TouchableOpacity
-                    style={styles.favRemoveButton}
-                    onPress={() => removeFavorite(favorite.professionalId)}
-                    activeOpacity={0.7}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Remover ${favorite.professionalName} dos favoritos`}>
-                    <FontAwesome
-                      name="heart"
-                      size={20}
-                      color={colors.primaryRed}
-                    />
-                  </TouchableOpacity>
-                </View>
-
-                <View style={styles.favFooter}>
-                  <TouchableOpacity
-                    style={styles.favProfileButton}
-                    onPress={() => handleViewProfile(favorite.professionalId)}
-                    activeOpacity={0.8}>
-                    <Text style={styles.favProfileButtonText}>Ver Perfil</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          ))}
+    <ProfilePage
+      title="Favoritos"
+      subtitle="Profissionais que você salvou para contratar de novo.">
+      {removed ? (
+        <View style={styles.undo} accessibilityLiveRegion="polite">
+          <Text style={styles.undoText}>
+            {removed.professionalName} saiu dos favoritos.
+          </Text>
+          <ActionButton
+            label="Desfazer"
+            variant="ghost"
+            size="sm"
+            onPress={undo}
+          />
         </View>
-      </ScrollView>
-    </View>
+      ) : null}
+      {body}
+    </ProfilePage>
   );
 };
 

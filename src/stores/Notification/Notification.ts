@@ -64,6 +64,13 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
     }
   },
 
+  markAllAsRead: async (userId: number) => {
+    await backendHttpClient.patch(`/api/notifications/mark-all-read/${userId}`);
+    set({
+      notifications: get().notifications.map((n) => ({ ...n, is_read: true })),
+    });
+  },
+
   clearNotifications: () => {
     set({ notifications: [], error: null, loading: false });
   },

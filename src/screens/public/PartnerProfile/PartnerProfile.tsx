@@ -21,7 +21,7 @@ import { SobreContent } from './SobreContent';
 import { ServicosContent } from './ServicosContent';
 import { GaleriaContent } from './GaleriaContent';
 import { AvaliacoesContent } from './AvaliacoesContent';
-import Stars from './components/Stars';
+import Stars from '@components/ui/Stars';
 import { createStyles } from './styles';
 
 type TabType = 'sobre' | 'servicos' | 'galeria' | 'avaliacoes';

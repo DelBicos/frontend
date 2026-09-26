@@ -1,144 +1,90 @@
-import { StyleSheet, Platform } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { ColorsType } from '@theme/types';
 
 export const createStyles = (colors: ColorsType) =>
   StyleSheet.create({
-    container: {
-      flex: 1,
-      padding: 16,
-      backgroundColor: 'transparent',
+    loading: {
+      marginVertical: 48,
     },
-    centered: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
+    chips: {
+      marginBottom: 20,
     },
-    listContent: {
-      paddingBottom: 20,
+    group: {
+      marginBottom: 24,
     },
-    card: {
-      marginBottom: 10,
+    groupLabel: {
+      marginBottom: 8,
+      marginLeft: 4,
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 14,
+      letterSpacing: 0.6,
+      textTransform: 'uppercase',
+      color: colors.textSecondary,
+    },
+    list: {
       borderRadius: 16,
-      shadowColor: colors.primaryBlack,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
-      backgroundColor: colors.cardBackground,
       borderWidth: 1,
       borderColor: colors.borderColor,
+      backgroundColor: colors.cardBackground,
+      overflow: 'hidden',
     },
-    unreadCard: {
-      borderColor: colors.primaryOrange,
-      backgroundColor: colors.backgroundElevated,
-    },
-    readCard: {
-      borderColor: colors.borderColor,
-    },
-    cardContent: {
+    item: {
       flexDirection: 'row',
-      alignItems: 'center',
-      paddingVertical: 12,
-      paddingHorizontal: 16,
+      alignItems: 'flex-start',
+      gap: 12,
+      padding: 14,
+      ...Platform.select({ web: { cursor: 'pointer' } as object }),
     },
-    logo: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      marginRight: 12,
+    itemDivider: {
+      borderTopWidth: 1,
+      borderTopColor: colors.divider,
+    },
+    itemPressed: {
       backgroundColor: colors.inputBackground,
     },
-    textContainer: {
-      flex: 1,
+    icon: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: 'center',
       justifyContent: 'center',
+      backgroundColor: colors.inputBackground,
+    },
+    texts: {
+      flex: 1,
+      minWidth: 0,
+      gap: 2,
+    },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      gap: 8,
     },
     title: {
-      fontSize: 16,
+      flex: 1,
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 17,
+      color: colors.primaryBlack,
+    },
+    titleUnread: {
       fontFamily: 'Afacad-Bold',
-      marginBottom: 4,
+    },
+    time: {
+      fontFamily: 'Afacad-Regular',
+      fontSize: 14,
+      color: colors.textSecondary,
     },
     message: {
-      fontSize: 14,
       fontFamily: 'Afacad-Regular',
-      lineHeight: 20,
-    },
-    date: {
-      fontSize: 12,
-      fontFamily: 'Afacad-Regular',
-      marginLeft: 8,
-      alignSelf: 'flex-start',
-      marginTop: 2,
-    },
-    errorText: {
-      textAlign: 'center',
-      marginTop: 20,
       fontSize: 16,
-      fontFamily: 'Afacad-Regular',
-      color: colors.errorText,
+      lineHeight: 22,
+      color: colors.textSecondary,
     },
-    emptyText: {
-      textAlign: 'center',
-      marginTop: 20,
-      fontSize: 16,
-      fontFamily: 'Afacad-Regular',
-      color: colors.textTertiary,
-    },
-
-    // --- MODAL ---
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: colors.overlay,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 20,
-    },
-    modalContent: {
-      backgroundColor: colors.cardBackground,
-      borderRadius: 16,
-      padding: 24,
-      width: '100%',
-      maxWidth: 500,
-      maxHeight: '80%',
-      ...Platform.select({
-        default: { elevation: 10 },
-        web: { boxShadow: '0 4px 12px rgba(0,0,0,0.15)' },
-      }),
-    },
-    modalInnerContainer: {},
-    modalTitle: {
-      fontSize: 20,
-      fontFamily: 'Afacad-Bold',
-      color: colors.primaryOrange,
-      textAlign: 'center',
-      marginBottom: 16,
-    },
-    modalMessageScroll: {
-      marginVertical: 12,
-      maxHeight: 300,
-    },
-    modalMessage: {
-      fontSize: 16,
-      fontFamily: 'Afacad-Regular',
-      color: colors.primaryBlack,
-      lineHeight: 24,
-    },
-    modalDate: {
-      fontSize: 14,
-      fontFamily: 'Afacad-Regular',
-      color: colors.textTertiary,
-      textAlign: 'center',
-      marginBottom: 24,
-      marginTop: 12,
-    },
-    modalButton: {
+    dot: {
+      width: 10,
+      height: 10,
+      marginTop: 6,
+      borderRadius: 5,
       backgroundColor: colors.primaryOrange,
-      borderRadius: 12,
-      paddingVertical: 12,
-      alignItems: 'center',
-    },
-    modalButtonLabel: {
-      fontSize: 16,
-      color: colors.primaryWhite,
-      fontFamily: 'Afacad-Bold',
     },
   });

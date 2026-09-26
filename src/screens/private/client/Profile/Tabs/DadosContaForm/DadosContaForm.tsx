@@ -1,530 +1,347 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Platform,
-  Modal,
-  Image,
-  Alert,
-  Animated,
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  useWindowDimensions,
-} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Platform, Text, View, useWindowDimensions } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { useForm, Controller } from 'react-hook-form';
+import { useNavigation } from '@react-navigation/native';
 import CustomTextInput from '@components/ui/CustomTextInput';
-import { createStyles } from './styles';
-import { useColors } from '@theme/ThemeProvider';
-import { useThemeStore } from '@stores/Theme';
-import { ThemeMode } from '@stores/Theme/types';
-import { UserProfileProps } from '../../types';
-import { FontAwesome } from '@expo/vector-icons';
 import PhoneInput from '@components/ui/PhoneInput';
+import Avatar from '@components/ui/Avatar';
+import ActionButton from '@components/ui/ActionButton';
+import InlineAlert from '@components/ui/InlineAlert';
+import { maskCpf } from '@components/ui/CpfInput/CpfInput';
+import { useColors } from '@theme/ThemeProvider';
 import { useUserStore } from '@stores/User';
-import { useProfessionalStore } from '@stores/Professional';
+import { confirmAction } from '@lib/utils/confirmAction';
+import { UserProfileProps } from '../../types';
+import ProfilePage, { ProfileCard } from '../../components/ProfilePage';
+import { createStyles } from './styles';
 
 interface DadosContaFormProps {
   user?: UserProfileProps;
 }
 
-const formatCPF = (value: string | undefined) => {
-  if (!value) return '';
-  const cleaned = value.replace(/\D/g, '');
-  return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+type FormData = {
+  name: string;
+  surname: string;
+  email: string;
+  phone: string;
 };
 
-const StatusModal = ({ visible, status, message, onClose }: any) => {
-  const isSuccess = status === 'success';
-  const isError = status === 'error';
-  const isProgress = status === 'loading';
-  const colors = useColors();
-  const styles = createStyles(colors);
+type Feedback = { type: 'success' | 'error'; text: string } | null;
 
-  const getIcon = () => (isSuccess ? '✔️' : isError ? '❌' : '⏳');
-  const getTitle = () =>
-    isSuccess ? 'Sucesso!' : isError ? 'Ops...' : 'Salvando...';
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  return (
-    <Modal
-      visible={visible}
-      animationType="fade"
-      onRequestClose={onClose}
-      transparent>
-      <View style={styles.modalOverlay}>
-        <View style={styles.statusModalContainer}>
-          <Text style={styles.statusModalIcon}>{getIcon()}</Text>
-          <Text style={styles.statusModalTitle}>{getTitle()}</Text>
-          <Text style={styles.statusModalMessage}>{message}</Text>
-          {isProgress ? (
-            <ActivityIndicator size="small" color={colors.primaryBlue} />
-          ) : (
-            <TouchableOpacity
-              style={styles.statusModalButton}
-              onPress={onClose}>
-              <Text style={styles.statusModalButtonText}>OK</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-    </Modal>
-  );
-};
+function splitName(full: string) {
+  const parts = full.trim().split(/\s+/);
+  return { name: parts[0] ?? '', surname: parts.slice(1).join(' ') };
+}
 
-const AvatarOptionsModal = ({
-  visible,
-  onClose,
-  onTakePhoto,
-  onPickFromGallery,
-  onRemovePhoto,
-  hasPhoto,
-  uploading,
-}: any) => {
-  const colors = useColors();
-  const styles = createStyles(colors);
-
-  return (
-    <Modal
-      visible={visible}
-      animationType="fade"
-      onRequestClose={onClose}
-      transparent>
-      <TouchableOpacity
-        style={styles.modalOverlay}
-        activeOpacity={1}
-        onPress={onClose}>
-        <View
-          style={styles.optionsContainer}
-          onStartShouldSetResponder={() => true}>
-          <Text
-            style={[
-              styles.statusModalTitle,
-              { textAlign: 'center', marginBottom: 16 },
-            ]}>
-            Alterar Foto
-          </Text>
-
-          <TouchableOpacity
-            style={styles.optionButton}
-            onPress={onTakePhoto}
-            disabled={uploading}>
-            <Text style={styles.optionText}>
-              {uploading ? 'Processando...' : 'Tirar Foto'}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.optionButton}
-            onPress={onPickFromGallery}
-            disabled={uploading}>
-            <Text style={styles.optionText}>
-              {uploading ? 'Processando...' : 'Escolher da Galeria'}
-            </Text>
-          </TouchableOpacity>
-
-          {hasPhoto && (
-            <TouchableOpacity
-              style={[styles.optionButton, styles.removeOption]}
-              onPress={onRemovePhoto}
-              disabled={uploading}>
-              <Text style={[styles.optionText, styles.removeText]}>
-                Remover Foto Atual
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          <TouchableOpacity
-            style={[styles.optionButton, styles.cancelOption]}
-            onPress={onClose}
-            disabled={uploading}>
-            <Text style={[styles.optionText, styles.cancelText]}>Cancelar</Text>
-          </TouchableOpacity>
-        </View>
-      </TouchableOpacity>
-    </Modal>
-  );
-};
-
+/** Foto, nome, contato e CPF (somente leitura). */
 export default function DadosContaForm({
   user: propUser,
 }: DadosContaFormProps) {
-  const [nome, setNome] = useState('');
-  const [sobrenome, setSobrenome] = useState('');
-  const [cpf, setCpf] = useState('');
-  const [email, setEmail] = useState('');
-  const [telefone, setTelefone] = useState('');
-
-  const [showOptions, setShowOptions] = useState(false);
-  const [overlayOpacity] = useState(new Animated.Value(0));
-  const [showStatusModal, setShowStatusModal] = useState(false);
-  const [status, setStatus] = useState<'success' | 'error' | 'loading' | null>(
-    null,
-  );
-  const [statusMessage, setStatusMessage] = useState('');
-  const [tempAvatarBase64, setTempAvatarBase64] = useState<string | null>(null);
-  const [isAvatarRemoved, setIsAvatarRemoved] = useState(false);
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
-
-  const {
-    user: storeUser,
-    updateUserProfile,
-    uploadAvatar,
-    removeAvatar,
-  } = useUserStore();
-
-  const { theme } = useThemeStore();
-  const { width } = useWindowDimensions();
-  const isMobile = width < 768;
-
-  const currentUser = storeUser || propUser;
-
-  const isHighContrast = theme === ThemeMode.LIGHT_HI_CONTRAST;
   const colors = useColors();
   const styles = createStyles(colors);
+  const navigation = useNavigation<any>();
+  const { width } = useWindowDimensions();
+  const isNarrow = width < 600;
+  const { user, avatarBase64, updateUserProfile, uploadAvatar, removeAvatar } =
+    useUserStore();
 
-  const responsiveStyles = useMemo(
-    () =>
-      StyleSheet.create({
-        contentWrapper: {
-          flexDirection: isMobile ? 'column' : 'row',
-          alignItems: isMobile ? 'center' : 'flex-start',
-        },
-        avatarContainer: {
-          marginRight: isMobile ? 0 : 32,
-          marginBottom: isMobile ? 32 : 0,
-        },
-        formGrid: {
-          flex: 1,
-          width: '100%',
-        },
-        formRow: {
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          gap: 16,
-          marginBottom: 16,
-        },
-        inputWrapper: {
-          flexGrow: 1,
-          flexBasis: 200,
-        },
-      }),
-    [isMobile],
-  );
+  const fullName = user?.name ?? propUser?.userName ?? '';
+  const email = user?.email ?? propUser?.userEmail ?? '';
+  const phone = user?.phone ?? propUser?.userPhone ?? '';
+  const cpf = user?.cpf ?? propUser?.userCpf ?? '';
+  const avatarUri = avatarBase64 || user?.avatar_uri || null;
 
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoFeedback, setPhotoFeedback] = useState<Feedback>(null);
+  const [formFeedback, setFormFeedback] = useState<Feedback>(null);
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isDirty, isSubmitting },
+  } = useForm<FormData>({
+    mode: 'onTouched',
+    defaultValues: { ...splitName(fullName), email, phone },
+  });
+
+  // Recarrega o formulario quando os dados da conta chegam do servidor.
   useEffect(() => {
-    if (Platform.OS !== 'web') {
-      (async () => {
-        const { status } =
-          await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert('Permissão necessária', 'Acesso à galeria negado.');
-        }
-      })();
-    }
+    reset({ ...splitName(fullName), email, phone });
+  }, [fullName, email, phone, reset]);
 
-    if (currentUser) {
-      const u = currentUser as any;
-
-      const fullName = u.userName || u.name || u.nome || u.full_name || '';
-      const emailValue = u.userEmail || u.email || '';
-      const phoneValue = u.userPhone || u.phone || u.telefone || '';
-      const cpfValue = u.userCpf || u.cpf || '';
-
-      const fullNameParts = fullName.split(' ');
-
-      setNome(fullNameParts[0] || '');
-      setSobrenome(fullNameParts.slice(1).join(' ') || '');
-      setEmail(emailValue);
-      setTelefone(phoneValue);
-      setCpf(formatCPF(cpfValue));
-    }
-  }, [currentUser]);
-
-  const handleHoverIn = () => {
-    Animated.timing(overlayOpacity, {
-      toValue: 1,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handleHoverOut = () => {
-    Animated.timing(overlayOpacity, {
-      toValue: 0,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handleImageSelection = async (asset: ImagePicker.ImagePickerAsset) => {
-    setShowOptions(false);
-    setStatus('loading');
-    setStatusMessage('Sincronizando com o servidor...');
-    setShowStatusModal(true);
-
+  const sendPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
+    setPhotoBusy(true);
+    setPhotoFeedback(null);
     const result = await uploadAvatar(asset.uri);
-
-    if (result.erro) {
-      setStatus('error');
-      setStatusMessage(result.mensagem);
-    } else {
-      setStatus('success');
-      setStatusMessage('Foto de perfil atualizada!');
-    }
+    setPhotoBusy(false);
+    setPhotoFeedback(
+      result.erro
+        ? {
+            type: 'error',
+            text: result.mensagem || 'Não foi possível enviar a foto.',
+          }
+        : { type: 'success', text: 'Foto atualizada.' },
+    );
   };
 
-  const handlePickFromGallery = async () => {
-    if ((currentUser as any)?.uploading) return;
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-        base64: true,
-      });
-      if (!result.canceled && result.assets[0]) {
-        handleImageSelection(result.assets[0]);
-      }
-    } catch {
-      Alert.alert('Erro', 'Erro ao abrir galeria.');
-    } finally {
-      setShowOptions(false);
-    }
-  };
-
-  const handleTakePhoto = async () => {
-    try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+  const pickFromGallery = async () => {
+    if (Platform.OS !== 'web') {
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permissão necessária', 'Acesso à câmera negado.');
+        setPhotoFeedback({
+          type: 'error',
+          text: 'Permita o acesso às fotos nas configurações do aparelho.',
+        });
         return;
       }
-
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.7,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        setShowOptions(false);
-        handleImageSelection(result.assets[0]);
-      }
-    } catch (error) {
-      Alert.alert('Erro', 'Não foi possível abrir a câmera.');
     }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) sendPhoto(result.assets[0]);
   };
 
-  const handleRemovePhoto = () => {
-    setIsAvatarRemoved(true);
-    setTempAvatarBase64(null);
-    setShowOptions(false);
+  const takePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      setPhotoFeedback({
+        type: 'error',
+        text: 'Permita o acesso à câmera nas configurações do aparelho.',
+      });
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets[0]) sendPhoto(result.assets[0]);
   };
 
-  const handleSaveChanges = async () => {
-    // Open preview modal to confirm changes before saving
-    setShowPreviewModal(true);
+  const deletePhoto = async () => {
+    const ok = await confirmAction({
+      title: 'Remover foto',
+      message: 'Sua foto de perfil vai ser removida.',
+      confirmLabel: 'Remover',
+      destructive: true,
+    });
+    if (!ok) return;
+    setPhotoBusy(true);
+    setPhotoFeedback(null);
+    const result = await removeAvatar();
+    setPhotoBusy(false);
+    setPhotoFeedback(
+      result?.erro
+        ? {
+            type: 'error',
+            text: result.mensagem || 'Não foi possível remover.',
+          }
+        : { type: 'success', text: 'Foto removida.' },
+    );
   };
 
-  const confirmSaveChanges = async () => {
-    setShowPreviewModal(false);
-    setShowStatusModal(true);
-    setStatus('loading');
-    setStatusMessage('Salvando alterações...');
-
+  const save = async (data: FormData) => {
+    setFormFeedback(null);
     try {
       await updateUserProfile({
-        name: `${nome} ${sobrenome}`.trim(),
-        email,
-        phone: telefone.replace(/\D/g, ''),
+        name: `${data.name.trim()} ${data.surname.trim()}`.trim(),
+        email: data.email.trim().toLowerCase(),
+        phone: data.phone.replace(/\D/g, ''),
       });
-
-      if (isAvatarRemoved) {
-        await removeAvatar();
-      }
-
-      setTempAvatarBase64(null);
-      setIsAvatarRemoved(false);
-      setStatus('success');
-      setStatusMessage('Dados atualizados com sucesso!');
+      reset(data);
+      setFormFeedback({ type: 'success', text: 'Dados salvos.' });
     } catch (error: any) {
-      setStatus('error');
-      setStatusMessage(error.message || 'Erro ao salvar os dados.');
+      setFormFeedback({
+        type: 'error',
+        text: error?.message || 'Não foi possível salvar. Tente de novo.',
+      });
     }
   };
 
-  const handleCloseStatusModal = () => {
-    setShowStatusModal(false);
-    setStatus(null);
-  };
-
-  const avatarUriToDisplay = useMemo(() => {
-    if (isAvatarRemoved) return null;
-    const uri =
-      tempAvatarBase64 ||
-      (currentUser as any)?.avatar_uri ||
-      (currentUser as any)?.avatarSource?.uri;
-    if (typeof uri !== 'string' || uri === '[object Object]') return null;
-    return uri;
-  }, [tempAvatarBase64, currentUser, isAvatarRemoved]);
-
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{ paddingBottom: 40 }}>
-      <Text style={styles.pageTitle}>Dados da Conta</Text>
-
-      <View
-        style={[
-          styles.card,
-          isHighContrast && {
-            borderWidth: 2,
-            borderColor: colors.primaryBlack,
-          },
-        ]}>
-        <View style={responsiveStyles.contentWrapper}>
-          <View style={responsiveStyles.avatarContainer}>
-            <TouchableOpacity
-              style={styles.avatarTouchable}
-              onPress={() => setShowOptions(true)}
-              disabled={(currentUser as any)?.uploading}>
-              <Animated.View style={styles.avatarAnimatedWrapper}>
-                {avatarUriToDisplay ? (
-                  <Image
-                    source={{ uri: avatarUriToDisplay }}
-                    style={styles.avatarImage}
-                    key={avatarUriToDisplay}
-                  />
-                ) : (
-                  <Image
-                    source={require('@assets/logo.png')}
-                    style={styles.avatarImage}
-                    resizeMode="contain"
-                  />
-                )}
-
-                <Animated.View
-                  style={[styles.avatarOverlay, { opacity: overlayOpacity }]}>
-                  {(currentUser as any)?.uploading ? (
-                    <ActivityIndicator
-                      size="small"
-                      color={colors.primaryWhite}
-                    />
-                  ) : (
-                    <View style={{ alignItems: 'center' }}>
-                      <FontAwesome name="camera" size={20} color="white" />
-                      <Text style={styles.avatarOverlayText}>Alterar</Text>
-                    </View>
-                  )}
-                </Animated.View>
-              </Animated.View>
-            </TouchableOpacity>
+    <ProfilePage
+      title="Dados da conta"
+      subtitle="Como você aparece para os profissionais e como falamos com você.">
+      <ProfileCard title="Foto de perfil">
+        <View style={[styles.photoRow, isNarrow && styles.photoRowNarrow]}>
+          <Avatar uri={avatarUri} name={fullName} size={96} />
+          <View style={styles.photoActions}>
+            <Text style={styles.hint}>
+              Uma foto ajuda o profissional a reconhecer você no atendimento.
+            </Text>
+            <View style={styles.buttons}>
+              {Platform.OS !== 'web' ? (
+                <ActionButton
+                  label="Tirar foto"
+                  icon="camera"
+                  variant="secondary"
+                  size="sm"
+                  onPress={takePhoto}
+                  disabled={photoBusy}
+                />
+              ) : null}
+              <ActionButton
+                label={Platform.OS === 'web' ? 'Escolher foto' : 'Galeria'}
+                icon="image"
+                variant="secondary"
+                size="sm"
+                onPress={pickFromGallery}
+                loading={photoBusy}
+              />
+              {avatarUri ? (
+                <ActionButton
+                  label="Remover"
+                  variant="ghost"
+                  size="sm"
+                  onPress={deletePhoto}
+                  disabled={photoBusy}
+                />
+              ) : null}
+            </View>
           </View>
+        </View>
+        {photoFeedback ? (
+          <View style={styles.feedback}>
+            <InlineAlert type={photoFeedback.type}>
+              {photoFeedback.text}
+            </InlineAlert>
+          </View>
+        ) : null}
+      </ProfileCard>
 
-          <View style={responsiveStyles.formGrid}>
-            <View style={responsiveStyles.formRow}>
-              <View style={responsiveStyles.inputWrapper}>
+      <ProfileCard title="Informações pessoais">
+        <View style={[styles.row, isNarrow && styles.rowNarrow]}>
+          <View style={styles.col}>
+            <Controller
+              control={control}
+              name="name"
+              rules={{ required: 'Informe seu nome.' }}
+              render={({ field: { onChange, onBlur, value } }) => (
                 <CustomTextInput
                   label="Nome"
-                  value={nome}
-                  onChangeText={setNome}
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  error={errors.name}
+                  autoComplete="given-name"
                 />
-              </View>
-              <View style={responsiveStyles.inputWrapper}>
+              )}
+            />
+          </View>
+          <View style={styles.col}>
+            <Controller
+              control={control}
+              name="surname"
+              render={({ field: { onChange, onBlur, value } }) => (
                 <CustomTextInput
                   label="Sobrenome"
-                  value={sobrenome}
-                  onChangeText={setSobrenome}
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  autoComplete="family-name"
                 />
-              </View>
-            </View>
-
-            <View style={responsiveStyles.formRow}>
-              <View style={responsiveStyles.inputWrapper}>
-                <CustomTextInput
-                  label="CPF"
-                  value={cpf}
-                  editable={false}
-                  style={{
-                    opacity: 0.6,
-                    backgroundColor: colors.inputBackground,
-                  }}
-                />
-              </View>
-              <View style={responsiveStyles.inputWrapper}>
+              )}
+            />
+          </View>
+        </View>
+        <View style={[styles.row, isNarrow && styles.rowNarrow]}>
+          <View style={styles.col}>
+            <Controller
+              control={control}
+              name="email"
+              rules={{
+                required: 'Informe seu e-mail.',
+                pattern: {
+                  value: EMAIL_PATTERN,
+                  message: 'Digite um e-mail válido.',
+                },
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
                 <CustomTextInput
                   label="E-mail"
-                  value={email}
-                  onChangeText={setEmail}
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  error={errors.email}
                   keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoComplete="email"
                 />
-              </View>
-            </View>
-
-            <View style={responsiveStyles.formRow}>
-              <View style={responsiveStyles.inputWrapper}>
-                <PhoneInput value={telefone} onChangeText={setTelefone} />
-              </View>
-            </View>
-
-            <View style={styles.saveButtonContainer}>
-              <TouchableOpacity
-                style={styles.saveButton}
-                onPress={handleSaveChanges}>
-                <Text style={styles.saveButtonText}>Salvar Alterações</Text>
-              </TouchableOpacity>
-            </View>
+              )}
+            />
+          </View>
+          <View style={styles.col}>
+            <Controller
+              control={control}
+              name="phone"
+              rules={{
+                required: 'Informe seu celular.',
+                validate: (v) =>
+                  v.replace(/\D/g, '').length >= 10 || 'Telefone incompleto.',
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <PhoneInput
+                  label="Celular"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  error={errors.phone?.message}
+                />
+              )}
+            />
           </View>
         </View>
-      </View>
 
-      <AvatarOptionsModal
-        visible={showOptions}
-        onClose={() => setShowOptions(false)}
-        onTakePhoto={handleTakePhoto}
-        onPickFromGallery={handlePickFromGallery}
-        onRemovePhoto={handleRemovePhoto}
-        hasPhoto={!!avatarUriToDisplay}
-        uploading={(currentUser as any)?.uploading}
-      />
-
-      {/* Preview / Confirmation Modal before saving changes */}
-      <Modal visible={showPreviewModal} animationType="fade" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.statusModalContainer}>
-            <Text style={styles.statusModalTitle}>Confirmar alterações</Text>
-            <Text style={{ marginTop: 8 }}>
-              Nome: {nome} {sobrenome}
+        <View style={styles.readonly}>
+          <Text style={styles.readonlyLabel}>CPF</Text>
+          <Text style={styles.readonlyValue}>{maskCpf(cpf) || '—'}</Text>
+          <Text style={styles.hint}>
+            O CPF não pode ser alterado. Precisa corrigir? Fale com o suporte na{' '}
+            <Text
+              style={styles.link}
+              onPress={() => navigation.navigate('Help')}
+              accessibilityRole="link">
+              Central de ajuda
             </Text>
-            <Text>E-mail: {email}</Text>
-            <Text>Telefone: {telefone}</Text>
-
-            <View style={{ flexDirection: 'row', marginTop: 16 }}>
-              <TouchableOpacity
-                style={[styles.statusModalButton, { flex: 1, marginRight: 8 }]}
-                onPress={() => setShowPreviewModal(false)}>
-                <Text style={styles.statusModalButtonText}>Cancelar</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.statusModalButton, { flex: 1 }]}
-                onPress={confirmSaveChanges}>
-                <Text style={styles.statusModalButtonText}>Confirmar</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+            .
+          </Text>
         </View>
-      </Modal>
 
-      <StatusModal
-        visible={showStatusModal}
-        status={status}
-        message={statusMessage}
-        onClose={handleCloseStatusModal}
-      />
-    </ScrollView>
+        {formFeedback ? (
+          <InlineAlert type={formFeedback.type}>
+            {formFeedback.text}
+          </InlineAlert>
+        ) : null}
+
+        <View style={styles.formActions}>
+          <ActionButton
+            label="Salvar alterações"
+            onPress={handleSubmit(save)}
+            loading={isSubmitting}
+            disabled={!isDirty}
+            block={isNarrow}
+          />
+          {isDirty ? (
+            <ActionButton
+              label="Descartar"
+              variant="ghost"
+              onPress={() => {
+                reset();
+                setFormFeedback(null);
+              }}
+            />
+          ) : null}
+        </View>
+      </ProfileCard>
+    </ProfilePage>
   );
 }

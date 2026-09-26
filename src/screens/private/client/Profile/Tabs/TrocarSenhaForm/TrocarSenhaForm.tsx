@@ -1,276 +1,205 @@
-import React, { useState, useMemo } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
-  StyleSheet,
-  useWindowDimensions,
-} from 'react-native';
+import React, { useState } from 'react';
+import { Text, View, useWindowDimensions } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
+import { useNavigation } from '@react-navigation/native';
+import { FontAwesome } from '@expo/vector-icons';
 import { useUserStore } from '@stores/User';
 import CustomTextInput from '@components/ui/CustomTextInput';
 import PasswordInput from '@components/ui/PasswordInput';
-import { createStyles } from './styles';
+import ActionButton from '@components/ui/ActionButton';
+import InlineAlert from '@components/ui/InlineAlert';
 import { useColors } from '@theme/ThemeProvider';
-import { useThemeStore } from '@stores/Theme';
-import { ThemeMode } from '@stores/Theme/types';
-import { FontAwesome } from '@expo/vector-icons';
+import ProfilePage, { ProfileCard } from '../../components/ProfilePage';
+import { passwordStrength, MIN_PASSWORD_LENGTH } from './passwordStrength';
+import { createStyles } from './styles';
 
-type MessageType = 'success' | 'error' | null;
+type FormData = { current: string; next: string; confirm: string };
 
+/** Trocar a senha (com a atual) ou ir para "esqueci minha senha". */
 const TrocarSenhaForm: React.FC = () => {
-  const [message, setMessage] = useState<{
-    type: MessageType;
+  const colors = useColors();
+  const styles = createStyles(colors);
+  const navigation = useNavigation<any>();
+  const { width } = useWindowDimensions();
+  const isNarrow = width < 600;
+  const { changePassword, user } = useUserStore();
+  const [feedback, setFeedback] = useState<{
+    type: 'success' | 'error';
     text: string;
   } | null>(null);
-
-  const { width } = useWindowDimensions();
-  const isDesktop = width >= 768;
 
   const {
     control,
     handleSubmit,
     watch,
+    getValues,
     reset,
-    formState: { errors, isSubmitting, isValid },
-  } = useForm({
-    mode: 'onChange',
-    defaultValues: {
-      senhaAtual: '',
-      novaSenha: '',
-      confirmarSenha: '',
-    },
+    formState: { errors, isSubmitting },
+  } = useForm<FormData>({
+    mode: 'onTouched',
+    defaultValues: { current: '', next: '', confirm: '' },
   });
 
-  const novaSenha = watch('novaSenha');
-  const { changePassword } = useUserStore();
-  const { theme } = useThemeStore();
-  const isHighContrast = theme === ThemeMode.LIGHT_HI_CONTRAST;
-  const colors = useColors();
-  const styles = createStyles(colors);
+  const strength = passwordStrength(watch('next'));
+  const strengthColor = [
+    colors.errorText,
+    colors.errorText,
+    colors.warningText,
+    colors.successText,
+  ][strength.level];
 
-  const responsiveStyles = useMemo(
-    () =>
-      StyleSheet.create({
-        formRow: {
-          flexDirection: isDesktop ? 'row' : 'column',
-          gap: 16,
-          marginBottom: 16,
-        },
-        inputHalf: {
-          flex: isDesktop ? 1 : undefined,
-          width: isDesktop ? undefined : '100%',
-        },
-      }),
-    [isDesktop],
-  );
-
-  const handleSalvar = async (data: any) => {
-    setMessage(null);
-
-    if (data.novaSenha !== data.confirmarSenha) {
-      setMessage({ type: 'error', text: 'As senhas não coincidem.' });
-      return;
-    }
-
+  const save = async (data: FormData) => {
+    setFeedback(null);
     try {
-      await changePassword(data.senhaAtual, data.novaSenha);
-      setMessage({
-        type: 'success',
-        text: 'Sua senha foi alterada com sucesso!',
-      });
+      await changePassword(data.current, data.next);
       reset();
-      setTimeout(() => setMessage(null), 5000);
+      setFeedback({ type: 'success', text: 'Senha alterada.' });
     } catch (error: any) {
-      setMessage({
+      setFeedback({
         type: 'error',
-        text:
-          error?.message ||
-          'Erro ao alterar a senha. Verifique sua senha atual.',
+        text: error?.message || 'Não foi possível trocar a senha.',
       });
-      setTimeout(() => setMessage(null), 7000);
     }
-  };
-
-  const PasswordRequirement = ({
-    regex,
-    text,
-  }: {
-    regex: RegExp;
-    text: string;
-  }) => {
-    const isMet = regex.test(novaSenha || '');
-    const iconColor = isMet ? colors.successText : colors.textTertiary;
-    const textColor = isMet ? colors.textSecondary : colors.textTertiary;
-
-    return (
-      <View style={styles.reqItem}>
-        <FontAwesome
-          name={isMet ? 'check-circle' : 'circle-o'}
-          size={14}
-          color={iconColor}
-        />
-        <Text style={[styles.reqText, { color: textColor }]}>{text}</Text>
-      </View>
-    );
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.pageTitle}>Segurança</Text>
-
-      {/* Banner de Mensagem */}
-      {message && (
-        <View
-          style={[
-            styles.messageBanner,
-            message.type === 'success'
-              ? styles.successBanner
-              : styles.errorBanner,
-          ]}>
-          <FontAwesome
-            name={
-              message.type === 'success' ? 'check-circle' : 'exclamation-circle'
-            }
-            size={20}
-            color={
-              message.type === 'success' ? colors.successText : colors.errorText
-            }
-            style={{ marginRight: 12 }}
-          />
-          <Text
-            style={[
-              styles.messageText,
-              message.type === 'success'
-                ? styles.successText
-                : styles.errorText,
-            ]}>
-            {message.text}
-          </Text>
-        </View>
-      )}
-
-      <View
-        style={[
-          styles.card,
-          isHighContrast && {
-            borderWidth: 2,
-            borderColor: colors.primaryBlack,
-          },
-        ]}>
-        <View style={styles.formContainer}>
-          {/* Senha Atual */}
-          <Controller
-            control={control}
-            name="senhaAtual"
-            rules={{ required: 'A senha atual é obrigatória.' }}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <CustomTextInput label="Senha Atual" error={errors.senhaAtual}>
-                <PasswordInput
-                  onBlur={onBlur}
-                  onChangeText={onChange}
-                  value={value}
-                  error={!!errors.senhaAtual}
-                  placeholder="Digite sua senha atual"
-                />
-              </CustomTextInput>
-            )}
-          />
-
-          <View style={responsiveStyles.formRow}>
-            {/* Nova Senha */}
-            <View style={responsiveStyles.inputHalf}>
-              <Controller
-                control={control}
-                name="novaSenha"
-                rules={{
-                  required: 'A nova senha é obrigatória.',
-                  minLength: { value: 8, message: 'Mínimo 8 caracteres.' },
-                  pattern: {
-                    value:
-                      /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/,
-                    message: 'Senha fraca.',
-                  },
-                }}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <CustomTextInput label="Nova Senha" error={errors.novaSenha}>
-                    <PasswordInput
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                      error={!!errors.novaSenha}
-                      placeholder="Crie uma nova senha"
-                    />
-                  </CustomTextInput>
-                )}
+    <ProfilePage
+      title="Senha e segurança"
+      subtitle="Use uma senha que você não usa em outros sites.">
+      <ProfileCard title="Trocar senha">
+        <Controller
+          control={control}
+          name="current"
+          rules={{ required: 'Informe sua senha atual.' }}
+          render={({ field: { onChange, onBlur, value } }) => (
+            <CustomTextInput label="Senha atual" error={errors.current}>
+              <PasswordInput
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                accessibilityLabel="Senha atual"
+                autoComplete="current-password"
+                textContentType="password"
+                error={!!errors.current}
               />
-            </View>
+            </CustomTextInput>
+          )}
+        />
 
-            {/* Confirmar Senha */}
-            <View style={responsiveStyles.inputHalf}>
-              <Controller
-                control={control}
-                name="confirmarSenha"
-                rules={{
-                  required: 'Confirme a senha.',
-                  validate: (value) =>
-                    value === novaSenha || 'As senhas não coincidem.',
-                }}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <CustomTextInput
-                    label="Confirmar Senha"
-                    error={errors.confirmarSenha}>
-                    <PasswordInput
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                      error={!!errors.confirmarSenha}
-                      placeholder="Repita a nova senha"
-                    />
-                  </CustomTextInput>
-                )}
-              />
-            </View>
-          </View>
-
-          {/* Checklist de Requisitos */}
-          <View style={styles.requirementsContainer}>
-            <Text style={styles.requirementsTitle}>Sua senha deve conter:</Text>
-            <PasswordRequirement
-              regex={/.{8,}/}
-              text="Pelo menos 8 caracteres"
-            />
-            <PasswordRequirement
-              regex={/[A-Za-z]/}
-              text="Pelo menos uma letra"
-            />
-            <PasswordRequirement regex={/\d/} text="Pelo menos um número" />
-            <PasswordRequirement
-              regex={/[@$!%*#?&]/}
-              text="Pelo menos um caractere especial (@$!%*#?&)"
-            />
-          </View>
-
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={[
-                styles.button,
-                (!isValid || isSubmitting) && styles.buttonDisabled,
-              ]}
-              onPress={handleSubmit(handleSalvar)}
-              disabled={!isValid || isSubmitting}
-              activeOpacity={0.8}>
-              {isSubmitting ? (
-                <ActivityIndicator color={colors.primaryWhite} />
-              ) : (
-                <Text style={styles.buttonText}>Atualizar Senha</Text>
+        <View style={[styles.row, isNarrow && styles.rowNarrow]}>
+          <View style={styles.col}>
+            <Controller
+              control={control}
+              name="next"
+              rules={{
+                required: 'Crie a nova senha.',
+                minLength: {
+                  value: MIN_PASSWORD_LENGTH,
+                  message: `Use pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`,
+                },
+                validate: (value) =>
+                  value !== getValues('current') ||
+                  'A nova senha deve ser diferente da atual.',
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <CustomTextInput label="Nova senha" error={errors.next}>
+                  <PasswordInput
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    accessibilityLabel="Nova senha"
+                    autoComplete="new-password"
+                    textContentType="newPassword"
+                    error={!!errors.next}
+                  />
+                </CustomTextInput>
               )}
-            </TouchableOpacity>
+            />
+          </View>
+          <View style={styles.col}>
+            <Controller
+              control={control}
+              name="confirm"
+              rules={{
+                required: 'Repita a nova senha.',
+                validate: (value) =>
+                  value === getValues('next') || 'As senhas não são iguais.',
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <CustomTextInput
+                  label="Repita a nova senha"
+                  error={errors.confirm}>
+                  <PasswordInput
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    accessibilityLabel="Repita a nova senha"
+                    autoComplete="new-password"
+                    textContentType="newPassword"
+                    returnKeyType="go"
+                    onSubmitEditing={handleSubmit(save)}
+                    error={!!errors.confirm}
+                  />
+                </CustomTextInput>
+              )}
+            />
           </View>
         </View>
+
+        {watch('next') ? (
+          <View style={styles.strength} accessibilityLiveRegion="polite">
+            <View style={styles.bars}>
+              {[1, 2, 3].map((n) => (
+                <View
+                  key={n}
+                  style={[
+                    styles.bar,
+                    strength.level >= n && { backgroundColor: strengthColor },
+                  ]}
+                />
+              ))}
+            </View>
+            <Text style={styles.strengthText}>
+              Força: <Text style={styles.strengthLabel}>{strength.label}</Text>
+              {strength.tip ? ` · ${strength.tip}` : ''}
+            </Text>
+          </View>
+        ) : (
+          <Text style={styles.hint}>
+            Mínimo de {MIN_PASSWORD_LENGTH} caracteres. Misturar letras, números
+            e símbolos deixa a senha mais segura.
+          </Text>
+        )}
+
+        {feedback ? (
+          <InlineAlert type={feedback.type}>{feedback.text}</InlineAlert>
+        ) : null}
+
+        <View style={styles.actions}>
+          <ActionButton
+            label="Trocar senha"
+            onPress={handleSubmit(save)}
+            loading={isSubmitting}
+            block={isNarrow}
+          />
+          <ActionButton
+            label="Esqueci a senha atual"
+            variant="ghost"
+            accessibilityRole="link"
+            onPress={() =>
+              navigation.navigate('ForgotPassword', { email: user?.email })
+            }
+          />
+        </View>
+      </ProfileCard>
+
+      <View style={styles.tip}>
+        <FontAwesome name="shield" size={18} color={colors.textSecondary} />
+        <Text style={styles.tipText}>
+          O DelBicos nunca pede sua senha por e-mail, WhatsApp ou chat.
+        </Text>
       </View>
-    </View>
+    </ProfilePage>
   );
 };
 

@@ -5,7 +5,7 @@ import { Review } from '@stores/Professional/types';
 import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
 import { useBreakpoint } from '@lib/hooks/useBreakpoint';
-import Stars from '../components/Stars';
+import Stars from '@components/ui/Stars';
 
 type AvaliacoesContentProps = {
   avaliacoes?: Review[];

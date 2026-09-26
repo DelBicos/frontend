@@ -6,12 +6,19 @@ import { UnauthenticatedProfileView } from './UnauthenticatedProfileView';
 
 const UserProfileScreen: React.FC = () => {
   const [uploading, setUploading] = useState<boolean>(false);
-  const { user, avatarBase64, uploadAvatar, removeAvatar, fetchCurrentUser } =
-    useUserStore();
+  const {
+    user,
+    token,
+    avatarBase64,
+    uploadAvatar,
+    removeAvatar,
+    fetchCurrentUser,
+  } = useUserStore();
 
+  // So atualiza os dados quando ha sessao (evita 401 para quem nao entrou).
   useEffect(() => {
-    fetchCurrentUser();
-  }, [fetchCurrentUser]);
+    if (token) fetchCurrentUser();
+  }, [token, fetchCurrentUser]);
 
   const handleAvatarChange = useCallback(
     async (base64Image: string | null) => {

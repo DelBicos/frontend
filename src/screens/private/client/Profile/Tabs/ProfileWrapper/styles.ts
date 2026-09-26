@@ -7,54 +7,36 @@ export const createStyles = (
   isDark: boolean,
 ) =>
   StyleSheet.create({
-    // --- ESTILOS BASE ---
+    // --- WEB (barra lateral + conteudo) ---
     desktopContainer: {
       flex: 1,
-      backgroundColor: isDark ? colors.secondaryGray : colors.primaryWhite,
+      backgroundColor: colors.secondaryGray,
       overflow: 'hidden',
     },
     desktopWrapper: {
       flex: 1,
       flexDirection: 'row',
-      maxWidth: 1400,
       width: '100%',
       alignSelf: 'center',
-      padding: 24,
-      gap: 24,
+      paddingTop: 32,
+      gap: 32,
       overflow: 'hidden',
     },
-
-    // --- SIDEBAR (DESKTOP) ---
     desktopSidebar: {
-      width: 300,
-      backgroundColor: colors.cardBackground,
-      borderRadius: 24,
-      paddingVertical: 24,
-      paddingHorizontal: 20,
+      width: 272,
+      alignSelf: 'flex-start',
+      padding: 12,
+      borderRadius: 16,
       borderWidth: 1,
       borderColor: colors.borderColor,
-      ...Platform.select({
-        web: { boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.03)' },
-        default: { elevation: 2 },
-      }),
-      display: 'flex',
-      flexDirection: 'column',
+      backgroundColor: colors.cardBackground,
       maxHeight:
-        Platform.OS === 'web' ? ('calc(100vh - 195px)' as any) : undefined,
+        Platform.OS === 'web' ? ('calc(100vh - 200px)' as any) : undefined,
     },
-
-    // --- CONTEÚDO PRINCIPAL (DESKTOP) ---
+    // As telas trazem seus proprios cartoes; aqui so a area de rolagem.
     desktopMainContent: {
       flex: 1,
-      backgroundColor: colors.cardBackground,
-      borderRadius: 24,
-      borderWidth: 1,
-      borderColor: colors.borderColor,
-      ...Platform.select({
-        web: { boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.03)' },
-        default: { elevation: 2 },
-      }),
-      overflow: 'hidden',
+      minWidth: 0,
     },
     desktopMainContentFill: {
       minHeight: 0,
@@ -68,8 +50,7 @@ export const createStyles = (
       }),
     },
     desktopContentScroll: {
-      padding: 40,
-      minHeight: '100%',
+      paddingBottom: 48,
     },
 
     // --- CELULAR ---

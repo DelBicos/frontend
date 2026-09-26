@@ -1,109 +1,68 @@
-import { StyleSheet, Platform } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { ColorsType } from '@theme/types';
 
 export const createStyles = (colors: ColorsType) =>
   StyleSheet.create({
-    container: {
-      flex: 1,
-      padding: 16,
-    },
-    pageTitle: {
-      fontSize: 24,
-      fontFamily: 'Afacad-Bold',
-      color: colors.primaryBlack,
-      marginBottom: 24,
-    },
-    card: {
-      backgroundColor: colors.cardBackground,
-      borderRadius: 16,
-      padding: 24,
-      borderWidth: 1,
-      borderColor: colors.borderColor,
-      ...Platform.select({
-        ios: {
-          shadowColor: colors.primaryBlack,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 4,
-        },
-        android: {
-          elevation: 2,
-        },
-      }),
-    },
-    formContainer: {
+    row: {
+      flexDirection: 'row',
       gap: 16,
     },
-    messageBanner: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      padding: 16,
-      borderRadius: 12,
-      marginBottom: 24,
-      borderWidth: 1,
+    rowNarrow: {
+      flexDirection: 'column',
+      gap: 0,
     },
-    successBanner: {
-      backgroundColor: colors.successBackground,
-      borderColor: colors.successText,
-    },
-    errorBanner: {
-      backgroundColor: colors.errorBackground,
-      borderColor: colors.errorText,
-    },
-    messageText: {
-      fontSize: 14,
-      fontFamily: 'Afacad-SemiBold',
+    col: {
       flex: 1,
+      minWidth: 0,
     },
-    successText: {
-      color: colors.successText,
+    hint: {
+      marginTop: -4,
+      marginBottom: 20,
+      fontFamily: 'Afacad-Regular',
+      fontSize: 15,
+      lineHeight: 21,
+      color: colors.textSecondary,
     },
-    errorText: {
-      color: colors.errorText,
+    strength: {
+      gap: 6,
+      marginTop: -4,
+      marginBottom: 20,
     },
-
-    requirementsContainer: {
-      marginTop: 8,
-      padding: 16,
-      backgroundColor: colors.inputBackground,
-      borderRadius: 12,
+    bars: {
+      flexDirection: 'row',
+      gap: 6,
     },
-    requirementsTitle: {
-      fontSize: 14,
+    bar: {
+      flex: 1,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: colors.borderColor,
+    },
+    strengthText: {
+      fontFamily: 'Afacad-Regular',
+      fontSize: 15,
+      color: colors.textSecondary,
+    },
+    strengthLabel: {
       fontFamily: 'Afacad-Bold',
       color: colors.primaryBlack,
-      marginBottom: 12,
     },
-    reqItem: {
+    actions: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      gap: 8,
+    },
+    tip: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: 8,
+      gap: 10,
+      paddingHorizontal: 4,
     },
-    reqText: {
-      fontSize: 13,
+    tipText: {
+      flex: 1,
       fontFamily: 'Afacad-Regular',
-      marginLeft: 8,
-    },
-
-    buttonContainer: {
-      marginTop: 24,
-      alignItems: 'flex-end',
-    },
-    button: {
-      backgroundColor: colors.primaryOrange,
-      paddingVertical: 12,
-      paddingHorizontal: 24,
-      borderRadius: 8,
-      minWidth: 150,
-      alignItems: 'center',
-    },
-    buttonDisabled: {
-      backgroundColor: colors.textTertiary,
-      opacity: 0.7,
-    },
-    buttonText: {
-      color: colors.primaryWhite,
-      fontFamily: 'Afacad-Bold',
-      fontSize: 16,
+      fontSize: 15,
+      color: colors.textSecondary,
     },
   });

@@ -1,26 +1,30 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
-import { Rating } from 'react-native-ratings';
+import { Text, View } from 'react-native';
 import { useColors } from '@theme/ThemeProvider';
+import Avatar from '@components/ui/Avatar';
+import Stars from '@components/ui/Stars';
+import ActionButton from '@components/ui/ActionButton';
 import { createStyles } from './styles';
 
 interface ReviewCardProps {
   rating: number;
-  title: string;
   serviceTitle: string;
-  clientName: string;
-  clientAvatar?: string;
+  /** Quem aparece no cartao (profissional avaliado ou cliente que avaliou). */
+  personName: string;
+  personAvatar?: string | null;
   date: string;
-  review?: string;
+  review?: string | null;
   onEdit?: () => void;
 }
 
+const RATING_LABEL = ['', 'Ruim', 'Regular', 'Bom', 'Muito bom', 'Excelente'];
+
+/** Avaliacao de um atendimento: nota, comentario, pessoa e data. */
 export const ReviewCard = React.memo(function ReviewCard({
   rating,
-  title,
   serviceTitle,
-  clientName,
-  clientAvatar,
+  personName,
+  personAvatar,
   date,
   review,
   onEdit,
@@ -30,65 +34,37 @@ export const ReviewCard = React.memo(function ReviewCard({
 
   return (
     <View style={styles.card}>
-      {/* Rating stars */}
-      <View style={styles.ratingContainer}>
-        <Rating
-          type="star"
-          ratingCount={5}
-          imageSize={16}
-          readonly
-          startingValue={rating}
-          tintColor={colors.cardBackground}
-          style={styles.stars}
-        />
-      </View>
-
-      {/* Title */}
-      <Text style={styles.title} numberOfLines={1}>
-        {title}
-      </Text>
-
-      {/* Service */}
-      <Text style={styles.service} numberOfLines={1}>
-        {serviceTitle}
-      </Text>
-
-      {/* Review comment */}
-      {review && review.trim() !== '' && (
-        <Text style={styles.reviewText} numberOfLines={4}>
-          {review}
-        </Text>
-      )}
-
-      {/* Client info */}
-      <View style={styles.clientContainer}>
-        <Image
-          source={{
-            uri: clientAvatar || 'https://via.placeholder.com/32',
-          }}
-          style={styles.avatar}
-        />
-        <View style={styles.clientInfo}>
-          <Text style={styles.clientName} numberOfLines={1}>
-            {clientName}
+      <View style={styles.header}>
+        <Avatar uri={personAvatar} name={personName} size={44} />
+        <View style={styles.headerTexts}>
+          <Text style={styles.name} numberOfLines={1}>
+            {personName}
           </Text>
-          <Text style={styles.date}>{date}</Text>
+          <Text style={styles.meta} numberOfLines={1}>
+            {serviceTitle} · {date}
+          </Text>
         </View>
-        {onEdit && (
-          <TouchableOpacity
-            onPress={onEdit}
-            style={{ marginLeft: 'auto', padding: 4 }}>
-            <Text
-              style={{
-                fontSize: 12,
-                color: colors.primaryOrange,
-                fontFamily: 'Afacad-Medium',
-              }}>
-              Editar
-            </Text>
-          </TouchableOpacity>
-        )}
       </View>
+      <View
+        style={styles.ratingRow}
+        accessibilityLabel={`Nota ${rating} de 5, ${RATING_LABEL[rating] ?? ''}`}>
+        <Stars value={rating} size={16} color="#B45309" />
+        <Text style={styles.ratingLabel}>{RATING_LABEL[rating] ?? ''}</Text>
+      </View>
+      {review && review.trim() ? (
+        <Text style={styles.review}>“{review.trim()}”</Text>
+      ) : (
+        <Text style={styles.noReview}>Sem comentário.</Text>
+      )}
+      {onEdit ? (
+        <ActionButton
+          label="Editar avaliação"
+          icon="pencil"
+          variant="ghost"
+          size="sm"
+          onPress={onEdit}
+        />
+      ) : null}
     </View>
   );
 });
