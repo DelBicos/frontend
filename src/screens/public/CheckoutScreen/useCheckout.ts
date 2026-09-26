@@ -160,6 +160,7 @@ export function useCheckout() {
     intentError,
     isCreatingIntent,
     retry: () => setAttempt((n) => n + 1),
+    goToLogin: () => navigation.navigate('Login'),
     goBack,
   };
 }

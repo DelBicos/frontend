@@ -1,1 +1,0 @@
-export { LoginPassword } from './LoginPassword';

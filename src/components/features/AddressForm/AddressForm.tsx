@@ -147,7 +147,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
       </View>
 
       {/* --- COMPLEMENTO --- */}
-      <View style={{ marginBottom: 16 }}>
+      <View>
         <Controller
           control={control}
           name="complement"
@@ -165,7 +165,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
       </View>
 
       {/* --- BAIRRO --- */}
-      <View style={{ marginBottom: 16 }}>
+      <View>
         <Controller
           control={control}
           name="neighborhood"

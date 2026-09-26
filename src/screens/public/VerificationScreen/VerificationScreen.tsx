@@ -1,26 +1,26 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
-  Image,
-  ScrollView,
-} from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-
-import LogoV3 from '@assets/LogoV3.png';
-import { createStyles } from './styles';
 import { useUserStore } from '@stores/User';
 import { verifyCode } from '@api/auth';
-import { getApiErrorMessage } from '@api/errors';
+import { getApiErrorMessage, getApiErrorStatus } from '@api/errors';
 import { useColors } from '@theme/ThemeProvider';
 import { checkForNewNotifications } from '@utils/usePushNotifications';
-import { FeedbackModal } from '@components/ui/FeedbackModal';
 import CodeInput from '@components/ui/CodeInput';
+import AuthLayout, {
+  AuthAlert,
+  createAuthStyles,
+} from '@components/layout/AuthLayout';
+import { leaveAuthFlow } from '@lib/auth/leaveAuthFlow';
 
+const COOLDOWN_SECONDS = 60;
+const CODE_LENGTH = 6;
+
+/** Confirma o e-mail do cadastro com o codigo de 6 numeros. */
 function VerificationScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
+  const colors = useColors();
+  const styles = createAuthStyles(colors);
   const {
     verificationEmail: email,
     setVerificationEmail,
@@ -30,132 +30,50 @@ function VerificationScreen() {
     resendCode,
   } = useUserStore();
 
-  const colors = useColors();
-  const styles = createStyles(colors);
-
-  // Estado para CodeInput
-  const [code, setCode] = useState<string[]>(Array(6).fill(''));
+  const [code, setCode] = useState<string[]>(Array(CODE_LENGTH).fill(''));
   const [focusedIndex, setFocusedIndex] = useState(0);
-
-  const [isLoading, setIsLoading] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
-  const COOLDOWN_SECONDS = 60;
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [expired, setExpired] = useState(false);
 
-  const calculateRemainingTime = useCallback(() => {
+  const remaining = useCallback(() => {
     if (!lastCodeSentAt) return 0;
-    const now = Date.now();
-    const diffSeconds = Math.floor((now - lastCodeSentAt) / 1000);
-    const remaining = COOLDOWN_SECONDS - diffSeconds;
-    return remaining > 0 ? remaining : 0;
+    const elapsed = Math.floor((Date.now() - lastCodeSentAt) / 1000);
+    return Math.max(0, COOLDOWN_SECONDS - elapsed);
   }, [lastCodeSentAt]);
+  const [timer, setTimer] = useState(remaining());
 
-  const [timer, setTimer] = useState(calculateRemainingTime());
-
-  const [feedbackVisible, setFeedbackVisible] = useState(false);
-  const [feedbackData, setFeedbackData] = useState({
-    type: 'info' as 'success' | 'error' | 'info',
-    title: '',
-    message: '',
-    onClose: () => setFeedbackVisible(false),
-  });
+  // Sem cadastro em andamento (ex.: recarregou a pagina), volta ao cadastro.
+  useEffect(() => {
+    if (!email) navigation.navigate('Register');
+  }, [email, navigation]);
 
   useEffect(() => {
-    if (!email) {
-      navigation.navigate('Register' as never);
-      return;
-    }
-
-    if (timer <= 0) return;
-
+    setTimer(remaining());
     const interval = setInterval(() => {
-      const remaining = calculateRemainingTime();
-      setTimer(remaining);
-      if (remaining <= 0) clearInterval(interval);
+      const left = remaining();
+      setTimer(left);
+      if (left <= 0) clearInterval(interval);
     }, 1000);
-
     return () => clearInterval(interval);
-  }, [email, lastCodeSentAt, timer, calculateRemainingTime, navigation]);
-
-  const showFeedback = (
-    type: 'success' | 'error',
-    title: string,
-    message: string,
-    action?: () => void,
-  ) => {
-    setFeedbackData({
-      type,
-      title,
-      message,
-      onClose: () => {
-        setFeedbackVisible(false);
-        if (action) action();
-      },
-    });
-    setFeedbackVisible(true);
-  };
-
-  const handleResendCode = async () => {
-    if (timer > 0 || !email) return;
-
-    setIsResending(true);
-
-    try {
-      await resendCode(email);
-      recordCodeSent();
-      setTimer(COOLDOWN_SECONDS);
-
-      showFeedback(
-        'success',
-        'Código Reenviado',
-        `Um novo código foi enviado para ${email}.`,
-      );
-
-      setCode(Array(6).fill(''));
-      setFocusedIndex(0);
-    } catch (error: any) {
-      console.error('Erro no reenvio:', error);
-      if (error.response?.status === 404) {
-        showFeedback(
-          'error',
-          'Sessão Expirada',
-          'Seu cadastro temporário expirou.',
-          () => navigation.navigate('Register' as never),
-        );
-      } else {
-        showFeedback('error', 'Erro', 'Não foi possível reenviar o código.');
-      }
-    } finally {
-      setIsResending(false);
-    }
-  };
+  }, [remaining]);
 
   const handleVerify = async () => {
     const fullCode = code.join('');
-    if (fullCode.length !== 6) {
-      showFeedback(
-        'error',
-        'Código Inválido',
-        'Por favor, preencha os 6 dígitos.',
-      );
+    if (fullCode.length !== CODE_LENGTH) {
+      setError(`Digite os ${CODE_LENGTH} números do código.`);
       return;
     }
-
-    if (!email) {
-      showFeedback(
-        'error',
-        'Erro',
-        'E-mail não encontrado. Reinicie o cadastro.',
-      );
-      return;
-    }
-
-    setIsLoading(true);
+    if (!email) return;
+    setError(null);
+    setNotice(null);
+    setIsVerifying(true);
     try {
       const session = await verifyCode(email, fullCode);
       setLoggedInUser(session);
       setVerificationEmail(null);
-
-      // Check notificações em background
       setTimeout(() => {
         checkForNewNotifications(
           session.user.id.toString(),
@@ -163,91 +81,118 @@ function VerificationScreen() {
           false,
         ).catch(() => {});
       }, 2000);
-
-      showFeedback('success', 'Sucesso!', 'Conta verificada com sucesso.', () =>
-        navigation.navigate('Home' as never),
-      );
-    } catch (error) {
-      showFeedback(
-        'error',
-        'Erro na Verificação',
-        getApiErrorMessage(error, 'Código incorreto ou expirado.'),
-      );
+      leaveAuthFlow(navigation, !!session.user.professional_id);
+    } catch (err) {
+      const status = getApiErrorStatus(err);
+      if (status === 404 || status === 429) setExpired(true);
+      setError(getApiErrorMessage(err, 'Código incorreto ou expirado.'));
     } finally {
-      setIsLoading(false);
+      setIsVerifying(false);
     }
   };
 
+  const handleResend = async () => {
+    if (timer > 0 || !email) return;
+    setIsResending(true);
+    setError(null);
+    try {
+      await resendCode(email);
+      recordCodeSent();
+      setCode(Array(CODE_LENGTH).fill(''));
+      setFocusedIndex(0);
+      setNotice(`Enviamos um novo código para ${email}.`);
+    } catch (err) {
+      if (getApiErrorStatus(err) === 404) {
+        setExpired(true);
+        setError('O cadastro expirou. Preencha os dados de novo.');
+      } else {
+        setError('Não foi possível reenviar o código. Tente de novo.');
+      }
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  const backToRegister = () => {
+    if (navigation.canGoBack()) navigation.goBack();
+    else navigation.navigate('Register');
+  };
+
   return (
-    <View style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.contentContainer}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}>
-        <TouchableOpacity onPress={() => navigation.navigate('Home' as never)}>
-          <Image source={LogoV3} style={styles.logo} />
-        </TouchableOpacity>
+    <AuthLayout
+      title="Confirme seu e-mail"
+      onBack={backToRegister}
+      subtitle={
+        <>
+          Enviamos um código de {CODE_LENGTH} números para{' '}
+          <Text style={styles.strong}>{email}</Text>. Ele vale por 10 minutos;
+          confira também o spam.
+        </>
+      }>
+      {error ? <AuthAlert>{error}</AuthAlert> : null}
+      {notice ? <AuthAlert type="success">{notice}</AuthAlert> : null}
 
-        <View style={styles.card}>
-          <Text style={styles.title}>Verifique seu E-mail</Text>
-          <Text style={styles.subtitle}>
-            Enviamos um código para{' '}
-            <Text style={styles.emailText}>{email}</Text>.
-          </Text>
-
-          {/* CodeInput Reutilizável */}
+      {expired ? (
+        <Pressable
+          onPress={backToRegister}
+          style={({ pressed }) => [
+            styles.primaryButton,
+            pressed && { opacity: 0.85 },
+          ]}
+          accessibilityRole="button">
+          <Text style={styles.primaryButtonText}>Voltar ao cadastro</Text>
+        </Pressable>
+      ) : (
+        <>
           <CodeInput
             verificationCode={code}
             setVerificationCode={setCode}
             focusedIndex={focusedIndex}
             setFocusedIndex={setFocusedIndex}
-            length={6}
+            length={CODE_LENGTH}
           />
-
-          <TouchableOpacity
-            style={[styles.button, isLoading && styles.buttonDisabled]}
+          <Pressable
             onPress={handleVerify}
-            disabled={isLoading}
-            activeOpacity={0.8}>
-            {isLoading ? (
-              <ActivityIndicator color={colors.primaryWhite} />
-            ) : (
-              <Text style={styles.buttonText}>Verificar</Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.resendButton}
-            onPress={handleResendCode}
+            disabled={isVerifying}
+            style={({ pressed }) => [
+              styles.primaryButton,
+              isVerifying && styles.primaryButtonDisabled,
+              pressed && { opacity: 0.85 },
+            ]}
+            accessibilityRole="button"
+            accessibilityState={{ busy: isVerifying }}>
+            {isVerifying ? <ActivityIndicator color="#000000" /> : null}
+            <Text style={styles.primaryButtonText}>Confirmar e entrar</Text>
+          </Pressable>
+          <Pressable
+            onPress={handleResend}
             disabled={timer > 0 || isResending}
-            activeOpacity={0.7}>
+            style={[styles.linkButton, { alignSelf: 'center', marginTop: 12 }]}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: timer > 0 }}>
             <Text
-              style={[
-                styles.resendText,
-                timer > 0 && styles.resendTextDisabled,
-              ]}>
+              style={
+                timer > 0
+                  ? [styles.alternateText, { fontSize: 16 }]
+                  : styles.linkText
+              }>
               {isResending
-                ? 'Reenviando...'
+                ? 'Reenviando…'
                 : timer > 0
                   ? `Reenviar código em ${timer}s`
                   : 'Reenviar código'}
             </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+          </Pressable>
+        </>
+      )}
 
-      <FeedbackModal
-        visible={feedbackVisible}
-        type={feedbackData.type}
-        title={feedbackData.title}
-        message={feedbackData.message}
-        onClose={feedbackData.onClose}
-      />
-
-      <Text style={styles.footer}>
-        © DelBicos - {new Date().getFullYear()} – Todos os direitos reservados.
-      </Text>
-    </View>
+      <Pressable
+        onPress={backToRegister}
+        style={[styles.linkButton, { alignSelf: 'center' }]}
+        accessibilityRole="link">
+        <Text style={styles.linkText}>Errou o e-mail? Corrigir cadastro</Text>
+      </Pressable>
+    </AuthLayout>
   );
 }
 

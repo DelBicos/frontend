@@ -56,7 +56,7 @@ export const PROFESSIONAL_ITEMS: BottomNavItem[] = [
 /** Rotas de tela cheia (login, pagamento, conversa) onde a barra fica oculta. */
 export const HIDDEN_ROUTES = new Set([
   'Login',
-  'LoginPassword',
+  'ForgotPassword',
   'Register',
   'VerificationScreen',
   'Checkout',

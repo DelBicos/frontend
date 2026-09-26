@@ -22,8 +22,8 @@ export type ClientProfileParams = {
 
 export type NavigationParams = {
   Home: undefined;
-  Login: undefined;
-  LoginPassword: undefined;
+  Login: { admin?: string } | undefined;
+  ForgotPassword: { email?: string } | undefined;
   Feed: undefined;
   PartnerProfile: { id: string };
   Register: undefined;

@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+import { useUserStore } from '@stores/User';
 import { AddressData } from './types';
 
 const LOCATIONIQ_API_KEY = process.env.EXPO_PUBLIC_LOCATIONIQ_API_KEY || '';
@@ -245,6 +253,18 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const currentCity = address?.city;
   const currentState = address?.state;
+
+  // Logado e sem local escolhido: usa a cidade do endereco da conta
+  // (no web e no app).
+  const accountAddress = useUserStore((st) => st.address);
+  const setLocationRef = useRef(setLocation);
+  setLocationRef.current = setLocation;
+  useEffect(() => {
+    if (accountAddress?.city && !address?.city) {
+      setLocationRef.current(accountAddress.city, accountAddress.state);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accountAddress?.city, accountAddress?.state]);
 
   return (
     <LocationContext.Provider

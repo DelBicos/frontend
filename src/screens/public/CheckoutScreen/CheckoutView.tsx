@@ -39,7 +39,31 @@ function CheckoutView({ checkout, renderPayment }: CheckoutViewProps) {
     address,
   } = checkout;
 
-  if (!user) return null;
+  // Voltou do login sem entrar: explica e oferece entrar de novo.
+  if (!user) {
+    return (
+      <PageContainer>
+        <BookingSteps current={3} />
+        <View style={styles.stateCard}>
+          <FontAwesome name="lock" size={40} color={colors.textSecondary} />
+          <Text style={styles.stateTitle}>Entre para continuar</Text>
+          <Text style={styles.stateText}>
+            Para pagar e confirmar o agendamento, entre na sua conta ou crie
+            uma. Você volta para esta etapa em seguida.
+          </Text>
+          <Pressable
+            onPress={checkout.goToLogin}
+            style={({ pressed }) => [
+              styles.primaryButton,
+              pressed && { opacity: 0.85 },
+            ]}
+            accessibilityRole="button">
+            <Text style={styles.primaryButtonText}>Entrar</Text>
+          </Pressable>
+        </View>
+      </PageContainer>
+    );
+  }
 
   if (status === 'loading') {
     return (

@@ -103,3 +103,24 @@ export async function login(
   });
   return mapAuthResponse(data);
 }
+
+/** Pede um codigo para criar nova senha (resposta igual exista ou nao a conta). */
+export async function requestPasswordReset(email: string): Promise<string> {
+  const { data } = await backendHttpClient.post('/auth/forgot-password', {
+    email,
+  });
+  return data?.message ?? '';
+}
+
+/** Confere o codigo e grava a nova senha. */
+export async function resetPassword(
+  email: string,
+  code: string,
+  password: string,
+): Promise<void> {
+  await backendHttpClient.post('/auth/reset-password', {
+    email,
+    code,
+    password,
+  });
+}

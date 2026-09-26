@@ -13,7 +13,7 @@ import Login from './public/Login';
 import Header from '@components/layout/Header';
 import ProfessionalWebNav from '@components/layout/ProfessionalWebNav';
 import { useUserStore } from '@stores/User';
-import { LoginPassword } from './public/LoginPassword';
+import ForgotPassword from './public/ForgotPassword';
 import CategoryScreen from './public/Category';
 import SubCategoryScreen from './public/SubCategoryScreen';
 import SearchResultScreen from './public/SearchResultScreen';
@@ -125,15 +125,17 @@ const RootStack = createNativeStackNavigator({
       },
       options: {
         headerShown: false,
+        title: 'Entrar',
       },
     },
-    LoginPassword: {
-      screen: LoginPassword,
+    ForgotPassword: {
+      screen: ForgotPassword,
       linking: {
-        path: 'login-password',
+        path: 'forgot-password',
       },
       options: {
         headerShown: false,
+        title: 'Recuperar senha',
       },
     },
     Feed: {
@@ -161,12 +163,14 @@ const RootStack = createNativeStackNavigator({
       },
       options: {
         headerShown: false,
+        title: 'Criar conta',
       },
     },
     VerificationScreen: {
       screen: VerificationScreen,
       options: {
-        headerShown: false, // Para manter a consistência com as telas de login/registro
+        headerShown: false,
+        title: 'Confirmar e-mail',
       },
     },
     ClientProfile: {

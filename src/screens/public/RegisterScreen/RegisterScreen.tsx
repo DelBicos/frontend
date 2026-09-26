@@ -1,40 +1,31 @@
 import React, { useState } from 'react';
-import {
-  ScrollView,
-  View,
-  Text,
-  TouchableOpacity,
-  Switch,
-  ActivityIndicator,
-  Image,
-} from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
-
+import { FontAwesome } from '@expo/vector-icons';
 import CustomTextInput from '@components/ui/CustomTextInput';
 import CpfInput from '@components/ui/CpfInput';
-import DateInput from '@components/ui/DateInput';
 import PhoneInput from '@components/ui/PhoneInput';
 import PasswordInput from '@components/ui/PasswordInput';
-import { FeedbackModal } from '@components/ui/FeedbackModal';
-
 import {
   AddressForm,
   AddressFormData,
 } from '@components/features/AddressForm/AddressForm';
-
-import { createStyles } from './styles';
+import AuthLayout, {
+  AuthAlert,
+  createAuthStyles,
+} from '@components/layout/AuthLayout';
 import { isValidCPF } from '@utils/validators';
 import { useUserStore } from '@stores/User';
 import { useColors } from '@theme/ThemeProvider';
+import { useBreakpoint } from '@lib/hooks/useBreakpoint';
 import { register } from '@api/auth';
 import { getApiErrorMessage } from '@api/errors';
-import LogoV3 from '@assets/LogoV3.png';
+import { createStyles } from './styles';
 
 type RegisterFormData = {
   name: string;
   surname: string;
-  birthDate: string;
   cpf: string;
   email: string;
   phone: string;
@@ -42,34 +33,30 @@ type RegisterFormData = {
   acceptTerms: boolean;
 } & AddressFormData;
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MIN_PASSWORD = 6;
+
+/** Criar conta: dados, acesso e endereco; depois confirma o e-mail. */
 function RegisterScreen() {
-  const navigation = useNavigation();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const { setVerificationEmail } = useUserStore();
-
-  const [feedbackVisible, setFeedbackVisible] = useState(false);
-  const [feedbackData, setFeedbackData] = useState({
-    type: 'info' as 'success' | 'error' | 'info',
-    title: '',
-    message: '',
-    onClose: () => setFeedbackVisible(false),
-  });
-
+  const navigation = useNavigation<any>();
   const colors = useColors();
-  const styles = createStyles(colors);
+  const { isCompact } = useBreakpoint();
+  const auth = createAuthStyles(colors);
+  const styles = createStyles(colors, isCompact);
+  const { setVerificationEmail, recordCodeSent } = useUserStore();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const {
     control,
     handleSubmit,
     setValue,
-    formState: { errors, isValid },
+    formState: { errors, submitCount },
   } = useForm<RegisterFormData>({
-    mode: 'onChange',
+    mode: 'onTouched',
     defaultValues: {
       name: '',
       surname: '',
-      birthDate: '',
       cpf: '',
       email: '',
       phone: '',
@@ -85,17 +72,20 @@ function RegisterScreen() {
     },
   });
 
-  const handleRegister = async (formData: RegisterFormData) => {
+  const hasErrors = Object.keys(errors).length > 0;
+
+  const onSubmit = async (formData: RegisterFormData) => {
     setIsSubmitting(true);
+    setError(null);
+    const email = formData.email.trim().toLowerCase();
     try {
-      const payload = {
-        name: formData.name,
-        surname: formData.surname,
-        email: formData.email,
+      await register({
+        name: formData.name.trim(),
+        surname: formData.surname.trim(),
+        email,
         phone: formData.phone,
         password: formData.password,
         cpf: formData.cpf,
-        birthDate: formData.birthDate,
         address: {
           postal_code: formData.cep,
           street: formData.street,
@@ -106,161 +96,102 @@ function RegisterScreen() {
           state: formData.state,
           country_iso: 'BR',
         },
-      };
-
-      await register(payload);
-
-      setVerificationEmail(formData.email);
-      setFeedbackData({
-        type: 'success',
-        title: 'Quase lá!',
-        message: `Enviamos um código de verificação para ${formData.email}. Verifique sua caixa de entrada.`,
-        onClose: () => {
-          setFeedbackVisible(false);
-          // @ts-ignore
-          navigation.navigate('VerificationScreen');
-        },
       });
-      setFeedbackVisible(true);
-    } catch (error) {
-      setFeedbackData({
-        type: 'error',
-        title: 'Erro no Cadastro',
-        message: getApiErrorMessage(
-          error,
-          'Ocorreu um problema ao realizar o cadastro.',
-        ),
-        onClose: () => setFeedbackVisible(false),
-      });
-      setFeedbackVisible(true);
+      setVerificationEmail(email);
+      recordCodeSent();
+      navigation.navigate('VerificationScreen');
+    } catch (err) {
+      setError(
+        getApiErrorMessage(err, 'Não foi possível criar a conta agora.'),
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <ScrollView
-        style={styles.scrollContainer}
-        contentContainerStyle={styles.contentContainer}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}>
-        <TouchableOpacity onPress={() => navigation.navigate('Home' as never)}>
-          <Image source={LogoV3} style={styles.logo} resizeMode="contain" />
-        </TouchableOpacity>
-
-        <View style={styles.formContainer}>
-          <Text style={styles.title}>Crie sua conta</Text>
-          <Text style={styles.subtitle}>
-            Preencha os campos abaixo para começar.
-          </Text>
-
-          {/* --- Campos Pessoais (Grid) --- */}
-          <View style={styles.row}>
-            <View style={styles.col}>
-              <Controller
-                control={control}
-                name="name"
-                rules={{ required: 'Nome obrigatório' }}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <CustomTextInput
-                    label="Nome"
-                    placeholder="Seu nome"
-                    onBlur={onBlur}
-                    onChangeText={onChange}
-                    value={value}
-                    error={errors.name}
-                  />
-                )}
-              />
-            </View>
-            <View style={styles.col}>
-              <Controller
-                control={control}
-                name="surname"
-                rules={{ required: 'Sobrenome obrigatório' }}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <CustomTextInput
-                    label="Sobrenome"
-                    placeholder="Seu sobrenome"
-                    onBlur={onBlur}
-                    onChangeText={onChange}
-                    value={value}
-                    error={errors.surname}
-                  />
-                )}
-              />
-            </View>
-          </View>
-
+    <AuthLayout
+      title="Criar conta"
+      subtitle="Leva só um minuto. Depois é só confirmar o código que enviamos para o seu e-mail."
+      maxWidth={640}>
+      {/* --- Dados pessoais --- */}
+      <Text
+        style={styles.sectionTitle}
+        accessibilityRole="header"
+        {...({ 'aria-level': 2 } as object)}>
+        Seus dados
+      </Text>
+      <View style={styles.row}>
+        <View style={styles.col}>
           <Controller
             control={control}
-            name="birthDate"
-            rules={{
-              required: 'Data de nascimento obrigatória',
-              minLength: { value: 10, message: 'Data incompleta' },
-            }}
-            render={({ field: { onChange, value } }) => (
-              <DateInput
-                label="Data de Nascimento"
-                value={value}
+            name="name"
+            rules={{ required: 'Informe seu nome.' }}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <CustomTextInput
+                label="Nome"
+                placeholder="Seu nome"
+                onBlur={onBlur}
                 onChangeText={onChange}
-                error={errors.birthDate?.message}
+                value={value}
+                error={errors.name}
+                autoComplete="given-name"
+                textContentType="givenName"
               />
             )}
           />
-
+        </View>
+        <View style={styles.col}>
+          <Controller
+            control={control}
+            name="surname"
+            rules={{ required: 'Informe seu sobrenome.' }}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <CustomTextInput
+                label="Sobrenome"
+                placeholder="Seu sobrenome"
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+                error={errors.surname}
+                autoComplete="family-name"
+                textContentType="familyName"
+              />
+            )}
+          />
+        </View>
+      </View>
+      <View style={styles.row}>
+        <View style={styles.col}>
           <Controller
             control={control}
             name="cpf"
             rules={{
-              required: 'CPF obrigatório',
-              validate: (value) => isValidCPF(value) || 'CPF inválido',
+              required: 'Informe seu CPF.',
+              validate: (value) => isValidCPF(value) || 'CPF inválido.',
             }}
-            render={({ field: { onChange, value } }) => (
+            render={({ field: { onChange, onBlur, value } }) => (
               <CpfInput
                 label="CPF"
                 value={value}
                 onChangeText={onChange}
+                onBlur={onBlur}
                 error={errors.cpf?.message}
               />
             )}
           />
-
-          <Controller
-            control={control}
-            name="email"
-            rules={{
-              required: 'E-mail obrigatório',
-              pattern: {
-                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                message: 'E-mail inválido',
-              },
-            }}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <CustomTextInput
-                label="E-mail"
-                placeholder="seu@email.com"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-                error={errors.email}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            )}
-          />
-
+        </View>
+        <View style={styles.col}>
           <Controller
             control={control}
             name="phone"
             rules={{
-              required: 'Telefone obrigatório',
-              minLength: { value: 10, message: 'Telefone inválido' },
+              required: 'Informe seu telefone.',
+              minLength: { value: 10, message: 'Telefone incompleto.' },
             }}
             render={({ field: { onChange, onBlur, value } }) => (
               <PhoneInput
-                label="Telefone"
+                label="Celular"
                 value={value}
                 onChangeText={onChange}
                 onBlur={onBlur}
@@ -268,111 +199,143 @@ function RegisterScreen() {
               />
             )}
           />
-
-          <View style={{ zIndex: 100, width: '100%' }}>
-            <AddressForm
-              control={control}
-              errors={errors}
-              setValue={setValue}
-            />
-          </View>
-
-          <Controller
-            control={control}
-            name="password"
-            rules={{
-              required: 'Senha obrigatória',
-              minLength: { value: 6, message: 'Mínimo 6 caracteres' },
-            }}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <CustomTextInput label="Senha" error={errors.password}>
-                <PasswordInput
-                  placeholder="Crie uma senha forte"
-                  onBlur={onBlur}
-                  onChangeText={onChange}
-                  value={value}
-                  error={!!errors.password}
-                />
-              </CustomTextInput>
-            )}
-          />
-
-          {/* --- Termos --- */}
-          <Controller
-            control={control}
-            name="acceptTerms"
-            rules={{
-              validate: (value) =>
-                value === true || 'Você deve aceitar os termos de uso.',
-            }}
-            render={({ field: { onChange, value } }) => (
-              <View>
-                <View style={styles.termsContainer}>
-                  <Switch
-                    value={value}
-                    onValueChange={onChange}
-                    trackColor={{
-                      false: '#767577',
-                      true: colors.primaryOrange,
-                    }}
-                    thumbColor={colors.primaryWhite}
-                  />
-                  <Text style={styles.termsText}>
-                    Aceito os{' '}
-                    <Text style={styles.linkTextBold}>termos de uso</Text> e{' '}
-                    <Text style={styles.linkTextBold}>condições</Text>
-                  </Text>
-                </View>
-                {errors.acceptTerms && (
-                  <Text
-                    style={[
-                      styles.errorText,
-                      { textAlign: 'center', marginBottom: 10 },
-                    ]}>
-                    {errors.acceptTerms.message}
-                  </Text>
-                )}
-              </View>
-            )}
-          />
-
-          <TouchableOpacity
-            style={[
-              styles.button,
-              (!isValid || isSubmitting) && styles.buttonDisabled,
-            ]}
-            onPress={handleSubmit(handleRegister)}
-            disabled={!isValid || isSubmitting}
-            activeOpacity={0.8}>
-            {isSubmitting ? (
-              <ActivityIndicator color={colors.primaryWhite} />
-            ) : (
-              <Text style={styles.buttonText}>Cadastrar</Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Login' as never)}>
-            <Text style={styles.linkText}>
-              Já tem uma conta?{' '}
-              <Text style={styles.linkTextBold}>Faça login</Text>
-            </Text>
-          </TouchableOpacity>
         </View>
-      </ScrollView>
+      </View>
 
-      <FeedbackModal
-        visible={feedbackVisible}
-        type={feedbackData.type}
-        title={feedbackData.title}
-        message={feedbackData.message}
-        onClose={feedbackData.onClose}
+      {/* --- Acesso --- */}
+      <Text
+        style={styles.sectionTitle}
+        accessibilityRole="header"
+        {...({ 'aria-level': 2 } as object)}>
+        Acesso
+      </Text>
+      <Controller
+        control={control}
+        name="email"
+        rules={{
+          required: 'Informe seu e-mail.',
+          pattern: {
+            value: EMAIL_PATTERN,
+            message: 'Digite um e-mail válido.',
+          },
+        }}
+        render={({ field: { onChange, onBlur, value } }) => (
+          <CustomTextInput
+            label="E-mail"
+            placeholder="seu@email.com"
+            onBlur={onBlur}
+            onChangeText={onChange}
+            value={value}
+            error={errors.email}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
+            textContentType="emailAddress"
+          />
+        )}
+      />
+      <Controller
+        control={control}
+        name="password"
+        rules={{
+          required: 'Crie uma senha.',
+          minLength: {
+            value: MIN_PASSWORD,
+            message: `Use pelo menos ${MIN_PASSWORD} caracteres.`,
+          },
+        }}
+        render={({ field: { onChange, onBlur, value } }) => (
+          <CustomTextInput label="Senha" error={errors.password}>
+            <PasswordInput
+              placeholder={`Mínimo de ${MIN_PASSWORD} caracteres`}
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+              accessibilityLabel="Senha"
+              autoComplete="new-password"
+              textContentType="newPassword"
+              error={!!errors.password}
+            />
+          </CustomTextInput>
+        )}
       />
 
-      <Text style={styles.footer}>
-        © DelBicos - {new Date().getFullYear()} – Todos os direitos reservados.
+      {/* --- Endereco --- */}
+      <Text
+        style={styles.sectionTitle}
+        accessibilityRole="header"
+        {...({ 'aria-level': 2 } as object)}>
+        Endereço
       </Text>
-    </View>
+      <Text style={[auth.hint, { marginTop: -4 }]}>
+        Usado para mostrar profissionais perto de você e como local padrão dos
+        atendimentos. Digite o CEP que preenchemos o resto.
+      </Text>
+      <View style={styles.address}>
+        <AddressForm control={control} errors={errors} setValue={setValue} />
+      </View>
+
+      {/* --- Termos --- */}
+      <Controller
+        control={control}
+        name="acceptTerms"
+        rules={{
+          validate: (value) =>
+            value === true || 'Para criar a conta, aceite os termos de uso.',
+        }}
+        render={({ field: { onChange, value } }) => (
+          <View style={styles.termsBlock}>
+            <Pressable
+              onPress={() => onChange(!value)}
+              style={styles.terms}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: value }}>
+              <View style={[styles.checkbox, value && styles.checkboxOn]}>
+                {value ? (
+                  <FontAwesome name="check" size={14} color="#000000" />
+                ) : null}
+              </View>
+              <Text style={styles.termsText}>
+                Li e aceito os termos de uso e a política de privacidade do
+                DelBicos.
+              </Text>
+            </Pressable>
+            {errors.acceptTerms ? (
+              <Text style={styles.errorText}>{errors.acceptTerms.message}</Text>
+            ) : null}
+          </View>
+        )}
+      />
+
+      {error ? <AuthAlert>{error}</AuthAlert> : null}
+      {submitCount > 0 && hasErrors ? (
+        <AuthAlert>Confira os campos destacados acima.</AuthAlert>
+      ) : null}
+
+      <Pressable
+        onPress={handleSubmit(onSubmit)}
+        disabled={isSubmitting}
+        style={({ pressed }) => [
+          auth.primaryButton,
+          isSubmitting && auth.primaryButtonDisabled,
+          pressed && { opacity: 0.85 },
+        ]}
+        accessibilityRole="button"
+        accessibilityState={{ busy: isSubmitting }}>
+        {isSubmitting ? <ActivityIndicator color="#000000" /> : null}
+        <Text style={auth.primaryButtonText}>Criar conta</Text>
+      </Pressable>
+
+      <View style={auth.alternate}>
+        <Text style={auth.alternateText}>Já tem conta?</Text>
+        <Pressable
+          onPress={() => navigation.navigate('Login')}
+          style={auth.linkButton}
+          accessibilityRole="link">
+          <Text style={auth.linkText}>Entrar</Text>
+        </Pressable>
+      </View>
+    </AuthLayout>
   );
 }
 

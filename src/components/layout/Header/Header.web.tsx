@@ -14,7 +14,7 @@ import { ThemeMode } from '@stores/Theme/types';
 import { useUserStore } from '@stores/User';
 import { useColors } from '@theme/ThemeProvider';
 import * as Location from 'expo-location';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -47,12 +47,11 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = () => {
   const logo = isDark ? DelBicosLogoDark : DelBicosLogo;
   const headerIconColor = isDark ? '#FFFFFF' : colors.primaryBlue;
 
-  const { user, signOut, address: userAddress } = useUserStore();
+  const { user, signOut } = useUserStore();
   const {
     address: locationAddress,
     city,
     state,
-    setLocation,
     lookupByCoordinates,
     loading: isLocationLoading,
   } = useLocation();
@@ -165,12 +164,6 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = () => {
       setIsMapModalVisible(false);
     }
   }, [tempMarker, lookupByCoordinates]);
-
-  useEffect(() => {
-    if (user && userAddress?.city && !city) {
-      setLocation(userAddress.city, userAddress.state);
-    }
-  }, [user, userAddress, city, setLocation]);
 
   const renderMapModal = useMemo(
     () => (

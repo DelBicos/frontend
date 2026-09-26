@@ -72,6 +72,7 @@ export type UserStore = {
   }) => void;
   updateUserProfile: (data: UpdateUserData) => Promise<void>;
   signInPassword: (email: string, password: string) => Promise<void>;
+  signInAdmin: (email: string, password: string) => Promise<void>;
   changePassword: (
     currentPassword: string,
     newPassword: string,
