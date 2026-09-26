@@ -1,244 +1,75 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Alert,
-  Platform,
-  useWindowDimensions,
-} from 'react-native';
-import {
-  useNavigation,
-  useRoute,
-  CommonActions,
-} from '@react-navigation/native';
-import { useUserStore } from '@stores/User';
+import { Pressable, Text, View } from 'react-native';
+import { useRoute } from '@react-navigation/native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { ClientProfileSubRoutes } from '@screens/types';
 import { useColors } from '@theme/ThemeProvider';
-import { MaterialIcons } from '@expo/vector-icons';
+import { useProfileMenu } from './useProfileMenu';
 import { createStyles } from './styles';
 
-const menuOptions = [
-  {
-    id: ClientProfileSubRoutes.DadosConta,
-    label: 'Dados da Conta',
-    icon: 'person-outline',
-    activeIcon: 'person',
-  },
-  {
-    id: ClientProfileSubRoutes.MeusEnderecos,
-    label: 'Endereços',
-    icon: 'location-on',
-    activeIcon: 'location-on',
-  },
-  {
-    id: ClientProfileSubRoutes.Seguranca,
-    label: 'Segurança',
-    icon: 'lock-outline',
-    activeIcon: 'lock',
-  },
-
-  {
-    id: ClientProfileSubRoutes.Notificacoes,
-    label: 'Notificações',
-    icon: 'notifications-none',
-    activeIcon: 'notifications',
-  },
-  {
-    id: ClientProfileSubRoutes.Conversas,
-    label: 'Conversas',
-    icon: 'chat-bubble-outline',
-    activeIcon: 'chat-bubble',
-  },
-  {
-    id: ClientProfileSubRoutes.Favoritos,
-    label: 'Favoritos',
-    icon: 'favorite-border',
-    activeIcon: 'favorite',
-  },
-  {
-    id: ClientProfileSubRoutes.Avaliacoes,
-    label: 'Avaliações',
-    icon: 'star-outline',
-    activeIcon: 'star',
-  },
-  {
-    id: ClientProfileSubRoutes.Historico,
-    label: 'Histórico',
-    icon: 'history',
-    activeIcon: 'history',
-  },
-  {
-    id: ClientProfileSubRoutes.TornarParceiro,
-    label: 'Tornar-se Colaborador',
-    icon: 'card-travel',
-    activeIcon: 'work',
-  },
-];
-
+/** Barra lateral do perfil no web (telas largas). */
 const MenuNavegacao = () => {
-  const navigation = useNavigation();
   const route = useRoute();
-  const { width } = useWindowDimensions();
-  const { user, signOut } = useUserStore();
   const colors = useColors();
   const styles = createStyles(colors);
-  const isWebDesktop = Platform.OS === 'web' && width >= 900;
-
-  const currentSubroute =
-    (route.params as any)?.subroute || ClientProfileSubRoutes.DadosConta;
-
-  const isProfessionalTab = route.name === 'ProfessionalProfileTab';
-
-  const dynamicMenuOptions = menuOptions.map((option) => {
-    if (option.id === ClientProfileSubRoutes.TornarParceiro) {
-      if (isProfessionalTab) {
-        return {
-          ...option,
-          id: 'VoltarCliente',
-          label: 'Acessar Painel Cliente',
-          icon: 'person',
-          activeIcon: 'person',
-        } as any;
-      } else if (user?.professional_id) {
-        return {
-          ...option,
-          id: 'AcessarParceiro',
-          label: 'Acessar Painel Colaborador',
-          icon: 'work',
-          activeIcon: 'work',
-        } as any;
-      }
-    }
-
-    return option;
-  });
-
-  // Adiciona a opção de Sair da conta no final
-  dynamicMenuOptions.push({
-    id: 'SairConta',
-    label: 'Sair da conta',
-    icon: 'logout',
-    activeIcon: 'logout',
-    isDestructive: true,
-  } as any);
-
-  const handlePress = (subroute: string) => {
-    if (subroute === 'VoltarCliente') {
-      if (Platform.OS === 'web') {
-        navigation.navigate('Feed');
-      } else {
-        // @ts-ignore
-        navigation.navigate('MainTabs', { screen: 'FeedTab' });
-      }
-      return;
-    }
-    if (subroute === 'AcessarParceiro') {
-      // @ts-ignore
-      navigation.navigate('ProfessionalTabs', {
-        screen: 'ProfessionalHomeTab',
-      });
-      return;
-    }
-    if (subroute === ClientProfileSubRoutes.Conversas) {
-      if (isWebDesktop) {
-        // @ts-ignore — inbox split dentro do perfil (menu lateral + lista + thread)
-        navigation.setParams({ subroute });
-        return;
-      }
-      // @ts-ignore — mobile: telas dedicadas no root stack
-      navigation.navigate('ChatList');
-      return;
-    }
-    if (subroute === 'SairConta') {
-      Alert.alert(
-        'Sair da Conta',
-        'Tem certeza que deseja sair da sua conta?',
-        [
-          {
-            text: 'Cancelar',
-            style: 'cancel',
-          },
-          {
-            text: 'Sair',
-            style: 'destructive',
-            onPress: () => {
-              signOut();
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [{ name: 'Home' }],
-                }),
-              );
-            },
-          },
-        ],
-      );
-      return;
-    }
-    // @ts-ignore - Atualiza o parâmetro na rota atual
-    navigation.setParams({ subroute });
-  };
+  const { sections, open, signOut } = useProfileMenu();
+  const current =
+    (route.params as { subroute?: string } | undefined)?.subroute ||
+    ClientProfileSubRoutes.DadosConta;
 
   return (
-    <View style={styles.menuContainer}>
-      {dynamicMenuOptions.map((item) => {
-        const isActive = currentSubroute === item.id;
-        const iconName = isActive ? item.activeIcon : item.icon;
-        const isDestructive = (item as any).isDestructive;
-
-        return (
-          <TouchableOpacity
-            key={item.id}
-            style={[
-              styles.menuItem,
-              isActive && styles.activeMenuItem,
-              (item as any).disabled && { opacity: 0.5 },
-            ]}
-            onPress={() => !(item as any).disabled && handlePress(item.id)}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityState={{
-              selected: isActive,
-              disabled: !!(item as any).disabled,
-            }}
-            accessibilityLabel={`Ir para ${item.label}`}>
-            {isActive && <View style={styles.activeIndicator} />}
-
-            <View style={styles.menuIconContainer}>
-              <MaterialIcons
-                name={iconName as any}
-                size={22}
-                color={
-                  isActive
-                    ? colors.primaryOrange
-                    : isDestructive
-                      ? colors.primaryRed
-                      : colors.textTertiary
-                }
-              />
-            </View>
-
-            <Text
-              style={[
-                styles.menuText,
-                isActive && styles.activeMenuText,
-                isDestructive && { color: colors.primaryRed },
-              ]}>
-              {item.label}
-            </Text>
-
-            {!isActive && (
-              <MaterialIcons
-                name="chevron-right"
-                size={20}
-                color={isDestructive ? colors.primaryRed : colors.borderColor}
-                style={styles.chevronIcon}
-              />
-            )}
-          </TouchableOpacity>
-        );
-      })}
+    <View style={styles.menuContainer} {...({ role: 'navigation' } as object)}>
+      {sections.map((section) => (
+        <View key={section.title} style={styles.section}>
+          <Text style={styles.sectionTitle}>{section.title}</Text>
+          {section.items.map((item) => {
+            const isActive = current === item.id;
+            return (
+              <Pressable
+                key={item.id}
+                onPress={() => open(item.id)}
+                style={({ hovered }: any) => [
+                  styles.menuItem,
+                  hovered && !isActive && styles.menuItemHovered,
+                  isActive && styles.activeMenuItem,
+                ]}
+                accessibilityRole="link"
+                {...({
+                  'aria-current': isActive ? 'page' : undefined,
+                } as object)}>
+                {isActive ? <View style={styles.activeIndicator} /> : null}
+                <MaterialIcons
+                  name={item.icon}
+                  size={22}
+                  color={colors.primaryBlack}
+                  style={styles.menuIcon}
+                />
+                <Text
+                  style={[styles.menuText, isActive && styles.activeMenuText]}>
+                  {item.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      ))}
+      <Pressable
+        onPress={signOut}
+        style={({ hovered }: any) => [
+          styles.menuItem,
+          hovered && styles.menuItemHovered,
+        ]}
+        accessibilityRole="button">
+        <MaterialIcons
+          name="logout"
+          size={22}
+          color={colors.errorText}
+          style={styles.menuIcon}
+        />
+        <Text style={[styles.menuText, { color: colors.errorText }]}>
+          Sair da conta
+        </Text>
+      </Pressable>
     </View>
   );
 };

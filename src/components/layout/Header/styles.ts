@@ -1,320 +1,368 @@
 import { StyleSheet, Platform } from 'react-native';
 import { ColorsType } from '@theme/types';
 
+const pointer = Platform.select({ web: { cursor: 'pointer' } as object });
+
 export const createStyles = (colors: ColorsType) =>
   StyleSheet.create({
     headerContainer: {
       backgroundColor: colors.cardBackground,
-      zIndex: 100,
-    },
-
-    // --- MOBILE HEADER ---
-    mobileHeader: {
-      height: 60,
-      backgroundColor: colors.cardBackground,
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
       borderBottomWidth: 1,
       borderColor: colors.borderColor,
-      paddingHorizontal: 16,
       zIndex: 100,
     },
-    mobileLogoContainer: {
-      flex: 1,
-      alignItems: 'center',
-    },
-    mobileLogo: {
-      width: 120,
-      height: 36,
-      resizeMode: 'contain',
-    },
-    mobileMenuTrigger: {
-      padding: 4,
-      width: 36,
-      alignItems: 'flex-start',
-    },
-    mobileProfileContainer: {
-      width: 36,
-      alignItems: 'flex-end',
-    },
-    mobileProfileImage: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: colors.borderColor,
-      backgroundColor: colors.inputBackground,
-    },
 
-    // --- DESKTOP HEADER (Top Bar) ---
+    // --- Linha 1 ---
     topBar: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      height: 80,
-      paddingHorizontal: 32,
-      borderBottomWidth: 1,
-      borderColor: colors.borderColor,
-      backgroundColor: colors.cardBackground,
+      height: 72,
+      gap: 24,
+    },
+    topBarCollapsed: {
+      height: 64,
     },
     logoImage: {
-      width: 180,
-      height: 50,
-      resizeMode: 'contain',
+      width: 160,
+      height: 46,
     },
     logoImageSmall: {
-      width: 132,
-      height: 40,
+      width: 128,
+      height: 38,
     },
-
-    // --- MENU RECOLHIDO (celular/tablet) ---
-    collapsedActions: {
+    nav: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    navLink: {
+      height: 72,
+      justifyContent: 'center',
+      paddingHorizontal: 12,
+      ...pointer,
+    },
+    navLinkHovered: {
+      backgroundColor: colors.inputBackground,
+    },
+    navLinkStacked: {
+      height: 'auto' as any,
+      minHeight: 48,
+      paddingHorizontal: 12,
+      borderRadius: 10,
+    },
+    navLinkStackedActive: {
+      backgroundColor: colors.inputBackground,
+    },
+    navText: {
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 16,
+      color: colors.primaryBlack,
+    },
+    navTextActive: {
+      fontFamily: 'Afacad-Bold',
+    },
+    navIndicator: {
+      position: 'absolute',
+      left: 12,
+      right: 12,
+      bottom: 0,
+      height: 3,
+      borderTopLeftRadius: 3,
+      borderTopRightRadius: 3,
+      backgroundColor: colors.primaryOrange,
+    },
+    rightSection: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
     },
-    menuToggle: {
+    iconButton: {
       width: 44,
       height: 44,
       borderRadius: 22,
       alignItems: 'center',
       justifyContent: 'center',
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...pointer,
     },
-    collapsedPanel: {
-      backgroundColor: colors.cardBackground,
-      borderBottomWidth: 1,
-      borderColor: colors.borderColor,
-      paddingVertical: 12,
-      gap: 12,
-    },
-    collapsedNav: {
-      gap: 2,
-    },
-    collapsedDivider: {
-      height: 1,
-      backgroundColor: colors.borderColor,
-    },
-    collapsedRow: {
+
+    // --- Conta ---
+    accountTrigger: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
       alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 12,
+      gap: 8,
+      minHeight: 44,
+      paddingLeft: 4,
+      paddingRight: 10,
+      borderRadius: 22,
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+      ...pointer,
     },
-    menuItemStacked: {
-      minHeight: 48,
-      justifyContent: 'center',
-      paddingHorizontal: 8,
+    accountName: {
+      maxWidth: 120,
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 16,
+      color: colors.primaryBlack,
+    },
+    authButtons: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
     },
     authButtonsStacked: {
       flexDirection: 'column',
       alignItems: 'stretch',
     },
-
-    // --- MENU DE NAVEGAÇÃO (DESKTOP) ---
-    menu: {
-      flexDirection: 'row',
-      gap: 24,
+    outlineButton: {
+      minHeight: 44,
+      paddingHorizontal: 18,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: colors.primaryBlack,
       alignItems: 'center',
       justifyContent: 'center',
-      flex: 1,
-      marginHorizontal: 20,
+      ...pointer,
     },
-    menuItemPressable: {
-      paddingVertical: 8,
-      paddingHorizontal: 12,
-      borderRadius: 6,
-      ...Platform.select({
-        web: { transition: 'background-color 0.2s ease' } as any,
-      }),
+    outlineButtonHovered: {
+      backgroundColor: colors.inputBackground,
     },
-    menuItemHovered: {
-      backgroundColor: colors.primaryOrange,
-    },
-    menuItemText: {
-      fontSize: 15,
-      fontFamily: 'Afacad-SemiBold',
+    outlineButtonText: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 16,
       color: colors.primaryBlack,
     },
-    menuItemTextHovered: {
-      color: colors.primaryWhite,
+    solidButton: {
+      minHeight: 44,
+      paddingHorizontal: 18,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.primaryOrange,
+      ...pointer,
+    },
+    solidButtonHovered: {
+      backgroundColor: colors.primaryOrangeHover,
+    },
+    solidButtonText: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 16,
+      color: '#000000',
+    },
+    buttonDisabled: {
+      opacity: 0.55,
     },
 
-    // --- SEÇÃO DIREITA ---
-    rightSection: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 16,
+    // --- Menus suspensos ---
+    dropdown: {
+      marginTop: 48,
+      width: 220,
+      paddingVertical: 6,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+      backgroundColor: colors.cardBackground,
+      ...Platform.select({
+        web: { boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.18)' } as object,
+        default: { elevation: 8 },
+      }),
     },
-    locationContainer: {
-      alignItems: 'flex-start',
+    accountDropdown: {
+      width: 260,
     },
-    locationLabel: {
-      fontFamily: 'Afacad-Regular',
-      fontSize: 12,
+    dropdownCaption: {
+      paddingHorizontal: 16,
+      paddingTop: 6,
+      paddingBottom: 4,
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 13,
+      letterSpacing: 0.6,
+      textTransform: 'uppercase',
       color: colors.textSecondary,
-      marginBottom: 2,
     },
-
-    // --- USER DROPDOWN ---
-    userContainer: {
+    dropdownItem: {
       flexDirection: 'row',
       alignItems: 'center',
-      cursor: 'pointer',
+      minHeight: 36,
+      paddingHorizontal: 8,
     },
-    profileImage: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+    dropdownIcon: {
+      width: 24,
+      marginRight: 10,
+      textAlign: 'center',
+    },
+    dropdownText: {
+      flex: 1,
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 16,
+      color: colors.primaryBlack,
+    },
+    dropdownDivider: {
+      height: 1,
+      marginVertical: 6,
+      backgroundColor: colors.divider,
+    },
+    accountHeader: {
+      paddingHorizontal: 16,
+      paddingTop: 8,
+      paddingBottom: 10,
+      marginBottom: 6,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.divider,
+    },
+    accountHeaderName: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 17,
+      color: colors.primaryBlack,
+    },
+    accountHeaderEmail: {
+      fontFamily: 'Afacad-Regular',
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+
+    // --- Menu recolhido ---
+    collapsedPanel: {
+      paddingVertical: 12,
+      gap: 8,
+      borderTopWidth: 1,
+      borderColor: colors.borderColor,
+    },
+    collapsedDivider: {
+      height: 1,
+      marginVertical: 4,
+      backgroundColor: colors.borderColor,
+    },
+    collapsedCaption: {
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+
+    // --- Linha 2: busca e local ---
+    searchRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      paddingVertical: 10,
+      borderTopWidth: 1,
+      borderColor: colors.borderColor,
+    },
+    searchField: {
+      flex: 1,
+      maxWidth: 720,
+      flexDirection: 'row',
+      alignItems: 'center',
+      height: 48,
+      paddingLeft: 16,
+      paddingRight: 4,
+      borderRadius: 12,
       borderWidth: 1,
       borderColor: colors.borderColor,
       backgroundColor: colors.inputBackground,
     },
-    authButtons: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-    },
-
-    // --- SEARCH BAR ---
-    searchBar: {
-      backgroundColor: colors.primaryBlue,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: 32,
-      paddingVertical: 12,
-      gap: 20,
-    },
-    searchText: {
-      color: '#FFFFFF',
-      fontSize: 16,
-      fontFamily: 'Afacad-SemiBold',
-    },
-    searchContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: '#FFFFFF',
-      borderRadius: 8,
-      overflow: 'hidden',
-      width: '100%',
-      maxWidth: 480,
-      height: 44,
+    searchIcon: {
+      marginRight: 10,
     },
     searchInput: {
       flex: 1,
-      paddingHorizontal: 16,
-      fontSize: 16,
-      fontFamily: 'Afacad-Regular',
+      minWidth: 0,
       height: '100%',
-      color: '#000000',
-      ...Platform.select({
-        web: { outlineStyle: 'none' } as any,
-      }),
+      fontFamily: 'Afacad-Regular',
+      fontSize: 16,
+      color: colors.primaryBlack,
+      ...Platform.select({ web: { outlineStyle: 'none' } as object }),
+    },
+    searchClear: {
+      width: 36,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...pointer,
     },
     searchButton: {
+      height: 40,
+      minWidth: 44,
       paddingHorizontal: 16,
-      height: '100%',
-      justifyContent: 'center',
+      borderRadius: 9,
       alignItems: 'center',
-      backgroundColor: '#E0E0E0',
+      justifyContent: 'center',
+      backgroundColor: colors.primaryOrange,
+      ...pointer,
     },
-
-    // --- MENU POPUP (DROPDOWN) ---
-    menuOptionsContainer: {
-      borderRadius: 12,
-      marginTop: 45,
-      width: 240,
-      backgroundColor: colors.cardBackground,
-      paddingVertical: 8,
-      borderWidth: 1,
-      borderColor: colors.borderColor,
-      ...Platform.select({
-        ios: {
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.25,
-          shadowRadius: 8,
-        },
-        android: { elevation: 8 },
-        web: { boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.3)' },
-      }),
-    },
-    menuOption: {
+    locationButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: 12,
-      paddingHorizontal: 16,
+      gap: 8,
+      height: 48,
+      minWidth: 48,
+      justifyContent: 'center',
+      paddingHorizontal: 14,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+      ...pointer,
     },
-    menuIcon: {
-      marginRight: 16,
-      width: 24,
-      textAlign: 'center',
+    locationButtonHovered: {
+      backgroundColor: colors.inputBackground,
     },
-    menuOptionText: {
+    locationText: {
+      maxWidth: 200,
       fontFamily: 'Afacad-SemiBold',
-      fontSize: 15,
+      fontSize: 16,
       color: colors.primaryBlack,
     },
-    menuDivider: {
-      height: 1,
-      backgroundColor: colors.divider,
-      marginVertical: 8,
-    },
 
-    // --- MODAL MAPA ---
+    // --- Modal do mapa ---
     modalOverlay: {
       flex: 1,
       backgroundColor: colors.overlay,
       justifyContent: 'center',
       alignItems: 'center',
-      padding: 20,
+      padding: 16,
     },
     modalContainer: {
       width: '100%',
       maxWidth: 700,
-      backgroundColor: colors.cardBackground,
-      borderRadius: 16,
+      gap: 12,
       padding: 24,
+      borderRadius: 16,
       borderWidth: 1,
       borderColor: colors.borderColor,
+      backgroundColor: colors.cardBackground,
     },
     modalHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 20,
     },
     modalTitle: {
-      fontSize: 20,
+      fontSize: 22,
       fontFamily: 'Afacad-Bold',
       color: colors.primaryBlack,
+    },
+    modalText: {
+      fontFamily: 'Afacad-Regular',
+      fontSize: 16,
+      color: colors.textSecondary,
     },
     mapWrapper: {
       width: '100%',
       height: 400,
+      maxHeight: '60vh' as any,
       borderRadius: 12,
       overflow: 'hidden',
       backgroundColor: colors.inputBackground,
       borderWidth: 1,
       borderColor: colors.borderColor,
     },
-    modalButton: {
-      backgroundColor: colors.primaryOrange,
-      paddingVertical: 14,
-      borderRadius: 8,
+    mapLoading: {
+      flex: 1,
+      justifyContent: 'center',
       alignItems: 'center',
-      marginTop: 20,
     },
-    modalButtonDisabled: {
-      backgroundColor: colors.textTertiary,
-      opacity: 0.7,
-    },
-    modalButtonText: {
-      color: '#FFFFFF',
-      fontFamily: 'Afacad-Bold',
-      fontSize: 16,
+    modalButton: {
+      minHeight: 48,
     },
   });

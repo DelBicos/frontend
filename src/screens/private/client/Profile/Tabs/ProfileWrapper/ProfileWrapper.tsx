@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { CONTENT_MAX_WIDTH, useBreakpoint } from '@lib/hooks/useBreakpoint';
 import {
   View,
   Platform,
   ScrollView,
   useWindowDimensions,
-  TouchableOpacity,
+  Pressable,
   Text,
+  BackHandler,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { FontAwesome } from '@expo/vector-icons';
@@ -28,6 +29,8 @@ import HistoricoCompras from '@screens/private/client/Profile/Tabs/HistoricoComp
 import MenuNavegacao from '@screens/private/client/Profile/Tabs/MenuNavegacao';
 import TornarParceiroForm from '@screens/private/client/Profile/Tabs/TornarParceiroForm';
 import ConversasTab from '@screens/private/client/Profile/Tabs/ConversasTab/ConversasTab';
+import { SUBROUTE_TITLES } from '../MenuNavegacao/useProfileMenu';
+import ProfileMobileHome from './ProfileMobileHome';
 
 type ClientProfileRouteParams = {
   subroute?: ClientProfileSubRoutes;
@@ -35,7 +38,7 @@ type ClientProfileRouteParams = {
 
 const ProfileWrapper: React.FC<{ user: UserProfileProps }> = ({ user }) => {
   const route = useRoute();
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const { width } = useWindowDimensions();
   const isMobile = width < 900;
   // Mesmo contêiner e margens das demais paginas.
@@ -55,6 +58,18 @@ const ProfileWrapper: React.FC<{ user: UserProfileProps }> = ({ user }) => {
   const activeSubroute =
     params?.subroute ||
     (isMobile ? undefined : ClientProfileSubRoutes.DadosConta);
+
+  const closeSubroute = () => navigation.setParams({ subroute: undefined });
+
+  // Android: o botao voltar do aparelho fecha a subtela antes de sair da aba.
+  useEffect(() => {
+    if (Platform.OS !== 'android' || !isMobile || !params?.subroute) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      navigation.setParams({ subroute: undefined });
+      return true;
+    });
+    return () => sub.remove();
+  }, [isMobile, params?.subroute, navigation]);
 
   const renderContent = () => {
     switch (activeSubroute) {
@@ -86,26 +101,35 @@ const ProfileWrapper: React.FC<{ user: UserProfileProps }> = ({ user }) => {
   const isConversasDesktop =
     !isMobile && activeSubroute === ClientProfileSubRoutes.Conversas;
 
-  // --- RENDERIZAÇÃO MOBILE (Menu -> Subtela) ---
+  // --- CELULAR: lista de opcoes -> subtela com titulo ---
   if (isMobile) {
     if (activeSubroute) {
-      // Exibe a subtela com botão de voltar
+      const title = SUBROUTE_TITLES[activeSubroute] ?? 'Perfil';
       return (
         <View style={styles.mobileContainer}>
           <View style={[styles.mobileHeader, { paddingHorizontal: gutter }]}>
-            <TouchableOpacity
-              style={styles.backButton}
-              // @ts-ignore
-              onPress={() => navigation.setParams({ subroute: undefined })}>
-              <View style={styles.backButtonIcon}>
-                <FontAwesome
-                  name="arrow-left"
-                  size={16}
-                  color={colors.primaryOrange}
-                />
-              </View>
-              <Text style={styles.backButtonText}>Voltar ao Menu</Text>
-            </TouchableOpacity>
+            <Pressable
+              style={({ pressed }) => [
+                styles.backButton,
+                pressed && { opacity: 0.6 },
+              ]}
+              onPress={closeSubroute}
+              accessibilityRole="button"
+              accessibilityLabel="Voltar ao perfil"
+              hitSlop={8}>
+              <FontAwesome
+                name="arrow-left"
+                size={18}
+                color={colors.primaryBlack}
+              />
+            </Pressable>
+            <Text
+              style={styles.mobileHeaderTitle}
+              numberOfLines={1}
+              accessibilityRole="header"
+              {...({ 'aria-level': 1 } as object)}>
+              {title}
+            </Text>
           </View>
 
           <ScrollView
@@ -113,6 +137,7 @@ const ProfileWrapper: React.FC<{ user: UserProfileProps }> = ({ user }) => {
               styles.mobileContentScroll,
               { padding: gutter },
             ]}
+            keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}>
             {renderContent()}
           </ScrollView>
@@ -120,7 +145,6 @@ const ProfileWrapper: React.FC<{ user: UserProfileProps }> = ({ user }) => {
       );
     }
 
-    // Exibe o Menu Principal
     return (
       <ScrollView
         style={styles.mobileContainer}
@@ -128,15 +152,11 @@ const ProfileWrapper: React.FC<{ user: UserProfileProps }> = ({ user }) => {
           styles.mobileMenuScroll,
           { paddingHorizontal: gutter },
         ]}>
-        <View style={styles.mobileMenuHeader}>
-          <Text style={styles.mobileMenuTitle}>Meu Perfil</Text>
-          <Text style={styles.mobileMenuSubtitle}>
-            Gerencie suas informações e preferências
-          </Text>
-        </View>
-        <View style={styles.mobileMenuCard}>
-          <MenuNavegacao />
-        </View>
+        <ProfileMobileHome
+          name={user.userName}
+          email={user.userEmail}
+          avatarUri={user.avatarSource?.uri}
+        />
       </ScrollView>
     );
   }

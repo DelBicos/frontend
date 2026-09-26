@@ -30,8 +30,6 @@ const UserProfileScreen: React.FC = () => {
 
         if (response.erro) {
           Alert.alert('Erro', response.mensagem);
-        } else {
-          Alert.alert('Sucesso', response.mensagem);
         }
       } catch (error) {
         console.error('Erro ao processar avatar:', error);

@@ -84,11 +84,4 @@ export function sortResults<T extends SortableResult>(
   });
 }
 
-/** Iniciais para o avatar de quem nao tem foto. */
-export function initials(name?: string | null) {
-  if (!name) return '?';
-  const parts = name.trim().split(/\s+/);
-  const first = parts[0]?.[0] ?? '';
-  const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
-  return (first + last).toUpperCase() || '?';
-}
+export { initials } from './utils/initials';

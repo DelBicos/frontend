@@ -176,8 +176,8 @@ const RootStack = createNativeStackNavigator({
     ClientProfile: {
       screen: ProfileScreen,
       linking: {
-        // Use wildcard so any nested path under client-profile is handled by the app
-        path: 'client-profile/*',
+        // /client-profile?subroute=MeusEnderecos (a secao vai na query).
+        path: 'client-profile',
       },
     },
     Category: {

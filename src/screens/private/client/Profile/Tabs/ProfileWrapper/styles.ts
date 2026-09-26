@@ -72,71 +72,39 @@ export const createStyles = (
       minHeight: '100%',
     },
 
-    // --- MOBILE ---
+    // --- CELULAR ---
     mobileContainer: {
       flex: 1,
-      backgroundColor: isDark ? colors.secondaryGray : colors.primaryWhite,
+      backgroundColor: colors.secondaryGray,
     },
     mobileHeader: {
-      paddingTop: 16,
-      paddingBottom: 16,
-      paddingHorizontal: 20,
+      minHeight: 56,
+      paddingVertical: 6,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
       backgroundColor: colors.cardBackground,
       borderBottomWidth: 1,
       borderBottomColor: colors.borderColor,
-      flexDirection: 'row',
-      alignItems: 'center',
     },
     backButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-    },
-    backButtonIcon: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: colors.inputBackground,
+      width: 44,
+      height: 44,
+      marginLeft: -10,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    backButtonText: {
-      fontSize: 16,
+    mobileHeaderTitle: {
+      flex: 1,
       fontFamily: 'Afacad-Bold',
+      fontSize: 21,
       color: colors.primaryBlack,
     },
     mobileContentScroll: {
       flexGrow: 1,
-      padding: 20,
     },
     mobileMenuScroll: {
-      padding: 20,
+      paddingTop: 20,
       paddingBottom: 40,
-    },
-    mobileMenuHeader: {
-      marginBottom: 24,
-      marginTop: 10,
-    },
-    mobileMenuTitle: {
-      fontSize: 32,
-      fontFamily: 'Afacad-Bold',
-      color: colors.primaryBlue,
-      marginBottom: 8,
-    },
-    mobileMenuSubtitle: {
-      fontSize: 16,
-      fontFamily: 'Afacad-Regular',
-      color: colors.textTertiary,
-    },
-    mobileMenuCard: {
-      backgroundColor: colors.cardBackground,
-      borderRadius: 20,
-      padding: 16,
-      borderWidth: 1,
-      borderColor: colors.borderColor,
-      ...Platform.select({
-        default: { elevation: 2 },
-        web: { boxShadow: '0px 4px 15px rgba(0,0,0,0.05)' },
-      }),
     },
   });

@@ -1,232 +1,145 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  Platform,
-} from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { FontAwesome } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
-import { Button } from '@components/ui/Button';
-import { ThemeToggle } from '@components/ui/ThemeToggle';
-import { NavigationParams } from '@screens/types';
+import { ColorsType } from '@theme/types';
+import { useBreakpoint } from '@lib/hooks/useBreakpoint';
+import { ProfileExtras } from '../ProfileWrapper/ProfileMobileHome';
 
+/** Aba Perfil sem login: convite para entrar + tema e ajuda. */
 export const UnauthenticatedProfileView: React.FC = () => {
   const colors = useColors();
-  const navigation = useNavigation();
-
-  const handleNavigate = (screen: keyof NavigationParams) => {
-    // @ts-ignore
-    navigation.navigate(screen);
-  };
-
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.cardBackground,
-    },
-    contentContainer: {
-      padding: 20,
-      paddingBottom: 40,
-    },
-    // Top Auth Card Component
-    authCard: {
-      backgroundColor: colors.primaryOrange,
-      borderRadius: 16,
-      padding: 24,
-      alignItems: 'center',
-      marginBottom: 24,
-      ...Platform.select({
-        ios: {
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.15,
-          shadowRadius: 8,
-        },
-        android: { elevation: 6 },
-        web: { boxShadow: '0px 4px 12px rgba(230, 81, 0, 0.25)' },
-      }),
-    },
-    iconContainer: {
-      width: 64,
-      height: 64,
-      borderRadius: 32,
-      backgroundColor: 'rgba(255, 255, 255, 0.2)',
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: 16,
-    },
-    authTitle: {
-      fontSize: 22,
-      fontFamily: 'Afacad-Bold',
-      color: '#FFFFFF',
-      textAlign: 'center',
-      marginBottom: 8,
-    },
-    authSubtitle: {
-      fontSize: 14,
-      fontFamily: 'Afacad-Regular',
-      color: '#FFFFFF',
-      textAlign: 'center',
-      opacity: 0.9,
-      marginBottom: 20,
-      lineHeight: 20,
-    },
-    buttonRow: {
-      flexDirection: 'row',
-      gap: 12,
-      width: '100%',
-      justifyContent: 'center',
-    },
-    btnWrapper: {
-      flex: 1,
-    },
-
-    // Options Section
-    sectionTitle: {
-      fontSize: 18,
-      fontFamily: 'Afacad-Bold',
-      color: colors.primaryBlack,
-      marginBottom: 12,
-      marginTop: 8,
-    },
-    optionsCard: {
-      backgroundColor: colors.cardBackground,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.borderColor,
-      overflow: 'hidden',
-    },
-    optionItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingVertical: 16,
-      paddingHorizontal: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.borderColor,
-    },
-    optionIcon: {
-      width: 24,
-      textAlign: 'center',
-      marginRight: 16,
-    },
-    optionText: {
-      flex: 1,
-      fontSize: 16,
-      fontFamily: 'Afacad-SemiBold',
-      color: colors.primaryBlack,
-    },
-  });
+  const styles = createStyles(colors);
+  const navigation = useNavigation<any>();
+  const { gutter } = useBreakpoint();
 
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={styles.contentContainer}
+      contentContainerStyle={[styles.content, { paddingHorizontal: gutter }]}
       showsVerticalScrollIndicator={false}>
-      {/* Top Banner CTA Component */}
-      <View style={styles.authCard}>
-        <View style={styles.iconContainer}>
-          <FontAwesome name="user-circle" size={36} color="#FFFFFF" />
-        </View>
-        <Text style={styles.authTitle}>Acesse sua conta</Text>
-        <Text style={styles.authSubtitle}>
-          Faça login ou cadastre-se para solicitar serviços, acompanhar seus
-          agendamentos e gerenciar seus dados no DelBicos.
+      <View style={styles.inner}>
+        <Text
+          style={styles.title}
+          accessibilityRole="header"
+          {...({ 'aria-level': 1 } as object)}>
+          Perfil
         </Text>
-        <View style={styles.buttonRow}>
-          <View style={styles.btnWrapper}>
-            <Button
-              colorVariant="secondary"
-              sizeVariant="default"
-              fontVariant="AfacadBold16"
-              onPress={() => handleNavigate('Login')}>
-              Entrar
-            </Button>
+
+        <View style={styles.card}>
+          <View style={styles.cardIcon}>
+            <MaterialIcons name="person-outline" size={32} color="#000000" />
           </View>
-          <View style={styles.btnWrapper}>
-            <Button
-              colorVariant="secondary"
-              variant="outlined"
-              sizeVariant="default"
-              fontVariant="AfacadBold16"
-              onPress={() => handleNavigate('Register')}>
-              Cadastrar
-            </Button>
-          </View>
+          <Text style={styles.cardTitle}>Entre na sua conta</Text>
+          <Text style={styles.cardText}>
+            Para agendar serviços, conversar com profissionais e acompanhar seus
+            pedidos.
+          </Text>
+          <Pressable
+            onPress={() => navigation.navigate('Login')}
+            style={({ pressed }) => [
+              styles.primaryButton,
+              pressed && { opacity: 0.85 },
+            ]}
+            accessibilityRole="button">
+            <Text style={styles.primaryButtonText}>Entrar</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => navigation.navigate('Register')}
+            style={({ pressed }) => [
+              styles.secondaryButton,
+              pressed && { opacity: 0.7 },
+            ]}
+            accessibilityRole="button">
+            <Text style={styles.secondaryButtonText}>Criar conta</Text>
+          </Pressable>
         </View>
-      </View>
 
-      {/* Options Menu */}
-      <Text style={styles.sectionTitle}>Mais Opções</Text>
-      <View style={styles.optionsCard}>
-        <TouchableOpacity
-          style={styles.optionItem}
-          onPress={() => handleNavigate('Category')}
-          activeOpacity={0.7}>
-          <FontAwesome
-            name="th-large"
-            size={18}
-            color={colors.primaryOrange}
-            style={styles.optionIcon}
-          />
-          <Text style={styles.optionText}>Explorar Categorias</Text>
-          <FontAwesome
-            name="chevron-right"
-            size={14}
-            color={colors.textTertiary}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.optionItem}
-          onPress={() => handleNavigate('Help')}
-          activeOpacity={0.7}>
-          <FontAwesome
-            name="question-circle-o"
-            size={18}
-            color={colors.primaryOrange}
-            style={styles.optionIcon}
-          />
-          <Text style={styles.optionText}>Central de Ajuda (FAQ)</Text>
-          <FontAwesome
-            name="chevron-right"
-            size={14}
-            color={colors.textTertiary}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.optionItem}
-          onPress={() => handleNavigate('AboutUs')}
-          activeOpacity={0.7}>
-          <FontAwesome
-            name="info-circle"
-            size={18}
-            color={colors.primaryOrange}
-            style={styles.optionIcon}
-          />
-          <Text style={styles.optionText}>Sobre o DelBicos</Text>
-          <FontAwesome
-            name="chevron-right"
-            size={14}
-            color={colors.textTertiary}
-          />
-        </TouchableOpacity>
-
-        <View style={[styles.optionItem, { borderBottomWidth: 0 }]}>
-          <FontAwesome
-            name="paint-brush"
-            size={18}
-            color={colors.primaryOrange}
-            style={styles.optionIcon}
-          />
-          <Text style={styles.optionText}>Tema do Aplicativo</Text>
-          <ThemeToggle />
-        </View>
+        <ProfileExtras />
       </View>
     </ScrollView>
   );
 };
+
+const createStyles = (colors: ColorsType) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.secondaryGray,
+    },
+    content: {
+      paddingTop: 20,
+      paddingBottom: 40,
+    },
+    inner: {
+      width: '100%',
+      maxWidth: 640,
+      alignSelf: 'center',
+    },
+    title: {
+      marginBottom: 16,
+      fontFamily: 'Afacad-Bold',
+      fontSize: 30,
+      lineHeight: 36,
+      color: colors.primaryBlack,
+    },
+    card: {
+      alignItems: 'stretch',
+      gap: 10,
+      padding: 20,
+      marginBottom: 24,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+      backgroundColor: colors.cardBackground,
+    },
+    cardIcon: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      alignSelf: 'center',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.primaryOrange,
+    },
+    cardTitle: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 22,
+      textAlign: 'center',
+      color: colors.primaryBlack,
+    },
+    cardText: {
+      marginBottom: 6,
+      fontFamily: 'Afacad-Regular',
+      fontSize: 16,
+      lineHeight: 22,
+      textAlign: 'center',
+      color: colors.textSecondary,
+    },
+    primaryButton: {
+      minHeight: 50,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.primaryOrange,
+    },
+    primaryButtonText: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 18,
+      color: '#000000',
+    },
+    secondaryButton: {
+      minHeight: 50,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.primaryBlack,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    secondaryButtonText: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 18,
+      color: colors.primaryBlack,
+    },
+  });
