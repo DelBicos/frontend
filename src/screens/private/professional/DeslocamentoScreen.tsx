@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -39,6 +39,44 @@ export const DeslocamentoScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [arrivedLoading, setArrivedLoading] = useState(false);
   const [showMapModal, setShowMapModal] = useState(false);
+
+  // Dynamic state loaded from DB
+  const [clientName, setClientName] = useState(params.clientName || 'Cliente DelBicos');
+  const [clientPhone, setClientPhone] = useState(params.clientPhone || '');
+  const [serviceTitle, setServiceTitle] = useState(params.serviceTitle || 'Serviço Agendado');
+  const [address, setAddress] = useState(params.address || 'Endereço de atendimento');
+
+  useEffect(() => {
+    if (params.appointmentId) {
+      backendHttpClient
+        .get(`/api/appointments/${params.appointmentId}`)
+        .then((res) => {
+          const appt = res.data;
+          if (appt) {
+            if (appt.Client?.User?.name) setClientName(appt.Client.User.name);
+            if (appt.Client?.User?.phone) setClientPhone(appt.Client.User.phone);
+            if (appt.Service?.title) setServiceTitle(appt.Service.title);
+            if (appt.Address) {
+              const addrStr = `${appt.Address.street}, ${appt.Address.number} - ${appt.Address.neighborhood}, ${appt.Address.city} - ${appt.Address.state}`;
+              setAddress(addrStr);
+            }
+            if (appt.status === 'in_transit') {
+              setInTransit(true);
+            } else if (appt.status === 'arrived') {
+              setInTransit(true);
+              setArrived(true);
+            } else if (appt.status === 'in_progress') {
+              setInTransit(true);
+              setArrived(true);
+              setInProgress(true);
+            }
+          }
+        })
+        .catch(() => {
+          // Silenciosamente mantém os dados iniciais
+        });
+    }
+  }, [params.appointmentId]);
 
   // OTP Code Modal State
   const [showOtpModal, setShowOtpModal] = useState(false);
@@ -204,17 +242,17 @@ export const DeslocamentoScreen: React.FC = () => {
               <View style={stylesDark.orderInfoLeft}>
                 {/* Nome do Cliente em cima */}
                 <Text style={stylesDark.orderBadge}>
-                  {params.clientName || 'Cliente DelBicos'}
+                  {clientName}
                 </Text>
 
                 {/* Nome do Serviço */}
                 <Text style={stylesDark.orderTitle}>
-                  Serviço: {params.serviceTitle || 'Serviço Agendado'}
+                  Serviço: {serviceTitle}
                 </Text>
 
                 {/* Endereço de Atendimento */}
                 <Text style={stylesDark.orderAddress} numberOfLines={3}>
-                  {params.address || 'Endereço de atendimento'}
+                  {address}
                 </Text>
               </View>
 
@@ -467,19 +505,19 @@ export const DeslocamentoScreen: React.FC = () => {
             </View>
           </View>
 
-          <Text style={stylesMinimal.serviceTitle}>{params.serviceTitle || 'Serviço Agendado'}</Text>
+          <Text style={stylesMinimal.serviceTitle}>{serviceTitle}</Text>
 
           <View style={stylesMinimal.infoGroup}>
             <View style={stylesMinimal.infoRow}>
               <Ionicons name="person-outline" size={18} color="#64748B" />
               <Text style={stylesMinimal.infoLabel}>Cliente:</Text>
-              <Text style={stylesMinimal.infoVal}>{params.clientName || 'Cliente DelBicos'}</Text>
+              <Text style={stylesMinimal.infoVal}>{clientName}</Text>
             </View>
 
-            {!!params.clientPhone && (
+            {!!clientPhone && (
               <TouchableOpacity onPress={handleCallClient} style={stylesMinimal.phoneCallBtn}>
                 <Ionicons name="call-outline" size={14} color="#2563EB" />
-                <Text style={stylesMinimal.phoneCallText}>{params.clientPhone}</Text>
+                <Text style={stylesMinimal.phoneCallText}>{clientPhone}</Text>
               </TouchableOpacity>
             )}
 
@@ -487,7 +525,7 @@ export const DeslocamentoScreen: React.FC = () => {
               <Ionicons name="location-outline" size={18} color="#64748B" />
               <Text style={stylesMinimal.infoLabel}>Endereço:</Text>
             </View>
-            <Text style={stylesMinimal.addressText}>{params.address || 'Endereço de atendimento'}</Text>
+            <Text style={stylesMinimal.addressText}>{address}</Text>
           </View>
         </View>
 
