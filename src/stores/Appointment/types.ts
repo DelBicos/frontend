@@ -153,6 +153,7 @@ export interface AppointmentStore {
     appointmentId: number,
     status: AppointmentStatus,
   ) => Promise<boolean>;
+  cancelAppointment: (appointmentId: number) => Promise<boolean>;
 
   fetchInvoice: (appointmentId: number) => Promise<InvoiceData | null>;
 }
