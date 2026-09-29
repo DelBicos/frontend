@@ -8,11 +8,13 @@ import SectionHeader from '@components/ui/SectionHeader';
 import { Developer, developers } from './aboutUsData';
 import { createStyles } from './styles';
 
+import type { WebPressableState } from '@lib/types/web';
+import type { FontAwesomeName } from '@lib/types/icons';
 const teamPhoto = require('@assets/aboutus/TeamDelbicos-profile.png');
 // Proporcao da imagem original (631 x 520).
 const TEAM_PHOTO_RATIO = 631 / 520;
 
-const VALUES = [
+const VALUES: { icon: FontAwesomeName; title: string; text: string }[] = [
   {
     icon: 'map-marker',
     title: 'Economia local',
@@ -149,11 +151,12 @@ function DeveloperCard({ dev, styles }: DeveloperCardProps) {
   const colors = useColors();
   const [expanded, setExpanded] = useState(false);
 
-  const links = [
+  const allLinks: { url?: string; icon: FontAwesomeName; label: string }[] = [
     { url: dev.linkedin, icon: 'linkedin', label: 'LinkedIn' },
     { url: dev.github, icon: 'github', label: 'GitHub' },
     { url: dev.portfolio, icon: 'globe', label: 'Portfólio' },
-  ].filter((link) => !!link.url);
+  ];
+  const links = allLinks.filter((link) => !!link.url);
 
   return (
     <View style={styles.devCard}>
@@ -187,14 +190,14 @@ function DeveloperCard({ dev, styles }: DeveloperCardProps) {
           <Pressable
             key={link.label}
             onPress={() => Linking.openURL(link.url!)}
-            style={({ pressed, hovered }: any) => [
+            style={({ pressed, hovered }: WebPressableState) => [
               styles.devLink,
               (pressed || hovered) && styles.devLinkActive,
             ]}
             accessibilityRole="link"
             accessibilityLabel={`${link.label} de ${dev.name}`}>
             <FontAwesome
-              name={link.icon as any}
+              name={link.icon}
               size={20}
               color={colors.primaryBlack}
             />

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Text } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+
 import { useUserStore } from '@stores/User';
 import { verifyCode } from '@api/auth';
 import { getApiErrorMessage, getApiErrorStatus } from '@api/errors';
@@ -13,12 +13,13 @@ import AuthLayout, {
 } from '@components/layout/AuthLayout';
 import { leaveAuthFlow } from '@lib/auth/leaveAuthFlow';
 
+import { useAppNavigation } from '@screens/useAppNavigation';
 const COOLDOWN_SECONDS = 60;
 const CODE_LENGTH = 6;
 
 /** Confirma o e-mail do cadastro com o codigo de 6 numeros. */
 function VerificationScreen() {
-  const navigation = useNavigation<any>();
+  const navigation = useAppNavigation();
   const colors = useColors();
   const styles = createAuthStyles(colors);
   const {

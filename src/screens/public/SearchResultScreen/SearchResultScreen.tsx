@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
 import ProfessionalResultCard, {
@@ -22,6 +22,7 @@ import {
 } from '@lib/booking';
 import { createStyles } from './styles';
 
+import { useAppNavigation } from '@screens/useAppNavigation';
 type SearchResultParams = {
   subCategoryId?: number;
   subCategoryTitle?: string;
@@ -125,7 +126,7 @@ function AvailabilityResults({
   professionalId,
   professionalName,
 }: SearchResultParams) {
-  const navigation = useNavigation<any>();
+  const navigation = useAppNavigation();
   const colors = useColors();
   const { isCompact, isExpanded } = useBreakpoint();
   const styles = createStyles(colors, isCompact);

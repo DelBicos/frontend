@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, Text, View } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useColors } from '@theme/ThemeProvider';
 import { useUserStore } from '@stores/User';
 import { useDashboardStore } from '@stores/Dashboard';
@@ -28,6 +28,7 @@ import {
 import { ClientProfileSubRoutes } from '@screens/types';
 import { createStyles } from './styles';
 
+import { useAppNavigation } from '@screens/useAppNavigation';
 const UPCOMING_LIMIT = 3;
 const HIDDEN_VALUE = 'R$ ••••';
 
@@ -37,7 +38,7 @@ const HIDDEN_VALUE = 'R$ ••••';
  */
 const ProfessionalDashboard: React.FC = () => {
   const colors = useColors();
-  const navigation = useNavigation<any>();
+  const navigation = useAppNavigation();
   const { isCompact, isExpanded } = useBreakpoint();
   const styles = useMemo(
     () => createStyles(colors, isCompact, isExpanded),

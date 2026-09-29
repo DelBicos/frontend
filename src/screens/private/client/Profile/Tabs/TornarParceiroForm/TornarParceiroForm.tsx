@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+
 import { FontAwesome } from '@expo/vector-icons';
 import { useUserStore } from '@stores/User';
 import { useColors } from '@theme/ThemeProvider';
@@ -13,6 +13,8 @@ import { isValidCPF } from '@utils/validators';
 import ProfilePage, { ProfileCard } from '../../components/ProfilePage';
 import { createStyles } from './styles';
 
+import { useAppNavigation } from '@screens/useAppNavigation';
+import { errorMessage } from '@lib/utils/errors';
 const MAX_DESCRIPTION = 1500;
 const MIN_DESCRIPTION = 30;
 /** 0 = sem limite de distancia. */
@@ -40,7 +42,7 @@ const maskCnpj = (text: string) =>
 const TornarParceiroForm: React.FC = () => {
   const colors = useColors();
   const styles = createStyles(colors);
-  const navigation = useNavigation<any>();
+  const navigation = useAppNavigation();
   const { user, becomeProfessional } = useUserStore();
   const accountCpf = user?.cpf ?? '';
 
@@ -107,10 +109,12 @@ const TornarParceiroForm: React.FC = () => {
         service_radius_km: radius,
       });
       setDone(true);
-    } catch (error: any) {
+    } catch (error) {
       setServerError(
-        error?.message ||
+        errorMessage(
+          error,
           'Não foi possível concluir o cadastro. Tente de novo.',
+        ),
       );
     } finally {
       setIsSubmitting(false);

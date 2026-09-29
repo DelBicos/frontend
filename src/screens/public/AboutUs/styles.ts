@@ -1,6 +1,7 @@
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { ColorsType } from '@theme/types';
 
+import { webStyle } from '@lib/types/web';
 const GAP = 16;
 
 export const createStyles = (
@@ -136,7 +137,7 @@ export const createStyles = (
       minHeight: 44,
       justifyContent: 'center',
       paddingHorizontal: 8,
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     readMoreText: {
       fontFamily: 'Afacad-SemiBold',
@@ -158,7 +159,7 @@ export const createStyles = (
       justifyContent: 'center',
       borderWidth: 1,
       borderColor: colors.borderColor,
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     devLinkActive: {
       borderColor: colors.primaryOrange,

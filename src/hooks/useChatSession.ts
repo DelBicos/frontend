@@ -1,8 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { Platform } from 'react-native';
-import uuid from 'react-native-uuid';
 import { useChatBotStore } from '@stores/ChatBot';
-import type { VoiceRecording } from '@hooks/useVoiceRecorder';
 import {
   getClientTimezone,
   getClientUtcOffsetMinutes,
@@ -28,7 +25,6 @@ import {
   EMPTY_CHATBOT_RESPONSE_ERROR,
   extractRateLimitReset,
   resolveGenericError,
-  resolveVoiceError,
 } from '@lib/chatbot/errors';
 import {
   ConversationRequest,
@@ -40,23 +36,12 @@ import {
   nextRestoreRequestId,
 } from '@lib/chatbot/conversationRequest';
 import type { AppointmentStatusEvent } from '@hooks/useAppointmentStatusSocket';
-
-let _counter = 0;
-const localId = () => `local_${Date.now()}_${++_counter}`;
-type VoiceSubmissionStatus = 'sent' | 'retryable_error' | 'discarded';
-
-interface VoiceCommandAttempt {
-  recording: VoiceRecording;
-  idempotencyKey: string;
-}
-
-interface ConversationResponseOptions {
-  /** Mantém o balão otimista quando o backend troca/limpa a sessão. */
-  preserveUserMessage?: ChatBotMessage;
-}
-
-/** Canal detectado uma vez na inicialização do módulo. */
-const CHANNEL: string = Platform.OS === 'web' ? 'web' : 'mobile';
+import { useChatVoice } from './useChatVoice';
+import {
+  CHANNEL,
+  ConversationResponseOptions,
+  localId,
+} from './chatSession.shared';
 
 /**
  * Hook principal do chatbot de agendamentos.
@@ -92,10 +77,7 @@ export function useChatSession() {
     resetSession,
     clearSession,
   } = useChatBotStore();
-  const lastVoiceCommandRef = useRef<VoiceCommandAttempt | null>(null);
   const lastTextMessageRef = useRef<ChatBotMessage | null>(null);
-  const [hasRetryableVoiceCommand, setHasRetryableVoiceCommand] =
-    useState(false);
   const [isRestarting, setIsRestarting] = useState(false);
 
   /**
@@ -250,6 +232,14 @@ export function useChatSession() {
     ],
   );
 
+  const {
+    hasRetryableVoiceCommand,
+    sendVoiceCommand,
+    retryLastVoiceCommand,
+    discardPendingVoiceCommand,
+    clearRetryableVoiceCommand,
+  } = useChatVoice({ applyConversationResponse });
+
   /**
    * Lógica compartilhada de envio HTTP.
    * Rastreia lastSentText, trata FINALIZADO (#4), 429 com header (#6).
@@ -324,157 +314,6 @@ export function useChatSession() {
   );
 
   /** Envia (ou reenvia) uma gravação mantendo a mesma chave de idempotência. */
-  const submitVoiceCommand = useCallback(
-    async (attempt: VoiceCommandAttempt): Promise<VoiceSubmissionStatus> => {
-      if (useChatBotStore.getState().loading) return 'discarded';
-
-      const request = beginConversationRequest('voice');
-      setLoading(true);
-      setError(null);
-      setLastSentText(null);
-      let canRetry = true;
-
-      try {
-        const audioResponse = await fetch(attempt.recording.uri, {
-          signal: request.controller.signal,
-        });
-        const audio = await audioResponse.blob();
-        if (audio.size === 0) {
-          canRetry = false;
-          throw new Error('O arquivo de áudio está vazio.');
-        }
-
-        // Leia a sessão no instante do envio. Em comandos de voz consecutivos,
-        // o callback ainda pode pertencer ao render anterior mesmo depois de a
-        // primeira resposta ter atualizado o Zustand. Usar o snapshot atual
-        // impede que o segundo áudio volte ao início por enviar sessionId e
-        // contexto obsoletos.
-        const currentConversation = useChatBotStore.getState();
-        const selectedTime = resolveSelectedTimeIso(
-          '',
-          currentConversation.conversationState,
-          currentConversation.conversationContext,
-        );
-        const data = await ChatBotApi.sendVoiceCommand(
-          {
-            audio,
-            mimeType: attempt.recording.mimeType,
-            channel: CHANNEL,
-            timezone: getClientTimezone(),
-            idempotencyKey: attempt.idempotencyKey,
-            sessionId: isValidChatBotSessionId(currentConversation.sessionId)
-              ? currentConversation.sessionId
-              : null,
-            selectedTime,
-          },
-          request.controller.signal,
-        );
-
-        if (!isCurrentConversationRequest(request)) return 'discarded';
-
-        const transcript = data.transcript?.trim();
-        if (!transcript) {
-          throw new Error('O serviço não retornou uma transcrição.');
-        }
-
-        if (!hasChatBotMessage(data)) {
-          setError(EMPTY_CHATBOT_RESPONSE_ERROR);
-          setHasRetryableVoiceCommand(true);
-          return 'retryable_error';
-        }
-
-        const transcriptMessage: ChatBotMessage = {
-          id: localId(),
-          role: 'user',
-          text: transcript,
-          createdAt: new Date().toISOString(),
-        };
-        addMessage(transcriptMessage);
-        applyConversationResponse(data, {
-          preserveUserMessage: transcriptMessage,
-        });
-        attempt.recording.release();
-        if (lastVoiceCommandRef.current === attempt) {
-          lastVoiceCommandRef.current = null;
-        }
-        setHasRetryableVoiceCommand(false);
-        return 'sent';
-      } catch (err: unknown) {
-        if (!isCurrentConversationRequest(request)) return 'discarded';
-
-        let status: number | undefined;
-        if (err && typeof err === 'object' && 'response' in err) {
-          const axiosErr = err as {
-            response?: { status?: number; headers?: Record<string, string> };
-          };
-          status = axiosErr.response?.status;
-          if (status === 429) {
-            const resetAt = extractRateLimitReset(axiosErr.response?.headers);
-            setRateLimitResetAt(resetAt ?? Date.now() + 60_000);
-          }
-          if (status === 404) resetSession();
-          setError(resolveVoiceError(status));
-        } else {
-          setError('Não foi possível enviar o áudio. Tente novamente.');
-        }
-
-        const isRetryable =
-          canRetry && status !== 413 && status !== 415 && status !== 422;
-        setHasRetryableVoiceCommand(isRetryable);
-        if (!isRetryable) {
-          attempt.recording.release();
-          if (lastVoiceCommandRef.current === attempt) {
-            lastVoiceCommandRef.current = null;
-          }
-          return 'discarded';
-        }
-        return 'retryable_error';
-      } finally {
-        if (finishConversationRequest(request)) setLoading(false);
-      }
-    },
-    [
-      addMessage,
-      applyConversationResponse,
-      resetSession,
-      setError,
-      setLastSentText,
-      setLoading,
-      setRateLimitResetAt,
-    ],
-  );
-
-  /** Inicia uma nova tentativa de voz e descarta uma gravação pendente anterior. */
-  const sendVoiceCommand = useCallback(
-    async (recording: VoiceRecording): Promise<VoiceSubmissionStatus> => {
-      if (useChatBotStore.getState().loading) return 'discarded';
-      if (recording.durationMillis < 300) {
-        recording.release();
-        setError(
-          'A gravação ficou muito curta. Grave por mais alguns instantes.',
-        );
-        return 'discarded';
-      }
-
-      lastVoiceCommandRef.current?.recording.release();
-      const attempt: VoiceCommandAttempt = {
-        recording,
-        idempotencyKey: String(uuid.v4()),
-      };
-      lastVoiceCommandRef.current = attempt;
-      setHasRetryableVoiceCommand(false);
-      return submitVoiceCommand(attempt);
-    },
-    [setError, submitVoiceCommand],
-  );
-
-  /** Reenvia exatamente o mesmo áudio quando a rede/provedor falhou. */
-  const retryLastVoiceCommand = useCallback(async () => {
-    const attempt = lastVoiceCommandRef.current;
-    if (!attempt || useChatBotStore.getState().loading) return;
-    await submitVoiceCommand(attempt);
-  }, [submitVoiceCommand]);
-
   /** Envia uma mensagem de texto livre. (#8) loading guard já impede duplicação. */
   const sendMessage = useCallback(
     (text: string, displayText = text): boolean => {
@@ -539,9 +378,7 @@ export function useChatSession() {
     nextRestoreRequestId();
     const request = beginConversationRequest('restart');
     lastTextMessageRef.current = null;
-    lastVoiceCommandRef.current?.recording.release();
-    lastVoiceCommandRef.current = null;
-    setHasRetryableVoiceCommand(false);
+    discardPendingVoiceCommand();
     setIsRestarting(true);
     setLoading(true);
     setError(null);
@@ -554,7 +391,7 @@ export function useChatSession() {
       if (finishConversationRequest(request)) setLoading(false);
       setIsRestarting(false);
     }
-  }, [setLoading, setError, postMessage]);
+  }, [setLoading, setError, postMessage, discardPendingVoiceCommand]);
 
   /** Aplica no chat uma confirmação recebida por Socket.IO ou polling. */
   const receiveAppointmentStatus = useCallback(
@@ -658,8 +495,8 @@ export function useChatSession() {
   const clearRateLimitReset = useCallback(() => {
     setRateLimitResetAt(null);
     setError(null);
-    setHasRetryableVoiceCommand(false);
-  }, [setError, setRateLimitResetAt]);
+    clearRetryableVoiceCommand();
+  }, [setError, setRateLimitResetAt, clearRetryableVoiceCommand]);
 
   /** Exibe falhas locais, como permissão de microfone, no banner do chat. */
   const reportError = useCallback(

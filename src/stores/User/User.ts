@@ -1,19 +1,16 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'expo-zustand-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  UserStore,
-  Address,
-  ErrorResponse,
-  User,
-  UpdateUserData,
-} from './types';
+import { UserStore, Address, User, UpdateUserData } from './types';
 import { AxiosError } from 'axios';
 import { backendHttpClient } from '@lib/helpers/httpClient';
+import { uploadToStorage } from '@lib/utils/uploadFile';
 import { login as loginRequest } from '@api/auth';
+import { verifyMfaLogin } from '@api/mfa';
 import { getApiErrorMessage, getApiErrorStatus } from '@api/errors';
 import { useChatBotStore } from '@stores/ChatBot';
 
+import { logger } from '@lib/logger';
 export const useUserStore = create<UserStore>()(
   persist(
     (set, get) => ({
@@ -55,11 +52,11 @@ export const useUserStore = create<UserStore>()(
 
           const userData: User = {
             id: user.id,
-            client_id: user.Client.id,
+            client_id: user.Client?.id ?? 0,
             name: user.name,
             email: user.email,
             phone: user.phone,
-            cpf: user.Client.cpf,
+            cpf: user.Client?.cpf ?? '',
             avatar_uri: user.avatar_uri,
             banner_uri: user.banner_uri,
             professional_id:
@@ -67,6 +64,9 @@ export const useUserStore = create<UserStore>()(
               user.Professional?.id ||
               user.professional?.id ||
               undefined,
+            mfa_enabled: Boolean(user.mfa_enabled),
+            admin: Boolean(user.admin),
+            professional_verified: Boolean(user.professional?.verified),
           };
 
           // fetchCurrentUser debug logs removed
@@ -77,14 +77,14 @@ export const useUserStore = create<UserStore>()(
             avatarBase64: userData.avatar_uri || null,
           });
         } catch (error) {
-          console.error('Erro ao buscar usuário atual:', error);
+          logger.error('Erro ao buscar usuário atual:', error);
         }
       },
 
       signInPassword: async (email: string, password: string) => {
-        let session;
+        let result;
         try {
-          session = await loginRequest(email, password);
+          result = await loginRequest(email, password);
         } catch (error) {
           const status = getApiErrorStatus(error);
           if (status === 401 || status === 404) {
@@ -106,61 +106,25 @@ export const useUserStore = create<UserStore>()(
           );
         }
 
-        get().setLoggedInUser(session);
-        set({ avatarBase64: session.user.avatar_uri || null });
+        if (result.mfaRequired) {
+          return { mfaToken: result.mfaToken, emailHint: result.emailHint };
+        }
+        get().setLoggedInUser(result.session);
+        set({ avatarBase64: result.session.user.avatar_uri || null });
+        return null;
       },
 
-      signInAdmin: async (email: string, password: string) => {
+      completeMfaSignIn: async (mfaToken: string, code: string) => {
+        let session;
         try {
-          const { data } = await backendHttpClient.post('/api/admin/login', {
-            email,
-            password,
-          });
-          const { token, user } = data;
-
-          if (!token) {
-            throw new Error('No token received from the server');
-          }
-
-          const tokenTrimmed = typeof token === 'string' ? token.trim() : token;
-
-          const userData: User = {
-            id: user.id,
-            client_id: user.client_id || 0,
-            name: user.name,
-            email: user.email,
-            phone: user.phone || '',
-            cpf: user.cpf || '',
-            avatar_uri: user.avatar_uri || null,
-            admin: true,
-          };
-
-          get().setLoggedInUser({
-            token: tokenTrimmed,
-            user: userData,
-            address: null,
-          });
-          set({ user: userData, address: null, token: tokenTrimmed });
-          return;
-        } catch (error: any | AxiosError) {
-          if (error instanceof AxiosError) {
-            if (
-              error.response?.status === 401 ||
-              error.response?.status === 404 ||
-              error.response?.status === 403
-            ) {
-              throw new Error('Credenciais inválidas ou sem permissão.');
-            }
-            if (error.response?.status.toString().startsWith('5')) {
-              throw new Error(
-                'Erro interno do servidor. Tente novamente mais tarde.',
-              );
-            }
-          }
+          session = await verifyMfaLogin(mfaToken, code);
+        } catch (error) {
           throw new Error(
-            'Erro ao fazer login do admin. Por favor, tente novamente.',
+            getApiErrorMessage(error, 'Código incorreto ou expirado.'),
           );
         }
+        get().setLoggedInUser(session);
+        set({ avatarBase64: session.user.avatar_uri || null });
       },
 
       changePassword: async (currentPassword: string, newPassword: string) => {
@@ -177,7 +141,7 @@ export const useUserStore = create<UserStore>()(
             throw new Error('Não foi possível alterar a senha.');
           }
           return;
-        } catch (error: any | AxiosError) {
+        } catch (error) {
           if (error instanceof AxiosError) {
             if (error.response?.status === 401) {
               throw new Error('Senha atual incorreta.');
@@ -216,10 +180,10 @@ export const useUserStore = create<UserStore>()(
           } else {
             throw new Error('Falha ao atualizar perfil.');
           }
-        } catch (error: any) {
-          console.error('Erro ao atualizar perfil:', error);
+        } catch (error) {
+          logger.error('Erro ao atualizar perfil:', error);
           throw new Error(
-            error.response?.data?.error || 'Erro ao salvar alterações.',
+            getApiErrorMessage(error, 'Erro ao salvar alterações.'),
           );
         }
       },
@@ -227,40 +191,15 @@ export const useUserStore = create<UserStore>()(
       uploadAvatar: async (imageUri: string) => {
         try {
           const fileName = `avatar_${Date.now()}.jpg`;
-          const {
-            data: { uploadUrl, fileUrl: initialFileUrl },
-          } = await backendHttpClient.post('/api/avatar/upload-url', {
-            fileName,
-            fileType: 'image/jpeg',
-          });
+          const { data: target } = await backendHttpClient.post(
+            '/api/avatar/upload-url',
+            { fileName, fileType: 'image/jpeg' },
+          );
 
           const responseFetch = await fetch(imageUri);
           const blob = await responseFetch.blob();
 
-          const isProxyUpload = uploadUrl.startsWith('/api/');
-
-          let fileUrl = initialFileUrl;
-
-          if (isProxyUpload) {
-            // Proxy ImgBB — usa backendHttpClient que já tem a baseURL configurada
-            const proxyRes = await backendHttpClient.put<{ fileUrl?: string }>(
-              uploadUrl,
-              blob,
-              {
-                headers: { 'Content-Type': 'image/jpeg' },
-              },
-            );
-            if (proxyRes.data?.fileUrl) fileUrl = proxyRes.data.fileUrl;
-          } else {
-            // S3 — PUT direto na AWS
-            const uploadResponse = await fetch(uploadUrl, {
-              method: 'PUT',
-              body: blob,
-              headers: { 'Content-Type': 'image/jpeg' },
-            });
-            if (!uploadResponse.ok)
-              throw new Error('Falha no upload para o bucket S3');
-          }
+          const fileUrl = await uploadToStorage(target, blob, 'image/jpeg');
 
           await backendHttpClient.patch('/api/avatar/update-path', {
             avatar_uri: fileUrl,
@@ -279,18 +218,11 @@ export const useUserStore = create<UserStore>()(
             mensagem: 'Avatar atualizado com sucesso!',
             avatar_uri: fileUrl,
           };
-        } catch (error: any) {
-          if (error.response) {
-            console.log(
-              'DADOS DO ERRO 500:',
-              JSON.stringify(error.response.data, null, 2),
-            );
-          }
-
+        } catch (error) {
+          logger.error('Erro ao enviar avatar:', error);
           return {
             erro: true,
-            mensagem:
-              error.response?.data?.message || 'Erro interno no servidor.',
+            mensagem: getApiErrorMessage(error, 'Erro interno no servidor.'),
           };
         }
       },
@@ -308,10 +240,10 @@ export const useUserStore = create<UserStore>()(
           }
 
           return { erro: false, mensagem: 'Avatar removido com sucesso!' };
-        } catch (error: any) {
+        } catch (error) {
           return {
             erro: true,
-            mensagem: error.response?.data?.error || 'Erro ao remover avatar.',
+            mensagem: getApiErrorMessage(error, 'Erro ao remover avatar.'),
           };
         }
       },
@@ -335,22 +267,14 @@ export const useUserStore = create<UserStore>()(
           } else {
             throw new Error('Falha ao registrar profissional.');
           }
-        } catch (error: any) {
-          console.error('Erro ao registrar profissional:', error);
-          if (error.response?.data?.error) {
-            throw new Error(error.response.data.error);
-          }
-          if (error.response?.data?.message) {
-            throw new Error(error.response.data.message);
-          }
-          if (error.response?.data?.msg) {
-            throw new Error(error.response.data.msg);
-          }
-
-          const debugData = error.response?.data
-            ? JSON.stringify(error.response.data)
-            : error.message;
-          throw new Error(`Erro inesperado: ${debugData}`);
+        } catch (error) {
+          logger.error('Erro ao registrar profissional:', error);
+          throw new Error(
+            getApiErrorMessage(
+              error,
+              'Não foi possível concluir o cadastro. Tente novamente.',
+            ),
+          );
         }
       },
 

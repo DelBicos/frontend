@@ -14,6 +14,7 @@ import type {
   SuggestedTime,
 } from '@stores/ChatBot/types';
 
+import { logger } from '@lib/logger';
 /**
  * Funcoes puras que traduzem estado/contexto do backend do chatbot em
  * elementos de UI (quick replies, horarios sugeridos, cartao de confirmacao).
@@ -186,7 +187,7 @@ export function parseSlot(slot: string, fallbackDate?: string): SuggestedTime {
       }
     }
   } catch (e) {
-    console.warn('[useChatSession] Error parsing slot:', slot, e);
+    logger.warn('[useChatSession] Error parsing slot:', slot, e);
   }
   // Mesmo dia — slot já é "HH:MM" ou fallback genérico
   return { label: slot, value: slot };
@@ -237,8 +238,8 @@ export function deriveBotAction(
   if (!context.serviceName && !context.professionalName) return undefined;
 
   // Backend usa `date` e `time` no contexto (não selectedDate/selectedTime)
-  const ctxDate = (context as any).date ?? context.selectedDate;
-  const ctxTime = (context as any).time ?? context.selectedTime;
+  const ctxDate = context.date ?? context.selectedDate;
+  const ctxTime = context.time ?? context.selectedTime;
   const startTime =
     ctxDate && ctxTime
       ? localDateTimeToISO(ctxDate, ctxTime)
@@ -258,7 +259,7 @@ export function deriveBotAction(
   }
 
   // Backend usa `servicePrice` (centavos) — fallback para `price`
-  const rawPrice = (context as any).servicePrice ?? context.price;
+  const rawPrice = context.servicePrice ?? context.price;
 
   return {
     type: 'confirm_appointment',
@@ -299,14 +300,14 @@ export function resolveSelectedTimeIso(
 ): string | undefined {
   if (!state || !context) return undefined;
 
-  const ctxDate = (context as any).date ?? context.selectedDate;
-  const ctxTime = (context as any).time ?? context.selectedTime;
+  const ctxDate = context.date ?? context.selectedDate;
+  const ctxTime = context.time ?? context.selectedTime;
 
   if (state === 'CONFIRMACAO' && ctxDate && ctxTime) {
     try {
       return localDateTimeToISO(ctxDate, ctxTime);
     } catch (e) {
-      console.warn('[useChatSession] Error formatting ISO for CONFIRMACAO:', e);
+      logger.warn('[useChatSession] Error formatting ISO for CONFIRMACAO:', e);
     }
   }
 
@@ -316,14 +317,14 @@ export function resolveSelectedTimeIso(
       try {
         return localDateTimeToISO(slotParts.date, slotParts.time);
       } catch (e) {
-        console.warn('[useChatSession] Error formatting ISO for slotParts:', e);
+        logger.warn('[useChatSession] Error formatting ISO for slotParts:', e);
       }
     }
     if (ctxDate && /^\d{1,2}:\d{2}$/.test(messageText.trim())) {
       try {
         return localDateTimeToISO(ctxDate, messageText.trim());
       } catch (e) {
-        console.warn(
+        logger.warn(
           '[useChatSession] Error formatting ISO for time string:',
           e,
         );

@@ -1,9 +1,10 @@
 import React from 'react';
-import { Platform, Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
 
+import { webStyle } from '@lib/types/web';
 interface ChipProps {
   label: string;
   selected: boolean;
@@ -61,7 +62,7 @@ const createStyles = (colors: ColorsType) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     selected: {
       backgroundColor: colors.primaryOrange,

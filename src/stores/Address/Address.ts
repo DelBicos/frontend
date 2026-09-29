@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { AddressStore, Address } from './types';
 import { backendHttpClient } from '@lib/helpers/httpClient';
-import { getApiErrorStatus } from '@api/errors';
+import { getApiErrorMessage, getApiErrorStatus } from '@api/errors';
 
 // O backendHttpClient ja envia o JWT; todas as rotas de endereco usam a
 // sessao do usuario autenticado (/api/address/session).
@@ -35,9 +35,8 @@ export function addressErrorMessage(
       : 'Endereço não encontrado';
   }
   if (operation === 'add') {
-    const serverMessage = (error as any)?.response?.data?.error;
-    if (typeof serverMessage === 'string' && serverMessage)
-      return serverMessage;
+    const serverMessage = getApiErrorMessage(error, '');
+    if (serverMessage) return serverMessage;
     if (status && status >= 400 && status < 500) {
       return 'Dados inválidos. Verifique as informações.';
     }

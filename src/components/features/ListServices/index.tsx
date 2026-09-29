@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { createStyles } from './styles';
 import { useColors } from '@theme/ThemeProvider';
-import useServicesStore from '@stores/Services/Services';
+import { useServicesStore } from '@stores/Services/Services';
 import ServiceCard from './ServiceCard';
 import { isServiceAvailableNow } from '@lib/utils/availability';
 import { useCategoryStore } from '@stores/Category';
@@ -84,10 +84,10 @@ const ListServices: React.FC = () => {
     const es = initSSE();
     if (!es) return;
     const handler = () => loadServices();
-    es.addEventListener('new_service', handler as any);
+    es.addEventListener('new_service', handler);
     return () => {
       try {
-        es.removeEventListener('new_service', handler as any);
+        es.removeEventListener('new_service', handler);
       } catch {
         // ignore
       }

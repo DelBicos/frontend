@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { backendHttpClient } from '@lib/helpers/httpClient';
 import { NotificationStore, Notification } from './types';
 
+import { logger } from '@lib/logger';
 export const useNotificationStore = create<NotificationStore>((set, get) => ({
   notifications: [],
   loading: false,
@@ -15,25 +16,12 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
       const response = await backendHttpClient.get(url);
       const apiNotifications = response.data as Notification[];
 
-      if (showLogs) {
-        if (apiNotifications.length > 0) {
-          console.table(
-            apiNotifications.map((n) => ({
-              id: n.id,
-              title: n.title,
-              lida: n.is_read ? 'Sim' : 'Não',
-              data: new Date(n.createdAt).toLocaleString('pt-BR'),
-            })),
-          );
-        }
-      }
-
       set({ notifications: apiNotifications, loading: false });
     } catch (err) {
       const errorMessage = 'Erro ao carregar notificações.';
       set({ error: errorMessage, loading: false });
       if (showLogs) {
-        console.error('❌ Erro ao buscar notificações:', err);
+        logger.error('Erro ao buscar notificações:', err);
       }
     }
   },
@@ -59,7 +47,7 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
         ),
       });
     } catch (err) {
-      console.error('Erro ao marcar como lida:', err);
+      logger.error('Erro ao marcar como lida:', err);
       throw new Error('Não foi possível marcar a notificação como lida.');
     }
   },

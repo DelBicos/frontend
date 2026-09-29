@@ -6,7 +6,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+
 import { useForm, Controller } from 'react-hook-form';
 import { FontAwesome } from '@expo/vector-icons';
 import { useUserStore } from '@stores/User';
@@ -19,27 +19,32 @@ import AuthLayout, {
 } from '@components/layout/AuthLayout';
 import { leaveAuthFlow } from '@lib/auth/leaveAuthFlow';
 import { checkForNewNotifications } from '@utils/usePushNotifications';
+import CodeEntry from '@components/ui/CodeEntry';
+import { resendMfaLogin, type MfaChallenge } from '@api/mfa';
+import { getApiErrorMessage } from '@api/errors';
 
+import { useAppNavigation } from '@screens/useAppNavigation';
+import { errorMessage } from '@lib/utils/errors';
 type FormData = {
   email: string;
   password: string;
 };
 
+const MFA_CODE_LENGTH = 6;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Entrar com e-mail e senha. Clientes e profissionais usam a mesma conta. */
 function LoginScreen() {
-  const navigation = useNavigation<any>();
-  const route = useRoute();
+  const navigation = useAppNavigation();
   const colors = useColors();
   const styles = createAuthStyles(colors);
   const { signInPassword } = useUserStore();
-  // Acesso administrativo: /login?admin=1 ou o link no rodape.
-  const [isAdmin, setIsAdmin] = useState(
-    !!(route.params as { admin?: unknown } | undefined)?.admin,
-  );
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Segunda etapa: codigo enviado ao e-mail quando a conta usa verificacao em duas etapas.
+  const [challenge, setChallenge] = useState<MfaChallenge | null>(null);
+  const [code, setCode] = useState('');
+  const [notice, setNotice] = useState<string | null>(null);
   const passwordRef = React.useRef<TextInput>(null);
 
   const {
@@ -52,30 +57,72 @@ function LoginScreen() {
     defaultValues: { email: '', password: '' },
   });
 
+  const finishLogin = () => {
+    const user = useUserStore.getState().user;
+    // Administradores entram direto no painel.
+    if (user?.admin) {
+      navigation.reset({ index: 0, routes: [{ name: 'AdminDashboard' }] });
+      return;
+    }
+    if (user?.id) {
+      setTimeout(() => {
+        checkForNewNotifications(
+          user.id.toString(),
+          new Date(Date.now() - 60000),
+          false,
+        ).catch(() => {});
+      }, 1000);
+    }
+    leaveAuthFlow(navigation, !!user?.professional_id);
+  };
+
+  const confirmCode = async () => {
+    if (!challenge) return;
+    if (code.length !== MFA_CODE_LENGTH) {
+      setError(`Digite os ${MFA_CODE_LENGTH} números do código.`);
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    setNotice(null);
+    try {
+      await useUserStore.getState().completeMfaSignIn(challenge.mfaToken, code);
+      finishLogin();
+    } catch (err) {
+      setError(errorMessage(err, 'Código incorreto ou expirado.'));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const resendCode = async () => {
+    if (!challenge) return;
+    setError(null);
+    try {
+      await resendMfaLogin(challenge.mfaToken);
+      setCode('');
+      setNotice('Enviamos um novo código.');
+    } catch (err) {
+      setError(
+        getApiErrorMessage(err, 'Não foi possível reenviar. Entre de novo.'),
+      );
+    }
+  };
+
   const onSubmit = async ({ email, password }: FormData) => {
     setIsSubmitting(true);
     setError(null);
     try {
-      if (isAdmin) {
-        await useUserStore.getState().signInAdmin(email.trim(), password);
-        navigation.reset({ index: 0, routes: [{ name: 'AdminDashboard' }] });
+      const pending = await signInPassword(email.trim(), password);
+      if (pending) {
+        setChallenge(pending);
+        setCode('');
         return;
       }
-      await signInPassword(email.trim(), password);
-      const user = useUserStore.getState().user;
-      if (user?.id) {
-        setTimeout(() => {
-          checkForNewNotifications(
-            user.id.toString(),
-            new Date(Date.now() - 60000),
-            false,
-          ).catch(() => {});
-        }, 1000);
-      }
-      leaveAuthFlow(navigation, !!user?.professional_id);
-    } catch (err: any) {
+      finishLogin();
+    } catch (err) {
       setError(
-        err?.message || 'Não foi possível entrar. Confira e-mail e senha.',
+        errorMessage(err, 'Não foi possível entrar. Confira e-mail e senha.'),
       );
     } finally {
       setIsSubmitting(false);
@@ -84,14 +131,50 @@ function LoginScreen() {
 
   const submit = handleSubmit(onSubmit);
 
+  if (challenge) {
+    return (
+      <AuthLayout
+        title="Confirme que é você"
+        onBack={() => {
+          setChallenge(null);
+          setError(null);
+          setNotice(null);
+        }}
+        subtitle={`Enviamos um código de ${MFA_CODE_LENGTH} números para ${challenge.emailHint}. Ele vale por 10 minutos; confira também o spam.`}>
+        {error ? <AuthAlert>{error}</AuthAlert> : null}
+        {notice ? <AuthAlert type="success">{notice}</AuthAlert> : null}
+        <CodeEntry value={code} onChange={setCode} length={MFA_CODE_LENGTH} />
+        <Pressable
+          onPress={confirmCode}
+          disabled={isSubmitting}
+          style={({ pressed }) => [
+            styles.primaryButton,
+            isSubmitting && styles.primaryButtonDisabled,
+            pressed && { opacity: 0.85 },
+          ]}
+          accessibilityRole="button"
+          accessibilityState={{ busy: isSubmitting }}>
+          {isSubmitting ? (
+            <ActivityIndicator color="#000000" />
+          ) : (
+            <FontAwesome name="shield" size={18} color="#000000" />
+          )}
+          <Text style={styles.primaryButtonText}>Confirmar</Text>
+        </Pressable>
+        <Pressable
+          onPress={resendCode}
+          style={[styles.linkButton, { alignSelf: 'center', marginTop: 12 }]}
+          accessibilityRole="button">
+          <Text style={styles.linkText}>Reenviar código</Text>
+        </Pressable>
+      </AuthLayout>
+    );
+  }
+
   return (
     <AuthLayout
-      title={isAdmin ? 'Acesso administrativo' : 'Entrar'}
-      subtitle={
-        isAdmin
-          ? 'Use sua conta de administrador.'
-          : 'Acesse para agendar, conversar e acompanhar seus serviços.'
-      }>
+      title="Entrar"
+      subtitle="Acesse para agendar, conversar e acompanhar seus serviços.">
       {error ? <AuthAlert>{error}</AuthAlert> : null}
 
       <Controller
@@ -145,18 +228,16 @@ function LoginScreen() {
         )}
       />
 
-      {!isAdmin ? (
-        <Pressable
-          onPress={() =>
-            navigation.navigate('ForgotPassword', {
-              email: getValues('email').trim() || undefined,
-            })
-          }
-          style={[styles.linkButton, { marginTop: -8, marginBottom: 12 }]}
-          accessibilityRole="link">
-          <Text style={styles.linkText}>Esqueci minha senha</Text>
-        </Pressable>
-      ) : null}
+      <Pressable
+        onPress={() =>
+          navigation.navigate('ForgotPassword', {
+            email: getValues('email').trim() || undefined,
+          })
+        }
+        style={[styles.linkButton, { marginTop: -8, marginBottom: 12 }]}
+        accessibilityRole="link">
+        <Text style={styles.linkText}>Esqueci minha senha</Text>
+      </Pressable>
 
       <Pressable
         onPress={submit}
@@ -171,52 +252,20 @@ function LoginScreen() {
         {isSubmitting ? (
           <ActivityIndicator color="#000000" />
         ) : (
-          <FontAwesome
-            name={isAdmin ? 'lock' : 'sign-in'}
-            size={18}
-            color="#000000"
-          />
+          <FontAwesome name="sign-in" size={18} color="#000000" />
         )}
         <Text style={styles.primaryButtonText}>Entrar</Text>
       </Pressable>
 
-      {isAdmin ? (
-        <View style={styles.alternate}>
-          <Pressable
-            onPress={() => setIsAdmin(false)}
-            style={styles.linkButton}
-            accessibilityRole="button">
-            <Text style={styles.linkText}>Voltar ao login comum</Text>
-          </Pressable>
-        </View>
-      ) : (
-        <>
-          <View style={styles.alternate}>
-            <Text style={styles.alternateText}>Ainda não tem conta?</Text>
-            <Pressable
-              onPress={() => navigation.navigate('Register')}
-              style={styles.linkButton}
-              accessibilityRole="link">
-              <Text style={styles.linkText}>Criar conta</Text>
-            </Pressable>
-          </View>
-          <Pressable
-            onPress={() => {
-              setError(null);
-              setIsAdmin(true);
-            }}
-            style={[styles.linkButton, { alignSelf: 'center', marginTop: 8 }]}
-            accessibilityRole="button">
-            <Text
-              style={[
-                styles.alternateText,
-                { fontSize: 14, textDecorationLine: 'underline' },
-              ]}>
-              Acesso administrativo
-            </Text>
-          </Pressable>
-        </>
-      )}
+      <View style={styles.alternate}>
+        <Text style={styles.alternateText}>Ainda não tem conta?</Text>
+        <Pressable
+          onPress={() => navigation.navigate('Register')}
+          style={styles.linkButton}
+          accessibilityRole="link">
+          <Text style={styles.linkText}>Criar conta</Text>
+        </Pressable>
+      </View>
     </AuthLayout>
   );
 }

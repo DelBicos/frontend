@@ -22,6 +22,13 @@ import {
 import { useChatSocket } from '@hooks/useChatSocket';
 import { createThreadPanelStyles } from './threadPanelStyles';
 
+import { logger } from '@lib/logger';
+
+/** Evento de teclado do react-native-web (tem preventDefault, ausente no tipo nativo). */
+interface WebKeyPressEvent {
+  nativeEvent: { key: string; shiftKey?: boolean };
+  preventDefault: () => void;
+}
 const PAGE_SIZE = 20;
 
 const dayKey = (iso: string) => new Date(iso).toDateString();
@@ -121,7 +128,7 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
         setHasMore(!!result.nextCursor);
         setRoomStatus(result.roomStatus);
       } catch (err) {
-        console.error('Erro ao carregar histórico do chat:', err);
+        logger.error('Erro ao carregar histórico do chat:', err);
       } finally {
         if (mounted) setLoadingInitial(false);
       }
@@ -146,7 +153,7 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
       setCursor(result.nextCursor);
       setHasMore(!!result.nextCursor);
     } catch (err) {
-      console.error('Erro ao paginar histórico do chat:', err);
+      logger.error('Erro ao paginar histórico do chat:', err);
     } finally {
       loadingMoreRef.current = false;
       setLoadingMore(false);
@@ -316,7 +323,7 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
               accessibilityLabel="Mensagem"
               {...(Platform.OS === 'web'
                 ? {
-                    onKeyPress: (e: any) => {
+                    onKeyPress: (e: WebKeyPressEvent) => {
                       if (
                         e.nativeEvent.key === 'Enter' &&
                         !e.nativeEvent.shiftKey

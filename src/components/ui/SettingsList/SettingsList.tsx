@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
 
+import type { WebPressableState } from '@lib/types/web';
 type IconName = React.ComponentProps<typeof MaterialIcons>['name'];
 
 /** Grupo de opcoes com titulo (lista de configuracoes do app). */
@@ -94,7 +95,7 @@ export function SettingsRow({
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed, hovered }: any) => [
+      style={({ pressed, hovered }: WebPressableState) => [
         styles.row,
         (pressed || hovered) && styles.rowPressed,
       ]}

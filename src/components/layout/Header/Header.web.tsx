@@ -6,7 +6,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { useLocation } from '@lib/hooks/LocationContext';
 import { useBreakpoint } from '@lib/hooks/useBreakpoint';
 import { Region } from '@lib/hooks/types';
-import { CommonActions, useNavigation } from '@react-navigation/native';
+import { CommonActions } from '@react-navigation/native';
 import { NativeStackHeaderProps } from '@react-navigation/native-stack';
 import { NavigationParams } from '@screens/types';
 import { useThemeStore } from '@stores/Theme';
@@ -33,6 +33,8 @@ import {
 import DelBicosLogoDark from '../../../../assets/DelBicos_git.png';
 import { createStyles } from './styles';
 
+import { useAppNavigation } from '@screens/useAppNavigation';
+import type { WebPressableState } from '@lib/types/web';
 // Logo, links, tema e conta so cabem lado a lado a partir daqui.
 const HEADER_FULL_MIN_WIDTH = 1200;
 
@@ -47,6 +49,7 @@ const ROUTE_SECTION: Partial<Record<string, Screen>> = {
   SearchResult: 'Category',
   AboutUs: 'AboutUs',
   Help: 'Help',
+  Terms: 'Help',
   MySchedules: 'MySchedules',
   AdminAnalytics: 'AdminAnalytics',
 };
@@ -66,7 +69,7 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = ({ route }) => {
     loading: isLocationLoading,
   } = useLocation();
 
-  const navigation = useNavigation<any>();
+  const navigation = useAppNavigation();
   const { width, isCompact, sideInset } = useBreakpoint();
   // Abaixo do desktop, links e acoes ficam em um menu recolhivel.
   const isCollapsed = width < HEADER_FULL_MIN_WIDTH;
@@ -167,9 +170,14 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = ({ route }) => {
   const navItems: { screen: Screen; label: string; show: boolean }[] = [
     { screen: 'Feed', label: 'Início', show: true },
     { screen: 'Category', label: 'Categorias', show: true },
-    { screen: 'MySchedules', label: 'Agendamentos', show: !!user },
+    {
+      screen: 'MySchedules',
+      label: 'Agendamentos',
+      show: !!user && !user.admin,
+    },
     { screen: 'AboutUs', label: 'Quem somos', show: true },
     { screen: 'Help', label: 'Ajuda', show: true },
+    { screen: 'AdminDashboard', label: 'Painel', show: !!user?.admin },
     { screen: 'AdminAnalytics', label: 'Analytics', show: !!user?.admin },
   ];
 
@@ -183,7 +191,7 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = ({ route }) => {
           onPress={() => navigateTo(item.screen)}
           accessibilityRole="link"
           {...({ 'aria-current': isActive ? 'page' : undefined } as object)}
-          style={({ hovered }: any) => [
+          style={({ hovered }: WebPressableState) => [
             styles.navLink,
             isCollapsed && styles.navLinkStacked,
             hovered && styles.navLinkHovered,
@@ -329,7 +337,7 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = ({ route }) => {
       style={[styles.authButtons, isCollapsed && styles.authButtonsStacked]}>
       <Pressable
         onPress={() => navigateTo('Login')}
-        style={({ hovered }: any) => [
+        style={({ hovered }: WebPressableState) => [
           styles.outlineButton,
           hovered && styles.outlineButtonHovered,
         ]}
@@ -338,7 +346,7 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = ({ route }) => {
       </Pressable>
       <Pressable
         onPress={() => navigateTo('Register')}
-        style={({ hovered }: any) => [
+        style={({ hovered }: WebPressableState) => [
           styles.solidButton,
           hovered && styles.solidButtonHovered,
         ]}
@@ -351,7 +359,7 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = ({ route }) => {
   const locationButton = (
     <Pressable
       onPress={openMapModal}
-      style={({ hovered }: any) => [
+      style={({ hovered }: WebPressableState) => [
         styles.locationButton,
         hovered && styles.locationButtonHovered,
       ]}
@@ -411,7 +419,7 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = ({ route }) => {
               <MapComponent
                 region={tempRegion}
                 markerCoords={tempMarker}
-                onMapPress={(event: any) =>
+                onMapPress={(event) =>
                   setTempMarker(event.nativeEvent.coordinate)
                 }
               />
@@ -536,7 +544,7 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = ({ route }) => {
           ) : null}
           <Pressable
             onPress={handleSearchSubmit}
-            style={({ hovered }: any) => [
+            style={({ hovered }: WebPressableState) => [
               styles.searchButton,
               hovered && styles.solidButtonHovered,
             ]}

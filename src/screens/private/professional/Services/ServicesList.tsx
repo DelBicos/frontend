@@ -25,6 +25,7 @@ import { formatAvailabilitySummary } from '@components/features/ListServices/Ser
 import ServiceForm from './ServiceForm';
 import ServiceAreaCard from './ServiceAreaCard';
 
+import { webStyle } from '@lib/types/web';
 const formatDuration = (minutes?: number) => {
   if (!minutes) return null;
   const h = Math.floor(minutes / 60);
@@ -361,7 +362,7 @@ const createStyles = (colors: ColorsType, isCompact: boolean) =>
       paddingHorizontal: 22,
       borderRadius: 999,
       backgroundColor: colors.primaryOrange,
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     primaryButtonText: {
       fontFamily: 'Afacad-Bold',
@@ -378,7 +379,7 @@ const createStyles = (colors: ColorsType, isCompact: boolean) =>
       borderRadius: 999,
       borderWidth: 1.5,
       borderColor: colors.primaryBlack,
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     secondaryButtonText: {
       fontFamily: 'Afacad-Bold',

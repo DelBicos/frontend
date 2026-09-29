@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
 import { useColors } from '@theme/ThemeProvider';
 import { useUserStore } from '@stores/User';
@@ -15,6 +15,7 @@ import AuthLayout, {
 } from '@components/layout/AuthLayout';
 import { leaveAuthFlow } from '@lib/auth/leaveAuthFlow';
 
+import { useAppNavigation } from '@screens/useAppNavigation';
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD = 6;
 const RESEND_SECONDS = 60;
@@ -23,7 +24,7 @@ type ResetForm = { password: string; confirm: string };
 
 /** "Esqueci minha senha": e-mail → codigo + nova senha → entra na conta. */
 function ForgotPasswordScreen() {
-  const navigation = useNavigation<any>();
+  const navigation = useAppNavigation();
   const route = useRoute();
   const colors = useColors();
   const styles = createAuthStyles(colors);

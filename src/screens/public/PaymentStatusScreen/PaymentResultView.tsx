@@ -7,7 +7,7 @@ import {
   View,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+
 import { useColors } from '@theme/ThemeProvider';
 import { InvoiceData } from '@stores/Appointment';
 import InvoiceTemplate from '@components/features/InvoiceTemplate';
@@ -19,6 +19,7 @@ import PageContainer from '@components/layout/PageContainer';
 import BookingSteps from '@components/features/BookingSteps';
 import { createStyles } from './styles';
 
+import { useAppNavigation } from '@screens/useAppNavigation';
 export type PaymentResultStatus =
   'loading' | 'success' | 'processing' | 'error';
 
@@ -63,7 +64,7 @@ function PaymentResultView({
   const colors = useColors();
   const { isCompact } = useBreakpoint();
   const styles = createStyles(colors, isCompact);
-  const navigation = useNavigation<any>();
+  const navigation = useAppNavigation();
   const [receiptState, setReceiptState] = useState<
     'idle' | 'busy' | 'saved' | 'failed'
   >('idle');
@@ -178,9 +179,10 @@ function PaymentResultView({
           Pedido enviado!
         </Text>
         <Text style={styles.text}>
-          Pagamento aprovado. {invoice?.professionalName ?? 'O profissional'}{' '}
-          precisa aceitar o pedido e você vai ser avisado. Se for recusado, o
-          valor é estornado automaticamente.
+          O valor foi reservado no seu cartão, sem cobrança por enquanto.{' '}
+          {invoice?.professionalName ?? 'O profissional'} precisa aceitar o
+          pedido e você vai ser avisado. A cobrança só acontece na aceitação; se
+          for recusado ou expirar, a reserva é liberada.
         </Text>
 
         {invoice ? (

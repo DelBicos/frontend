@@ -12,6 +12,7 @@ import { formatDayLabel, isSameDay } from '@lib/appointments';
 import ProfilePage from '../../components/ProfilePage';
 import { createStyles } from './styles';
 
+import type { WebPressableState } from '@lib/types/web';
 const TYPE_ICON: Record<
   string,
   React.ComponentProps<typeof FontAwesome>['name']
@@ -149,7 +150,7 @@ const NotificacoesContent: React.FC = () => {
               <Pressable
                 key={item.id}
                 onPress={() => toggle(item)}
-                style={({ pressed, hovered }: any) => [
+                style={({ pressed, hovered }: WebPressableState) => [
                   styles.item,
                   i > 0 && styles.itemDivider,
                   (pressed || hovered) && styles.itemPressed,

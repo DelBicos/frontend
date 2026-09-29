@@ -11,8 +11,8 @@ export const AUTH_ROUTES = [
 
 interface MinimalNavigation {
   getState: () => { routes: { name: string }[]; index: number } | undefined;
-  dispatch: (action: any) => void;
-  reset: (state: any) => void;
+  dispatch: (action: object) => void;
+  reset: (state: object) => void;
 }
 
 /**

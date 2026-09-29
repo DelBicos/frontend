@@ -4,6 +4,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
 
+import { webStyle } from '@lib/types/web';
 interface SearchFieldProps {
   value: string;
   onChangeText: (text: string) => void;
@@ -70,7 +71,7 @@ const createStyles = (colors: ColorsType) =>
       width: '100%',
       maxWidth: 640,
       ...Platform.select({
-        web: { boxShadow: '0px 2px 10px rgba(0,0,0,0.06)' } as any,
+        web: webStyle({ boxShadow: '0px 2px 10px rgba(0,0,0,0.06)' }),
         android: { elevation: 2 },
       }),
     },
@@ -80,11 +81,11 @@ const createStyles = (colors: ColorsType) =>
       fontFamily: 'Afacad-Regular',
       color: colors.primaryBlack,
       paddingVertical: 12,
-      ...Platform.select({ web: { outlineStyle: 'none' } as any }),
+      ...webStyle({ outlineStyle: 'none' }),
     },
     clear: {
       padding: 4,
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
   });
 

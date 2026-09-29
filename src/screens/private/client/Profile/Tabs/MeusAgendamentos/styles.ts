@@ -1,6 +1,7 @@
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { ColorsType } from '@theme/types';
 
+import { webStyle } from '@lib/types/web';
 export const createStyles = (colors: ColorsType) =>
   StyleSheet.create({
     tabs: {
@@ -80,7 +81,7 @@ export const createStyles = (colors: ColorsType) =>
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: colors.primaryOrange,
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     primaryButtonText: {
       fontFamily: 'Afacad-Bold',

@@ -39,7 +39,7 @@ export function paymentIntentIdFromSecret(clientSecret: string): string {
 export async function confirmPayment(paymentIntentId: string) {
   const { data } = await backendHttpClient.post<{
     message: string;
-    appointment: Record<string, any>;
+    appointment: Record<string, unknown> & { id: string | number };
   }>('/api/payments/confirm', { paymentIntentId });
   return data;
 }

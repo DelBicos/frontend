@@ -36,7 +36,7 @@ function createSSEClient(url: string): RNSSEClient {
     listeners.get(event)?.forEach((fn) => {
       try {
         fn(data);
-      } catch (e) {
+      } catch {
         /* ignorar erros em handlers */
       }
     });

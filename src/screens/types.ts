@@ -5,6 +5,7 @@ export enum ClientProfileSubRoutes {
   MeusEnderecos = 'MeusEnderecos',
   TrocarSenha = 'TrocarSenha',
   Seguranca = 'Seguranca',
+  Verificacao = 'Verificacao',
   MeusAgendamentos = 'MeusAgendamentos',
   Notificacoes = 'Notificacoes',
   Conversas = 'Conversas',
@@ -72,9 +73,12 @@ export type NavigationParams = {
   ProfessionalServicesTab: undefined;
   ProfessionalProfileTab: undefined;
   Help: undefined;
+  Terms: undefined;
   AboutUs: undefined;
   AdminDashboard: undefined;
   AdminAnalytics: undefined;
+  AdminDisputes: undefined;
+  AdminVerifications: undefined;
   ChatList: undefined;
   ChatThread: {
     roomId: number;

@@ -1,3 +1,5 @@
+import type { MfaChallenge } from '@api/mfa';
+
 export type User = {
   id: number;
   client_id: number;
@@ -9,6 +11,9 @@ export type User = {
   banner_uri?: string | null;
   admin?: boolean;
   professional_id?: number;
+  mfa_enabled?: boolean;
+  /** Profissional com identidade aprovada (selo de verificado). */
+  professional_verified?: boolean;
 };
 
 export type Address = {
@@ -71,8 +76,12 @@ export type UserStore = {
     address: Address | null;
   }) => void;
   updateUserProfile: (data: UpdateUserData) => Promise<void>;
-  signInPassword: (email: string, password: string) => Promise<void>;
-  signInAdmin: (email: string, password: string) => Promise<void>;
+  /** Retorna o desafio quando a conta exige o codigo do e-mail (MFA). */
+  signInPassword: (
+    email: string,
+    password: string,
+  ) => Promise<MfaChallenge | null>;
+  completeMfaSignIn: (mfaToken: string, code: string) => Promise<void>;
   changePassword: (
     currentPassword: string,
     newPassword: string,

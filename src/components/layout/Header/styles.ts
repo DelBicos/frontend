@@ -1,6 +1,7 @@
 import { StyleSheet, Platform } from 'react-native';
 import { ColorsType } from '@theme/types';
 
+import { webStyle } from '@lib/types/web';
 const pointer = Platform.select({ web: { cursor: 'pointer' } as object });
 
 export const createStyles = (colors: ColorsType) =>
@@ -47,7 +48,7 @@ export const createStyles = (colors: ColorsType) =>
       backgroundColor: colors.inputBackground,
     },
     navLinkStacked: {
-      height: 'auto' as any,
+      ...webStyle({ height: 'auto' }),
       minHeight: 48,
       paddingHorizontal: 12,
       borderRadius: 10,
@@ -350,7 +351,7 @@ export const createStyles = (colors: ColorsType) =>
     mapWrapper: {
       width: '100%',
       height: 400,
-      maxHeight: '60vh' as any,
+      ...webStyle({ maxHeight: '60vh' }),
       borderRadius: 12,
       overflow: 'hidden',
       backgroundColor: colors.inputBackground,

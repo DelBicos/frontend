@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
 
+import type { FontAwesomeName } from '@lib/types/icons';
 type AlertType = 'error' | 'success' | 'info';
 
 /** Mensagem de erro/sucesso/aviso no proprio conteudo (anunciada a leitores de tela). */
@@ -14,7 +15,10 @@ function InlineAlert({
   children: React.ReactNode;
 }) {
   const colors = useColors();
-  const palette = {
+  const palette: Record<
+    AlertType,
+    { bg: string; fg: string; icon: FontAwesomeName }
+  > = {
     error: {
       bg: colors.errorBackground,
       fg: colors.errorText,
@@ -30,20 +34,21 @@ function InlineAlert({
       fg: colors.primaryBlack,
       icon: 'info-circle',
     },
-  }[type];
+  };
+  const tone = palette[type];
 
   return (
     <View
-      style={[styles.alert, { backgroundColor: palette.bg }]}
+      style={[styles.alert, { backgroundColor: tone.bg }]}
       accessibilityRole="alert"
       accessibilityLiveRegion={type === 'error' ? 'assertive' : 'polite'}>
       <FontAwesome
-        name={palette.icon as any}
+        name={tone.icon}
         size={18}
-        color={palette.fg}
+        color={tone.fg}
         style={styles.icon}
       />
-      <Text style={[styles.text, { color: palette.fg }]}>{children}</Text>
+      <Text style={[styles.text, { color: tone.fg }]}>{children}</Text>
     </View>
   );
 }

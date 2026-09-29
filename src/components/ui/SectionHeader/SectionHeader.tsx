@@ -1,9 +1,10 @@
 import React from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
 
+import { webStyle } from '@lib/types/web';
 interface SectionHeaderProps {
   title: string;
   /** Nivel do heading no web (h2 por padrao; a pagina tem um unico h1). */
@@ -82,7 +83,7 @@ const createStyles = (colors: ColorsType) =>
       gap: 6,
       minHeight: 44,
       paddingHorizontal: 4,
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     actionText: {
       fontSize: 16,

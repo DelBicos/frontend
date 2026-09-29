@@ -135,7 +135,6 @@ describe('useVoiceRecorder', () => {
         }),
     );
 
-    let root: TestRenderer.ReactTestRenderer;
     let voiceRecorder: ReturnType<typeof useVoiceRecorder>;
     await act(async () => {
       root = TestRenderer.create(
@@ -164,10 +163,9 @@ describe('useVoiceRecorder', () => {
   });
 
   it('cancels recording cleanly without throwing error', async () => {
-    let root: TestRenderer.ReactTestRenderer;
     let voiceRecorder: ReturnType<typeof useVoiceRecorder>;
     await act(async () => {
-      root = TestRenderer.create(
+      TestRenderer.create(
         React.createElement(Harness, {
           onRender: (value) => {
             voiceRecorder = value as ReturnType<typeof useVoiceRecorder>;

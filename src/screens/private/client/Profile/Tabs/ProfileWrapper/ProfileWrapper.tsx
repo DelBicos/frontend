@@ -9,7 +9,7 @@ import {
   Text,
   BackHandler,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
 import { FontAwesome } from '@expo/vector-icons';
 
 import { useColors } from '@theme/ThemeProvider';
@@ -21,6 +21,7 @@ import { createStyles } from './styles';
 import DadosContaForm from '@screens/private/client/Profile/Tabs/DadosContaForm';
 import AlterarEnderecoForm from '@screens/private/client/Profile/Tabs/AlterarEnderecoForm';
 import TrocarSenhaForm from '@screens/private/client/Profile/Tabs/TrocarSenhaForm';
+import VerificacaoConta from '@screens/private/client/Profile/Tabs/VerificacaoConta';
 import MeusAgendamentos from '@screens/private/client/Profile/Tabs/MeusAgendamentos';
 import NotificacoesContent from '@screens/private/client/Profile/Tabs/NotificacoesContent';
 import AvaliacoesTab from '@screens/private/client/Profile/Tabs/AvaliacoesTab';
@@ -32,13 +33,14 @@ import ConversasTab from '@screens/private/client/Profile/Tabs/ConversasTab/Conv
 import { SUBROUTE_TITLES } from '../MenuNavegacao/useProfileMenu';
 import ProfileMobileHome from './ProfileMobileHome';
 
+import { useAppNavigation } from '@screens/useAppNavigation';
 type ClientProfileRouteParams = {
   subroute?: ClientProfileSubRoutes;
 };
 
 const ProfileWrapper: React.FC<{ user: UserProfileProps }> = ({ user }) => {
   const route = useRoute();
-  const navigation = useNavigation<any>();
+  const navigation = useAppNavigation();
   const { width } = useWindowDimensions();
   const isMobile = width < 900;
   // Mesmo contêiner e margens das demais paginas.
@@ -79,6 +81,8 @@ const ProfileWrapper: React.FC<{ user: UserProfileProps }> = ({ user }) => {
         return <AlterarEnderecoForm />;
       case ClientProfileSubRoutes.Seguranca:
         return <TrocarSenhaForm />;
+      case ClientProfileSubRoutes.Verificacao:
+        return <VerificacaoConta />;
       case ClientProfileSubRoutes.MeusAgendamentos:
         return <MeusAgendamentos role={role} />;
       case ClientProfileSubRoutes.Notificacoes:

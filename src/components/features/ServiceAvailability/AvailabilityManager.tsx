@@ -6,10 +6,10 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import CustomSelect from '@components/ui/CustomSelect';
 import CustomTextInput from '@components/ui/CustomTextInput';
 import { useColors } from '@theme/ThemeProvider';
 
+import type { ColorsType } from '@theme/types';
 const DAYS = [
   { label: 'Domingo', value: '0' },
   { label: 'Segunda', value: '1' },
@@ -44,10 +44,25 @@ function padTime(t: string) {
   return `${h}:${mm}`;
 }
 
-export default function AvailabilityManager({ control, setValue, watch }: any) {
+export interface AvailabilityItem {
+  day: number;
+  start: string;
+  end: string;
+}
+
+interface AvailabilityManagerProps {
+  setValue: (name: 'availabilities', value: AvailabilityItem[]) => void;
+  watch: (name: 'availabilities') => AvailabilityItem[] | undefined;
+}
+
+export default function AvailabilityManager({
+  setValue,
+  watch,
+}: AvailabilityManagerProps) {
   const colors = useColors();
   const styles = createStyles(colors);
-  const availabilities = watch('availabilities') || [];
+  const watched = watch('availabilities');
+  const availabilities = useMemo(() => watched ?? [], [watched]);
 
   const [selectedDays, setSelectedDays] = useState<string[]>(['1']);
   const [start, setStart] = useState('09:00');
@@ -84,20 +99,18 @@ export default function AvailabilityManager({ control, setValue, watch }: any) {
       const editing = availabilities[editingIndex];
       if (!editing) return;
       const dayNum = Number(editing.day);
-      const overlapping = (availabilities as any[]).some(
-        (a: any, idx: number) => {
-          if (idx === editingIndex) return false;
-          if (Number(a.day) !== dayNum) return false;
-          const as = timeToMinutes(a.start);
-          const ae = timeToMinutes(a.end);
-          return !(e <= as || s >= ae);
-        },
-      );
+      const overlapping = availabilities.some((a, idx) => {
+        if (idx === editingIndex) return false;
+        if (Number(a.day) !== dayNum) return false;
+        const as = timeToMinutes(a.start);
+        const ae = timeToMinutes(a.end);
+        return !(e <= as || s >= ae);
+      });
       if (overlapping) {
         setError('Já existe uma disponibilidade que se sobrepõe neste dia.');
         return;
       }
-      const updated = (availabilities as any[]).map((a: any, i: number) =>
+      const updated = availabilities.map((a, i) =>
         i === editingIndex ? { day: dayNum, start: startP, end: endP } : a,
       );
       setValue('availabilities', updated);
@@ -107,18 +120,17 @@ export default function AvailabilityManager({ control, setValue, watch }: any) {
     }
 
     // Add entries for each selected day, validating overlap and duplicates per day
-    const next = [...(availabilities as any[])];
+    const next = [...availabilities];
     for (const d of selectedDays) {
       const dayNum = Number(d);
       if (!Number.isInteger(dayNum) || dayNum < 0 || dayNum > 6) continue;
 
       const duplicate = next.some(
-        (a: any) =>
-          Number(a.day) === dayNum && a.start === startP && a.end === endP,
+        (a) => Number(a.day) === dayNum && a.start === startP && a.end === endP,
       );
       if (duplicate) continue;
 
-      const overlapping = next.some((a: any) => {
+      const overlapping = next.some((a) => {
         if (Number(a.day) !== dayNum) return false;
         const as = timeToMinutes(a.start);
         const ae = timeToMinutes(a.end);
@@ -137,7 +149,7 @@ export default function AvailabilityManager({ control, setValue, watch }: any) {
   };
 
   const removeAt = (index: number) => {
-    const next = availabilities.filter((_: any, i: number) => i !== index);
+    const next = availabilities.filter((_, i) => i !== index);
     setValue('availabilities', next);
   };
 
@@ -151,7 +163,7 @@ export default function AvailabilityManager({ control, setValue, watch }: any) {
   };
 
   const grouped = useMemo(() => {
-    return (availabilities as any[])
+    return availabilities
       .map((a) => ({ ...a }))
       .sort(
         (x, y) =>
@@ -285,7 +297,7 @@ export default function AvailabilityManager({ control, setValue, watch }: any) {
   );
 }
 
-const createStyles = (colors: any) =>
+const createStyles = (colors: ColorsType) =>
   StyleSheet.create({
     errorText: {
       fontFamily: 'Afacad-SemiBold',

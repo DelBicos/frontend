@@ -70,3 +70,7 @@ env.front.prod
 
 # Relatorios de teste
 coverage/
+
+# Codigo nativo gerado pelo "expo prebuild" (CNG): nao versionar; a fonte e o app.json + plugins
+/ios
+/android

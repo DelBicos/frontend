@@ -9,6 +9,7 @@ import { useCategoryStore } from '@stores/Category';
 import { isServiceAvailableNow } from '@lib/utils/availability';
 import { formatBRLFromCents } from '@lib/helpers/formatCurrency';
 
+import type { WebPressableState } from '@lib/types/web';
 const DAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
 /** Resumo legivel dos horarios: "Seg 08:00–12:00 • Ter …". */
@@ -62,7 +63,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
 
   const scheduleButton = (
     <Pressable
-      style={({ pressed, hovered }: any) => [
+      style={({ pressed, hovered }: WebPressableState) => [
         styles.actionButton,
         (pressed || hovered) && styles.actionButtonActive,
       ]}

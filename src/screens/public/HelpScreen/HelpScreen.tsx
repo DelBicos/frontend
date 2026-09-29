@@ -75,7 +75,7 @@ function HelpScreen() {
           <Chip
             key={topic.id}
             label={topic.title}
-            icon={topic.icon as any}
+            icon={topic.icon}
             selected={topicId === topic.id}
             onPress={() =>
               setTopicId((current) => (current === topic.id ? null : topic.id))
@@ -96,11 +96,7 @@ function HelpScreen() {
         <View key={topic.id} style={styles.topic}>
           <View style={styles.topicHeader}>
             <View style={styles.topicIcon}>
-              <FontAwesome
-                name={topic.icon as any}
-                size={18}
-                color={'#000000'}
-              />
+              <FontAwesome name={topic.icon} size={18} color={'#000000'} />
             </View>
             <Text
               style={styles.topicTitle}
@@ -148,6 +144,15 @@ function HelpScreen() {
           </Text>
         </Pressable>
       </View>
+
+      <Pressable
+        onPress={() => navigation.navigate('Terms')}
+        style={({ pressed }) => [styles.termsLink, pressed && { opacity: 0.7 }]}
+        accessibilityRole="link">
+        <Text style={styles.termsLinkText}>
+          Ver os termos de uso e a política de cancelamento completa
+        </Text>
+      </Pressable>
     </PageContainer>
   );
 }

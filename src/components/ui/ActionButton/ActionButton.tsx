@@ -12,6 +12,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
 
+import type { WebPressableState } from '@lib/types/web';
 type Variant = 'primary' | 'secondary' | 'danger' | 'ghost';
 
 interface ActionButtonProps {
@@ -60,7 +61,7 @@ function ActionButton({
     <Pressable
       onPress={onPress}
       disabled={isDisabled}
-      style={({ pressed, hovered }: any) => [
+      style={({ pressed, hovered }: WebPressableState) => [
         styles.base,
         size === 'sm' && styles.small,
         styles[variant],

@@ -27,6 +27,7 @@ import { confirmAction } from '@lib/utils/confirmAction';
 import ProfilePage from '../../components/ProfilePage';
 import { createStyles } from './styles';
 
+import { errorMessage } from '@lib/utils/errors';
 const EMPTY_FORM: AddressFormData = {
   cep: '',
   street: '',
@@ -87,8 +88,8 @@ function AddressModal({
     setError(null);
     try {
       await onSave(data);
-    } catch (e: any) {
-      setError(e?.message || 'Não foi possível salvar o endereço.');
+    } catch (e) {
+      setError(errorMessage(e, 'Não foi possível salvar o endereço.'));
     }
   });
 
@@ -237,8 +238,11 @@ export default function AlterarEnderecoForm() {
     try {
       await deleteAddress(address.id);
       setFeedback({ type: 'success', text: 'Endereço excluído.' });
-    } catch (e: any) {
-      setFeedback({ type: 'error', text: e?.message });
+    } catch (e) {
+      setFeedback({
+        type: 'error',
+        text: errorMessage(e, 'Não foi possível concluir.'),
+      });
     } finally {
       setBusyId(null);
     }
@@ -249,8 +253,11 @@ export default function AlterarEnderecoForm() {
     try {
       await setPrimaryAddress(id);
       setFeedback({ type: 'success', text: 'Endereço principal alterado.' });
-    } catch (e: any) {
-      setFeedback({ type: 'error', text: e?.message });
+    } catch (e) {
+      setFeedback({
+        type: 'error',
+        text: errorMessage(e, 'Não foi possível concluir.'),
+      });
     } finally {
       setBusyId(null);
     }

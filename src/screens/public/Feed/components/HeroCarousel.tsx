@@ -13,6 +13,8 @@ import {
 import { FontAwesome } from '@expo/vector-icons';
 import { HighlightCard, HighlightItem } from '@components/ui/HighlightCard';
 
+import { webStyle } from '@lib/types/web';
+import type { StyleProp, ViewStyle } from 'react-native';
 const AUTOPLAY_INTERVAL_MS = 6000;
 
 interface HeroCarouselProps {
@@ -203,7 +205,7 @@ function ControlButton({
   icon: React.ComponentProps<typeof FontAwesome>['name'];
   label: string;
   onPress: () => void;
-  style: any;
+  style: StyleProp<ViewStyle>;
   iconSize?: number;
 }) {
   return (
@@ -224,7 +226,7 @@ const glass = {
   borderColor: 'rgba(255,255,255,0.35)',
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
-  ...Platform.select({ web: { cursor: 'pointer' } as any }),
+  ...webStyle({ cursor: 'pointer' }),
 };
 
 const styles = StyleSheet.create({
@@ -259,7 +261,7 @@ const styles = StyleSheet.create({
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    ...Platform.select({ web: { cursor: 'pointer' } as any }),
+    ...webStyle({ cursor: 'pointer' }),
   },
   dot: {
     width: 8,

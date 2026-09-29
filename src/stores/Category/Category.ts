@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { Category, CategoryStore } from './types';
 import { backendHttpClient } from '@lib/helpers/httpClient';
 
+import { logger } from '@lib/logger';
 // Chamadas simultaneas (varios componentes montando juntos) compartilham
 // a mesma requisicao.
 let inFlight: Promise<void> | null = null;
@@ -17,7 +18,7 @@ export const useCategoryStore = create<CategoryStore>()((set) => ({
         set({ categories: response.data });
       })
       .catch((error) => {
-        console.error('Failed to fetch categories:', error);
+        logger.error('Failed to fetch categories:', error);
       })
       .finally(() => {
         inFlight = null;

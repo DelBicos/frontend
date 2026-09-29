@@ -1,6 +1,7 @@
 import { StyleSheet, Platform } from 'react-native';
 import { ColorsType } from '@theme/types';
 
+import { webStyle } from '@lib/types/web';
 export const createStyles = (
   colors: ColorsType,
   isMobile: boolean,
@@ -30,8 +31,7 @@ export const createStyles = (
       borderWidth: 1,
       borderColor: colors.borderColor,
       backgroundColor: colors.cardBackground,
-      maxHeight:
-        Platform.OS === 'web' ? ('calc(100vh - 200px)' as any) : undefined,
+      ...webStyle({ maxHeight: 'calc(100vh - 200px)' }),
     },
     // As telas trazem seus proprios cartoes; aqui so a area de rolagem.
     desktopMainContent: {
@@ -42,10 +42,10 @@ export const createStyles = (
       minHeight: 0,
       ...Platform.select({
         // 147px = header + pesquisar, 48px = desktopWrapper padding (24px top + 24px bottom)
-        web: {
-          height: 'calc(100vh - 195px)' as any,
-          maxHeight: 'calc(100vh - 195px)' as any,
-        },
+        web: webStyle({
+          height: 'calc(100vh - 195px)',
+          maxHeight: 'calc(100vh - 195px)',
+        }),
         default: {},
       }),
     },

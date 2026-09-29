@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { create } from 'axios';
 import { HTTP_DOMAIN } from '@config/varEnvs';
 
 let getToken: (() => string | null) | null = null;
@@ -7,7 +7,14 @@ export const registerTokenProvider = (provider: () => string | null) => {
   getToken = provider;
 };
 
-export const backendHttpClient = axios.create({
+let onUnauthorized: (() => void) | null = null;
+
+/** Chamado quando o servidor recusa a sessao (o app registra o logout aqui). */
+export const registerUnauthorizedHandler = (handler: () => void) => {
+  onUnauthorized = handler;
+};
+
+export const backendHttpClient = create({
   baseURL: `${HTTP_DOMAIN}`,
   timeout: 30000,
   headers: {
@@ -43,12 +50,7 @@ backendHttpClient.interceptors.response.use(
           msg === 'Acesso negado. É obrgatório o envio de token JWT' ||
           msg?.includes('expired')))
     ) {
-      try {
-        const { useUserStore } = require('@stores/User');
-        useUserStore.getState().signOut();
-      } catch (e) {
-        // Ignore circular dependency during bootstrap
-      }
+      onUnauthorized?.();
     }
     return Promise.reject(error);
   },

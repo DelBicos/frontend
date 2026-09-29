@@ -1,20 +1,15 @@
 import React from 'react';
-import {
-  Image,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+
 import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
 import { Service } from '@stores/Professional/types';
 import { formatBRL } from '@lib/helpers/formatCurrency';
 import { useBreakpoint } from '@lib/hooks/useBreakpoint';
 
+import { useAppNavigation } from '@screens/useAppNavigation';
+import { webStyle } from '@lib/types/web';
 type ServicosContentProps = {
   servicos: Service[];
   professionalId: number;
@@ -39,7 +34,7 @@ export function ServicosContent({
   const colors = useColors();
   const { isCompact } = useBreakpoint();
   const styles = createStyles(colors, isCompact);
-  const navigation = useNavigation<any>();
+  const navigation = useAppNavigation();
 
   const active = servicos.filter((s) => s.active);
 
@@ -201,7 +196,7 @@ const createStyles = (colors: ColorsType, isCompact: boolean) =>
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: colors.primaryOrange,
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     buttonText: {
       fontFamily: 'Afacad-Bold',

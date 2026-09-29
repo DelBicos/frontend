@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+
 import { useColors } from '@theme/ThemeProvider';
 import { formatBRLFromUnits } from '@lib/helpers/formatCurrency';
 import { initials, slotDate } from '@lib/booking';
+import VerifiedBadge from '@components/ui/VerifiedBadge';
 import { createStyles } from './styles';
 
+import { useAppNavigation } from '@screens/useAppNavigation';
+import type { WebPressableState } from '@lib/types/web';
 export interface ProfessionalResult {
   id: number;
   name: string;
@@ -20,6 +23,7 @@ export interface ProfessionalResult {
   distance: number;
   location: string;
   imageUrl: string;
+  verified?: boolean;
 }
 
 interface ProfessionalResultCardProps {
@@ -46,7 +50,7 @@ const ProfessionalResultCard: React.FC<ProfessionalResultCardProps> = ({
 }) => {
   const colors = useColors();
   const styles = createStyles(colors);
-  const navigation = useNavigation<any>();
+  const navigation = useAppNavigation();
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [showAllTimes, setShowAllTimes] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
@@ -96,6 +100,7 @@ const ProfessionalResultCard: React.FC<ProfessionalResultCardProps> = ({
             {...({ 'aria-level': 2 } as object)}>
             {professional.name}
           </Text>
+          {professional.verified ? <VerifiedBadge showLabel /> : null}
           <Text style={styles.service} numberOfLines={2}>
             {professional.serviceName}
           </Text>
@@ -157,7 +162,7 @@ const ProfessionalResultCard: React.FC<ProfessionalResultCardProps> = ({
             <Pressable
               key={time}
               onPress={() => setSelectedTime(time)}
-              style={({ pressed, hovered }: any) => [
+              style={({ pressed, hovered }: WebPressableState) => [
                 styles.time,
                 hovered && !isSelected && styles.timeHover,
                 isSelected && styles.timeSelected,
@@ -199,7 +204,7 @@ const ProfessionalResultCard: React.FC<ProfessionalResultCardProps> = ({
         <Pressable
           onPress={handleBook}
           disabled={!selectedTime}
-          style={({ pressed, hovered }: any) => [
+          style={({ pressed, hovered }: WebPressableState) => [
             styles.book,
             hovered && selectedTime && styles.bookHover,
             !selectedTime && styles.bookDisabled,

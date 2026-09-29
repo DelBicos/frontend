@@ -1,6 +1,7 @@
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { ColorsType } from '@theme/types';
 
+import { webStyle } from '@lib/types/web';
 export const createStyles = (
   colors: ColorsType,
   size: 'compact' | 'large' = 'compact',
@@ -55,7 +56,7 @@ export const createStyles = (
       borderRadius: 999,
       // Texto escuro sobre o laranja da marca: contraste AA (branco ficaria ~2,6:1).
       backgroundColor: colors.primaryOrange,
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     ctaText: {
       fontFamily: 'Afacad-Bold',

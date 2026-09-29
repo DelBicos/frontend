@@ -25,6 +25,7 @@ import SearchField from '@components/ui/SearchField';
 import Chip, { ChipGroup } from '@components/ui/Chip';
 import { createStyles } from './styles';
 
+import type { WebPressableState } from '@lib/types/web';
 type Status = 'loading' | 'ready' | 'error';
 
 /**
@@ -316,7 +317,7 @@ function ServiceTile({ sub, subtitle, onPress, styles }: ServiceTileProps) {
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed, hovered }: any) => [
+      style={({ pressed, hovered }: WebPressableState) => [
         styles.tile,
         (hovered || pressed) && styles.tileActive,
       ]}

@@ -9,6 +9,7 @@ import { useAppointmentStore, InvoiceData } from '@stores/Appointment';
 import { NavigationParams } from '@screens/types';
 import PaymentResultView, { PaymentResultStatus } from './PaymentResultView';
 
+import { errorMessage } from '@lib/utils/errors';
 type PaymentStatusRouteParams = NavigationParams['PaymentStatus'];
 
 /**
@@ -33,7 +34,7 @@ function PaymentStatusLogic() {
     if (!user) return;
     let cancelled = false;
 
-    const finish = async (id: number) => {
+    const finish = async (id: string | number) => {
       const data = await fetchInvoice(id);
       if (cancelled) return;
       setInvoice(data);
@@ -42,7 +43,7 @@ function PaymentStatusLogic() {
 
     const verify = async () => {
       if (appointmentId) {
-        await finish(Number(appointmentId));
+        await finish(appointmentId);
         return;
       }
       if (!stripe) return;
@@ -66,7 +67,12 @@ function PaymentStatusLogic() {
           if (!cancelled) setStatus('processing');
           return;
         }
-        if (paymentIntent?.status !== 'succeeded') {
+        // 'requires_capture' = valor reservado; a cobranca so ocorre quando o
+        // profissional aceita o pedido.
+        if (
+          paymentIntent?.status !== 'requires_capture' &&
+          paymentIntent?.status !== 'succeeded'
+        ) {
           if (!cancelled) {
             setMessage(
               'O pagamento foi recusado ou cancelado. Nenhum valor foi cobrado.',
@@ -77,12 +83,12 @@ function PaymentStatusLogic() {
         }
         const { appointment } = await confirmPayment(paymentIntentId);
         await finish(appointment.id);
-      } catch (err: any) {
+      } catch (err) {
         if (cancelled) return;
         setMessage(
           getApiErrorMessage(
             err,
-            err?.message || 'Ocorreu um erro ao processar o pagamento.',
+            errorMessage(err, 'Ocorreu um erro ao processar o pagamento.'),
           ),
         );
         setStatus('error');

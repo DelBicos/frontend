@@ -1,8 +1,9 @@
 import { Platform, StyleSheet } from 'react-native';
 import { ColorsType } from '@theme/types';
 
+import { webStyle } from '@lib/types/web';
 const cardShadow = Platform.select({
-  web: { boxShadow: '0px 4px 14px rgba(0, 0, 0, 0.08)' } as any,
+  web: webStyle({ boxShadow: '0px 4px 14px rgba(0, 0, 0, 0.08)' }),
   default: {
     shadowColor: '#000',
     shadowOpacity: 0.06,
@@ -68,7 +69,7 @@ export const createStyles = (colors: ColorsType) =>
       borderWidth: 1,
       borderColor: colors.primaryBlack,
       justifyContent: 'center',
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     showMoreText: {
       fontFamily: 'Afacad-SemiBold',
@@ -207,11 +208,9 @@ export const createStyles = (colors: ColorsType) =>
       borderRadius: 999,
       justifyContent: 'center',
       backgroundColor: colors.primaryOrange,
-      ...Platform.select({
-        web: {
-          cursor: 'pointer',
-          transition: 'background-color 0.15s ease',
-        } as any,
+      ...webStyle({
+        cursor: 'pointer',
+        transition: 'background-color 0.15s ease',
       }),
     },
     actionButtonActive: {

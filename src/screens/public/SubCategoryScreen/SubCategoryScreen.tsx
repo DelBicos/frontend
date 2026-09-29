@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { FontAwesome, FontAwesome5 } from '@expo/vector-icons';
 import { useSubCategoryStore } from '@stores/SubCategory';
@@ -18,6 +18,8 @@ import { SectionHeader } from '@components/ui/SectionHeader/SectionHeader';
 import BookingSteps from '@components/features/BookingSteps';
 import { createStyles } from './styles';
 
+import { useAppNavigation } from '@screens/useAppNavigation';
+import type { WebPressableState } from '@lib/types/web';
 type SubCategoryRouteParams = {
   categoryId: number;
   categoryTitle?: string;
@@ -27,7 +29,7 @@ type SubCategoryRouteParams = {
   professionalName?: string;
 };
 
-LocaleConfig.locales['pt-br'] = {
+const ptBrLocale = {
   monthNames: [
     'Janeiro',
     'Fevereiro',
@@ -67,12 +69,13 @@ LocaleConfig.locales['pt-br'] = {
   ],
   dayNamesShort: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
   today: 'Hoje',
-} as any;
+};
+LocaleConfig.locales['pt-br'] = ptBrLocale;
 LocaleConfig.defaultLocale = 'pt-br';
 
 /** Etapa 1 do agendamento: escolher o servico (subcategoria) e o dia. */
 function SubCategoryScreen() {
-  const navigation = useNavigation<any>();
+  const navigation = useAppNavigation();
   const route = useRoute();
   const {
     categoryId,
@@ -186,7 +189,7 @@ function SubCategoryScreen() {
                 style={[styles.gridItem, { width: `${100 / columns}%` }]}>
                 <Pressable
                   onPress={() => setSelectedId(item.id)}
-                  style={({ pressed, hovered }: any) => [
+                  style={({ pressed, hovered }: WebPressableState) => [
                     styles.option,
                     hovered && !isSelected && styles.optionHover,
                     isSelected && styles.optionSelected,
@@ -274,7 +277,7 @@ function SubCategoryScreen() {
       <Pressable
         onPress={handleContinue}
         disabled={!canContinue}
-        style={({ pressed, hovered }: any) => [
+        style={({ pressed, hovered }: WebPressableState) => [
           styles.continueButton,
           hovered && canContinue && styles.continueButtonHover,
           !canContinue && styles.continueButtonDisabled,

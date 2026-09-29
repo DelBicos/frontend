@@ -12,6 +12,7 @@ import {
 } from './dashboardData';
 import { DashboardStyles } from './styles';
 
+import type { WebPressableState } from '@lib/types/web';
 type IconName = React.ComponentProps<typeof FontAwesome>['name'];
 
 // --- Indicador ---
@@ -216,7 +217,7 @@ export function UpcomingCard({
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed, hovered }: any) => [
+      style={({ pressed, hovered }: WebPressableState) => [
         styles.card,
         styles.upcomingCard,
         (pressed || hovered) && styles.cardActive,
@@ -262,7 +263,7 @@ export function ActionItem({
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed, hovered }: any) => [
+      style={({ pressed, hovered }: WebPressableState) => [
         styles.actionItem,
         (pressed || hovered) && styles.cardActive,
       ]}

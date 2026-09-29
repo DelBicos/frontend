@@ -7,7 +7,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+
 import { useFavoriteStore } from '@stores/Favorite';
 import { FavoriteProfessional } from '@stores/Favorite/types';
 import { useColors } from '@theme/ThemeProvider';
@@ -17,11 +17,13 @@ import EmptyState from '@components/ui/EmptyState';
 import ProfilePage from '../../components/ProfilePage';
 import { createStyles } from './styles';
 
+import { useAppNavigation } from '@screens/useAppNavigation';
+import type { WebPressableState } from '@lib/types/web';
 /** Profissionais favoritos, com atalho para o perfil e desfazer remocao. */
 const FavoritosTab: React.FC = () => {
   const colors = useColors();
   const styles = createStyles(colors);
-  const navigation = useNavigation<any>();
+  const navigation = useAppNavigation();
   const { width } = useWindowDimensions();
   const columns = width >= 1100 ? 2 : 1;
   const { favorites, loading, removeFavorite, addFavorite, syncWithServer } =
@@ -114,7 +116,7 @@ const FavoritosTab: React.FC = () => {
               </Pressable>
               <Pressable
                 onPress={() => remove(fav)}
-                style={({ pressed, hovered }: any) => [
+                style={({ pressed, hovered }: WebPressableState) => [
                   styles.heart,
                   (pressed || hovered) && styles.heartPressed,
                 ]}

@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+
 import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
 import { useThemeStore, ThemeMode } from '@stores/Theme';
@@ -19,6 +19,7 @@ import LogoV3 from '@assets/LogoV3.png';
 import LogoLight from '@assets/DelBicos_LogoH.png';
 import LogoDark from '../../../../assets/DelBicos_git.png';
 
+import { useAppNavigation } from '@screens/useAppNavigation';
 interface AuthLayoutProps {
   title: string;
   subtitle?: React.ReactNode;
@@ -51,7 +52,7 @@ function AuthLayout({
 }: AuthLayoutProps) {
   const colors = useColors();
   const theme = useThemeStore((s) => s.theme);
-  const navigation = useNavigation<any>();
+  const navigation = useAppNavigation();
   const { isExpanded, isCompact, gutter } = useBreakpoint();
   const styles = createStyles(colors, isCompact);
 

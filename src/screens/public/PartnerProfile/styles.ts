@@ -1,6 +1,7 @@
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { ColorsType } from '@theme/types';
 
+import { webStyle } from '@lib/types/web';
 export const createStyles = (colors: ColorsType, isCompact: boolean) =>
   StyleSheet.create({
     centered: {
@@ -64,7 +65,7 @@ export const createStyles = (colors: ColorsType, isCompact: boolean) =>
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: 'rgba(0,0,0,0.45)',
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
 
     // --- Identidade ---
@@ -155,7 +156,7 @@ export const createStyles = (colors: ColorsType, isCompact: boolean) =>
       borderBottomWidth: 3,
       borderBottomColor: 'transparent',
       marginBottom: -1,
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     tabSelected: {
       borderBottomColor: colors.primaryOrange,

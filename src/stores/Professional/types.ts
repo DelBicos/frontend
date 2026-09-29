@@ -11,6 +11,7 @@ export interface ListedProfessional {
   location: string;
   distance?: number;
   offeredServices: string[];
+  verified?: boolean;
 }
 
 /**
@@ -106,6 +107,11 @@ export interface Professional {
 
   // Raio de atendimento
   service_radius_km?: number;
+
+  /** Identidade verificada por um administrador. */
+  verified?: boolean;
+  /** Agendamentos confirmados que o profissional cancelou. */
+  cancellations_count?: number;
 
   // Dados calculados
   rating?: number;

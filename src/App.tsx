@@ -18,7 +18,10 @@ import { initGAWeb } from './utils/ga-web';
 import { initClarityWeb } from './utils/clarity';
 import { GOOGLE_ANALYTICS_ID, CLARITY_ID } from './config/varEnvs';
 import VLibrasSetup from '@components/features/Accessibility/VLibrasSetup';
-import { registerTokenProvider } from '@lib/helpers/httpClient';
+import {
+  registerTokenProvider,
+  registerUnauthorizedHandler,
+} from '@lib/helpers/httpClient';
 import { useUserStore } from '@stores/User';
 import { useThemeStore } from '@stores/Theme';
 import { ThemeMode } from '@stores/Theme/types';
@@ -37,6 +40,7 @@ function NotificationManager() {
 }
 
 registerTokenProvider(() => useUserStore.getState().token);
+registerUnauthorizedHandler(() => useUserStore.getState().signOut());
 
 const styles = StyleSheet.create({
   container: {

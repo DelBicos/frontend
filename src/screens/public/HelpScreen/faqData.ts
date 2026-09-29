@@ -1,3 +1,16 @@
+import { MIN_ADVANCE_HOURS } from '@lib/booking';
+import {
+  DISPUTE_WINDOW_DAYS,
+  FREE_CANCELLATION_HOURS,
+  LATE_CANCELLATION_HOURS,
+  LATE_RETENTION_PERCENT,
+  MID_RETENTION_PERCENT,
+  NO_SHOW_GRACE_MINUTES,
+  PENDING_RESPONSE_HOURS,
+  RESCHEDULE_MIN_HOURS,
+} from '@lib/appointments';
+
+import type { FontAwesomeName } from '@lib/types/icons';
 export interface FaqQuestion {
   id: string;
   q: string;
@@ -8,7 +21,7 @@ export interface FaqTopic {
   id: string;
   title: string;
   /** Icone FontAwesome. */
-  icon: string;
+  icon: FontAwesomeName;
   questions: FaqQuestion[];
 }
 
@@ -43,12 +56,32 @@ export const FAQ_TOPICS: FaqTopic[] = [
       {
         id: 'p1',
         q: 'Como funciona o pagamento?',
-        a: 'O pagamento é processado de forma segura através do Stripe. Aceitamos Cartão de Crédito e Pix. O valor é pré-autorizado no agendamento e cobrado após a confirmação do serviço.',
+        a: `O pagamento é processado de forma segura através do Stripe. Aceitamos Cartão de Crédito. O valor fica apenas reservado no cartão quando você agenda e só é cobrado quando o profissional aceita o pedido. Se ele recusar ou não responder em ${PENDING_RESPONSE_HOURS} horas, a reserva é liberada e nada é cobrado.`,
+      },
+      {
+        id: 'p4',
+        q: 'Com quanta antecedência preciso agendar?',
+        a: `Com pelo menos ${MIN_ADVANCE_HOURS} horas de antecedência. Só aparecem horários que respeitam esse prazo.`,
       },
       {
         id: 'p2',
-        q: 'Posso cancelar um agendamento?',
-        a: 'Ainda não é possível cancelar pelo app. Converse com o profissional em "Conversas": enquanto o pedido estiver pendente, ele pode recusá-lo e o valor pago é estornado automaticamente.',
+        q: 'Posso cancelar um agendamento? Quanto vou pagar?',
+        a: `Pode. Em "Meus Agendamentos", abra o serviço e toque em "Cancelar agendamento": o app mostra o valor exato antes de você confirmar. Enquanto o profissional não aceitou, o cancelamento é sempre grátis. Depois que ele aceita: com ${FREE_CANCELLATION_HOURS} horas ou mais de antecedência não há custo; entre ${FREE_CANCELLATION_HOURS}h e ${LATE_CANCELLATION_HOURS}h o profissional retém ${MID_RETENTION_PERCENT}% do valor; com menos de ${LATE_CANCELLATION_HOURS}h ele retém ${LATE_RETENTION_PERCENT}%. Se for o profissional a cancelar, você recebe o reembolso total.`,
+      },
+      {
+        id: 'p5',
+        q: 'Como reagendo um serviço?',
+        a: `Em "Meus Agendamentos", abra o serviço e toque em "Reagendar". Só é possível com pelo menos ${RESCHEDULE_MIN_HOURS} horas de antecedência e o novo horário precisa ser aceito pela outra parte. Até lá, vale o horário original.`,
+      },
+      {
+        id: 'p6',
+        q: 'E se eu não puder comparecer, ou o profissional não aparecer?',
+        a: `Se você não comparecer, o profissional pode registrar a falta ${NO_SHOW_GRACE_MINUTES} minutos após o horário e o valor fica retido; se isso não procede, você pode contestar. Se o profissional é quem não aparece, abra uma disputa ${LATE_CANCELLATION_HOURS} horas depois do horário marcado e a equipe analisa o reembolso.`,
+      },
+      {
+        id: 'p7',
+        q: 'Como abro uma disputa?',
+        a: `Em até ${DISPUTE_WINDOW_DAYS} dias após um serviço concluído (ou de um não comparecimento), abra o agendamento em "Meus Agendamentos" e toque em "Abrir disputa". Escolha o motivo e descreva o que houve. A equipe DelBicos decide por reembolso total, parcial ou pela manutenção do valor e você acompanha a resposta no próprio agendamento.`,
       },
       {
         id: 'p3',

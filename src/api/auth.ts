@@ -27,26 +27,49 @@ export interface AuthSession {
   address: Address | null;
 }
 
+/** Formatos brutos (JSON da API) antes de virarem tipos do app. */
+interface RawAuthResponse {
+  token?: unknown;
+  user?: {
+    id: number;
+    client_id: number;
+    name: string;
+    email: string;
+    phone: string;
+    cpf: string;
+    avatar_uri?: string | null;
+    banner_uri?: string | null;
+    professional_id?: number | null;
+    Professional?: { id?: number; verified?: boolean };
+    professional?: { id?: number; verified?: boolean };
+    mfa_enabled?: boolean;
+    admin?: boolean;
+    address?: Partial<Address> | null;
+  };
+}
+
 /** Converte o endereco retornado pela API no formato usado pela store. */
-export function mapAddress(raw: any): Address | null {
+export function mapAddress(
+  raw: Partial<Address> | null | undefined,
+): Address | null {
   if (!raw) return null;
   return {
-    id: raw.id,
-    lat: raw.lat,
-    lng: raw.lng,
-    street: raw.street,
-    number: raw.number,
+    id: raw.id ?? 0,
+    lat: raw.lat ?? '',
+    lng: raw.lng ?? '',
+    street: raw.street ?? '',
+    number: raw.number ?? '',
     complement: raw.complement ?? null,
-    neighborhood: raw.neighborhood,
-    city: raw.city,
-    state: raw.state,
-    country_iso: raw.country_iso,
-    postal_code: raw.postal_code,
+    neighborhood: raw.neighborhood ?? '',
+    city: raw.city ?? '',
+    state: raw.state ?? '',
+    country_iso: raw.country_iso ?? 'BR',
+    postal_code: raw.postal_code ?? '',
   };
 }
 
 /** Converte a resposta de login/verificacao ({ token, user }) em sessao. */
-export function mapAuthResponse(data: any): AuthSession {
+export function mapAuthResponse(data: RawAuthResponse): AuthSession {
   const token = typeof data?.token === 'string' ? data.token.trim() : '';
   const user = data?.user;
   if (!token || !user) throw new Error('Resposta de autenticação inválida.');
@@ -67,6 +90,11 @@ export function mapAuthResponse(data: any): AuthSession {
         user.Professional?.id ||
         user.professional?.id ||
         undefined,
+      mfa_enabled: Boolean(user.mfa_enabled),
+      admin: Boolean(user.admin),
+      professional_verified: Boolean(
+        user.professional?.verified ?? user.Professional?.verified,
+      ),
     },
     address: mapAddress(user.address),
   };
@@ -93,15 +121,27 @@ export async function resendCode(email: string): Promise<void> {
   await backendHttpClient.post('/auth/resend', { email });
 }
 
+/** Com o MFA ativo o login nao devolve sessao: pede o codigo do e-mail. */
+export type LoginResult =
+  | { mfaRequired: false; session: AuthSession }
+  | { mfaRequired: true; mfaToken: string; emailHint: string };
+
 export async function login(
   email: string,
   password: string,
-): Promise<AuthSession> {
+): Promise<LoginResult> {
   const { data } = await backendHttpClient.post('/api/user/login', {
     email,
     password,
   });
-  return mapAuthResponse(data);
+  if (data?.mfa_required) {
+    return {
+      mfaRequired: true,
+      mfaToken: String(data.mfa_token),
+      emailHint: String(data.email_hint ?? ''),
+    };
+  }
+  return { mfaRequired: false, session: mapAuthResponse(data) };
 }
 
 /** Pede um codigo para criar nova senha (resposta igual exista ou nao a conta). */

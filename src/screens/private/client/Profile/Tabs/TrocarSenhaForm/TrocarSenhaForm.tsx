@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Text, View, useWindowDimensions } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
-import { useNavigation } from '@react-navigation/native';
+
 import { FontAwesome } from '@expo/vector-icons';
 import { useUserStore } from '@stores/User';
 import CustomTextInput from '@components/ui/CustomTextInput';
@@ -13,13 +13,15 @@ import ProfilePage, { ProfileCard } from '../../components/ProfilePage';
 import { passwordStrength, MIN_PASSWORD_LENGTH } from './passwordStrength';
 import { createStyles } from './styles';
 
+import { useAppNavigation } from '@screens/useAppNavigation';
+import { errorMessage } from '@lib/utils/errors';
 type FormData = { current: string; next: string; confirm: string };
 
 /** Trocar a senha (com a atual) ou ir para "esqueci minha senha". */
 const TrocarSenhaForm: React.FC = () => {
   const colors = useColors();
   const styles = createStyles(colors);
-  const navigation = useNavigation<any>();
+  const navigation = useAppNavigation();
   const { width } = useWindowDimensions();
   const isNarrow = width < 600;
   const { changePassword, user } = useUserStore();
@@ -54,10 +56,10 @@ const TrocarSenhaForm: React.FC = () => {
       await changePassword(data.current, data.next);
       reset();
       setFeedback({ type: 'success', text: 'Senha alterada.' });
-    } catch (error: any) {
+    } catch (error) {
       setFeedback({
         type: 'error',
-        text: error?.message || 'Não foi possível trocar a senha.',
+        text: errorMessage(error, 'Não foi possível trocar a senha.'),
       });
     }
   };

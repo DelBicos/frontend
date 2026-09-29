@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useColors } from '@theme/ThemeProvider';
@@ -7,6 +7,7 @@ import { ColorsType } from '@theme/types';
 import { CONTENT_MAX_WIDTH, useBreakpoint } from '@lib/hooks/useBreakpoint';
 import { PROFESSIONAL_ITEMS } from '../BottomNav/bottomNavState';
 
+import { webStyle, WebPressableState } from '@lib/types/web';
 /**
  * Navegacao entre as secoes do painel do colaborador no web (no app isso e
  * feito pela barra inferior). Fica logo abaixo do cabecalho do site.
@@ -29,7 +30,7 @@ function ProfessionalWebNav({ state, navigation }: BottomTabBarProps) {
             <Pressable
               key={item.tab}
               onPress={() => navigation.navigate(item.tab)}
-              style={({ hovered }: any) => [
+              style={({ hovered }: WebPressableState) => [
                 styles.tab,
                 selected && styles.tabSelected,
                 hovered && !selected && styles.tabHovered,
@@ -38,7 +39,7 @@ function ProfessionalWebNav({ state, navigation }: BottomTabBarProps) {
               accessibilityState={{ selected }}
               accessibilityLabel={item.label}>
               <FontAwesome
-                name={item.icon as any}
+                name={item.icon}
                 size={16}
                 color={selected ? colors.primaryBlack : colors.textSecondary}
               />
@@ -77,7 +78,7 @@ const createStyles = (colors: ColorsType) =>
       paddingHorizontal: 14,
       borderBottomWidth: 3,
       borderBottomColor: 'transparent',
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     tabSelected: {
       borderBottomColor: colors.primaryOrange,

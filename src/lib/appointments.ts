@@ -70,6 +70,96 @@ export function needsPayment(a: Appointment, role: AgendaRole) {
   );
 }
 
+// --- Politica de cancelamento (espelha o backend: cancellation.policy.ts) ---
+
+export const MID_RETENTION_PERCENT = 20;
+export const LATE_RETENTION_PERCENT = 30;
+export const NO_SHOW_RETENTION_PERCENT = 100;
+/** O profissional tem este prazo para responder antes do pedido expirar. */
+export const PENDING_RESPONSE_HOURS = 12;
+export const FREE_CANCELLATION_HOURS = 24;
+export const LATE_CANCELLATION_HOURS = 2;
+export const NO_SHOW_GRACE_MINUTES = 15;
+export const DISPUTE_WINDOW_DAYS = 7;
+export const RESCHEDULE_MIN_HOURS = 24;
+
+const HOUR = 3_600_000;
+const hoursUntil = (a: Appointment, now: Date) =>
+  (startOf(a).getTime() - now.getTime()) / HOUR;
+
+/** Pendente ou confirmado que ainda nao comecou. */
+export function canCancel(a: Appointment, now: Date = new Date()) {
+  return (
+    (a.status === AppointmentStatus.PENDING ||
+      a.status === AppointmentStatus.CONFIRMED) &&
+    startOf(a) > now
+  );
+}
+
+/** Reagendar exige 24h de antecedencia. */
+export function canReschedule(a: Appointment, now: Date = new Date()) {
+  return (
+    (a.status === AppointmentStatus.PENDING ||
+      a.status === AppointmentStatus.CONFIRMED) &&
+    hoursUntil(a, now) >= RESCHEDULE_MIN_HOURS
+  );
+}
+
+/** O profissional registra o nao comparecimento 15 min apos o horario. */
+export function canMarkNoShow(
+  a: Appointment,
+  role: AgendaRole,
+  now: Date = new Date(),
+) {
+  return (
+    role === 'professional' &&
+    a.status === AppointmentStatus.CONFIRMED &&
+    now.getTime() >= startOf(a).getTime() + NO_SHOW_GRACE_MINUTES * 60_000
+  );
+}
+
+/**
+ * O cliente contesta ate 7 dias depois de: atendimento concluido, nao
+ * comparecimento, ou profissional que nao apareceu (2h apos o horario).
+ */
+export function canDispute(
+  a: Appointment,
+  role: AgendaRole,
+  now: Date = new Date(),
+) {
+  if (role !== 'client' || !a.payment_intent_id) return false;
+  const windowMs = DISPUTE_WINDOW_DAYS * 24 * HOUR;
+  if (a.status === AppointmentStatus.COMPLETED) {
+    const base = new Date(a.completed_at ?? a.start_time).getTime();
+    return now.getTime() - base <= windowMs;
+  }
+  if (a.status === AppointmentStatus.NO_SHOW) {
+    return now.getTime() - startOf(a).getTime() <= windowMs;
+  }
+  if (a.status === AppointmentStatus.CONFIRMED) {
+    const late = now.getTime() - startOf(a).getTime();
+    return late >= LATE_CANCELLATION_HOURS * HOUR && late <= windowMs;
+  }
+  return false;
+}
+
+/** Pedido de reagendamento aberto: feito por mim ("outgoing") ou pela outra parte. */
+export function pendingReschedule(
+  a: Appointment,
+  role: AgendaRole,
+): 'incoming' | 'outgoing' | null {
+  if (!a.reschedule_requested_start || !a.reschedule_requested_by) return null;
+  if (
+    a.status !== AppointmentStatus.PENDING &&
+    a.status !== AppointmentStatus.CONFIRMED
+  ) {
+    return null;
+  }
+  return a.reschedule_requested_by === role ? 'outgoing' : 'incoming';
+}
+
+export const centsToCurrency = (cents: number) => formatCurrency(cents / 100);
+
 export type AgendaTab = 'upcoming' | 'toComplete' | 'history' | 'canceled';
 
 export type AgendaGroups = Record<AgendaTab, Appointment[]>;
@@ -104,6 +194,7 @@ export function groupAgenda(
         else groups.history.push(a);
         break;
       case AppointmentStatus.COMPLETED:
+      case AppointmentStatus.NO_SHOW:
         groups.history.push(a);
         break;
       default:

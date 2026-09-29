@@ -1,3 +1,4 @@
+import VerifiedBadge from '@components/ui/VerifiedBadge';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -10,7 +11,7 @@ import {
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
 import { useProfessionalStore } from '@stores/Professional';
 import { useFavoriteStore } from '@stores/Favorite';
 import { useUserStore } from '@stores/User';
@@ -24,6 +25,8 @@ import { AvaliacoesContent } from './AvaliacoesContent';
 import Stars from '@components/ui/Stars';
 import { createStyles } from './styles';
 
+import { useAppNavigation } from '@screens/useAppNavigation';
+import type { WebPressableState } from '@lib/types/web';
 type TabType = 'sobre' | 'servicos' | 'galeria' | 'avaliacoes';
 
 const TAB_LABELS: Record<TabType, string> = {
@@ -34,7 +37,7 @@ const TAB_LABELS: Record<TabType, string> = {
 };
 
 function PartnerProfileScreen() {
-  const navigation = useNavigation<any>();
+  const navigation = useAppNavigation();
   const route = useRoute();
   const id = Number((route.params as { id: number | string }).id);
 
@@ -266,6 +269,7 @@ function PartnerProfileScreen() {
             {...({ 'aria-level': 1 } as object)}>
             {name}
           </Text>
+          {parceiro.verified ? <VerifiedBadge showLabel size={18} /> : null}
           <View style={styles.metaRow}>
             {parceiro.rating ? (
               <View
@@ -283,6 +287,20 @@ function PartnerProfileScreen() {
                 <Text style={styles.badgeText}>Novo no DelBicos</Text>
               </View>
             )}
+            {parceiro.cancellations_count ? (
+              <View style={styles.metaItem}>
+                <FontAwesome
+                  name="calendar-times-o"
+                  size={14}
+                  color={colors.textSecondary}
+                />
+                <Text style={styles.metaText}>
+                  {parceiro.cancellations_count === 1
+                    ? '1 cancelamento pelo profissional'
+                    : `${parceiro.cancellations_count} cancelamentos pelo profissional`}
+                </Text>
+              </View>
+            ) : null}
             {location ? (
               <View style={styles.metaItem}>
                 <FontAwesome
@@ -308,7 +326,7 @@ function PartnerProfileScreen() {
             <Pressable
               key={tab}
               onPress={() => setActiveTab(tab)}
-              style={({ hovered }: any) => [
+              style={({ hovered }: WebPressableState) => [
                 styles.tab,
                 selected && styles.tabSelected,
                 hovered && !selected && styles.tabHovered,

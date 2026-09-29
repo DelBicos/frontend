@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Image,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -24,6 +23,7 @@ import {
   needsPayment,
 } from '@lib/appointments';
 
+import { webStyle, WebPressableState } from '@lib/types/web';
 type Busy = 'accept' | 'decline' | 'complete' | null;
 
 interface AgendaCardProps {
@@ -51,6 +51,20 @@ function statusInfo(
       label: 'Expirado',
       bg: colors.inputBackground,
       fg: colors.textSecondary,
+    };
+  }
+  if (
+    a.reschedule_requested_start &&
+    (a.status === AppointmentStatus.PENDING ||
+      a.status === AppointmentStatus.CONFIRMED)
+  ) {
+    return {
+      label:
+        a.reschedule_requested_by === role
+          ? 'Reagendamento enviado'
+          : 'Reagendamento pedido',
+      bg: colors.warningBackground,
+      fg: colors.warningText,
     };
   }
   if (needsPayment(a, role)) {
@@ -90,6 +104,13 @@ function statusInfo(
         label: 'Concluído',
         bg: colors.badgeBackground,
         fg: colors.badgeText,
+      };
+    case AppointmentStatus.NO_SHOW:
+      return {
+        label:
+          role === 'professional' ? 'Cliente não compareceu' : 'Não compareceu',
+        bg: colors.errorBackground,
+        fg: colors.errorText,
       };
     default:
       return {
@@ -206,7 +227,7 @@ function AgendaCard({
     <View style={styles.card}>
       <Pressable
         onPress={onOpenDetails}
-        style={({ hovered }: any) => [
+        style={({ hovered }: WebPressableState) => [
           styles.main,
           hovered && styles.mainHovered,
         ]}
@@ -317,7 +338,7 @@ const createStyles = (colors: ColorsType, isCompact: boolean) =>
       alignItems: 'flex-start',
       gap: 12,
       padding: isCompact ? 14 : 16,
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     mainHovered: {
       backgroundColor: colors.inputBackground,
@@ -405,7 +426,7 @@ const createStyles = (colors: ColorsType, isCompact: boolean) =>
       borderRadius: 999,
       alignItems: 'center',
       justifyContent: 'center',
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     primary: {
       backgroundColor: colors.primaryOrange,

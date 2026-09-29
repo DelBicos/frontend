@@ -7,8 +7,8 @@ import { isAxiosError } from 'axios';
 export function getApiErrorMessage(error: unknown, fallback: string): string {
   if (isAxiosError(error)) {
     const data = error.response?.data as
-      { error?: unknown; message?: unknown } | undefined;
-    const message = data?.error ?? data?.message;
+      { error?: unknown; message?: unknown; msg?: unknown } | undefined;
+    const message = data?.error ?? data?.message ?? data?.msg;
     if (typeof message === 'string' && message.trim()) return message;
     if (!error.response) {
       return 'Não foi possível se conectar ao servidor. Verifique sua internet.';

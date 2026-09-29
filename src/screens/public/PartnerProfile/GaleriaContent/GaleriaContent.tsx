@@ -13,6 +13,7 @@ import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
 import { useBreakpoint } from '@lib/hooks/useBreakpoint';
 
+import { webStyle, WebPressableState } from '@lib/types/web';
 type Imagem = {
   id: string;
   url: string;
@@ -55,7 +56,7 @@ export function GaleriaContent({ imagens }: GaleriaContentProps) {
             <Pressable
               key={img.id}
               onPress={() => setOpen(index)}
-              style={({ hovered }: any) => [
+              style={({ hovered }: WebPressableState) => [
                 styles.tile,
                 { width: tile, height: tile },
                 hovered && styles.tileHovered,
@@ -178,7 +179,7 @@ const createStyles = (colors: ColorsType) =>
       borderRadius: 12,
       overflow: 'hidden',
       backgroundColor: colors.inputBackground,
-      ...Platform.select({ web: { cursor: 'zoom-in' } as any }),
+      ...webStyle({ cursor: 'zoom-in' }),
     },
     tileHovered: {
       opacity: 0.85,
@@ -232,7 +233,7 @@ const createViewerStyles = () =>
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: 'rgba(255,255,255,0.16)',
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     navLeft: {
       position: 'absolute',

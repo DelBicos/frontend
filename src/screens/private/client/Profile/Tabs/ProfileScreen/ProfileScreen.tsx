@@ -4,6 +4,7 @@ import { useUserStore } from '@stores/User';
 import ProfileWrapper from '@screens/private/client/Profile/Tabs/ProfileWrapper';
 import { UnauthenticatedProfileView } from './UnauthenticatedProfileView';
 
+import { logger } from '@lib/logger';
 const UserProfileScreen: React.FC = () => {
   const [uploading, setUploading] = useState<boolean>(false);
   const {
@@ -39,7 +40,7 @@ const UserProfileScreen: React.FC = () => {
           Alert.alert('Erro', response.mensagem);
         }
       } catch (error) {
-        console.error('Erro ao processar avatar:', error);
+        logger.error('Erro ao processar avatar:', error);
         Alert.alert('Erro', 'Erro inesperado ao processar avatar.');
       } finally {
         setUploading(false);

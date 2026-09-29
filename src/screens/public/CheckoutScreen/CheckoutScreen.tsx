@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+
 import { StripeProvider, useStripe } from '@stripe/stripe-react-native';
 import { STRIPE_PUBLISHABLE_KEY } from '@config/varEnvs';
 import { confirmPayment, paymentIntentIdFromSecret } from '@api/payments';
@@ -12,6 +12,7 @@ import CheckoutView from './CheckoutView';
 import { useCheckout } from './useCheckout';
 import { createStyles } from './styles';
 
+import { useAppNavigation } from '@screens/useAppNavigation';
 /** App: o pagamento abre na tela segura do Stripe (PaymentSheet). */
 function NativePayment({
   clientSecret,
@@ -23,7 +24,7 @@ function NativePayment({
   const colors = useColors();
   const { isCompact } = useBreakpoint();
   const styles = createStyles(colors, isCompact);
-  const navigation = useNavigation<any>();
+  const navigation = useAppNavigation();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const [isReady, setIsReady] = useState(false);
   const [isPaying, setIsPaying] = useState(false);

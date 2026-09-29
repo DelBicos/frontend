@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Platform, Text, View, useWindowDimensions } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useForm, Controller } from 'react-hook-form';
-import { useNavigation } from '@react-navigation/native';
+
 import CustomTextInput from '@components/ui/CustomTextInput';
 import PhoneInput from '@components/ui/PhoneInput';
 import Avatar from '@components/ui/Avatar';
@@ -16,6 +16,8 @@ import { UserProfileProps } from '../../types';
 import ProfilePage, { ProfileCard } from '../../components/ProfilePage';
 import { createStyles } from './styles';
 
+import { useAppNavigation } from '@screens/useAppNavigation';
+import { errorMessage } from '@lib/utils/errors';
 interface DadosContaFormProps {
   user?: UserProfileProps;
 }
@@ -42,7 +44,7 @@ export default function DadosContaForm({
 }: DadosContaFormProps) {
   const colors = useColors();
   const styles = createStyles(colors);
-  const navigation = useNavigation<any>();
+  const navigation = useAppNavigation();
   const { width } = useWindowDimensions();
   const isNarrow = width < 600;
   const { user, avatarBase64, updateUserProfile, uploadAvatar, removeAvatar } =
@@ -159,10 +161,10 @@ export default function DadosContaForm({
       });
       reset(data);
       setFormFeedback({ type: 'success', text: 'Dados salvos.' });
-    } catch (error: any) {
+    } catch (error) {
       setFormFeedback({
         type: 'error',
-        text: error?.message || 'Não foi possível salvar. Tente de novo.',
+        text: errorMessage(error, 'Não foi possível salvar. Tente de novo.'),
       });
     }
   };

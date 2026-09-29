@@ -19,6 +19,8 @@ import { useForm } from 'react-hook-form';
 import { AddressForm } from '@components/features/AddressForm/AddressForm';
 import { FontAwesome } from '@expo/vector-icons';
 
+import { logger } from '@lib/logger';
+import type { AddressFormData } from '@components/features/AddressForm/AddressForm';
 type AddressSelectionModalProps = {
   visible: boolean;
   onClose: () => void;
@@ -110,7 +112,7 @@ function AddressSelectionModal({
     }
   };
 
-  const handleSaveNewAddress = async (formData: any) => {
+  const handleSaveNewAddress = async (formData: AddressFormData) => {
     setIsSaving(true);
     try {
       const cleanCep = formData.cep ? formData.cep.replace(/\D/g, '') : '';
@@ -135,7 +137,7 @@ function AddressSelectionModal({
       setViewMode('list');
       reset();
     } catch (e) {
-      console.error(e);
+      logger.error(e);
       Alert.alert('Erro', 'Falha ao salvar endereço.');
     } finally {
       setIsSaving(false);

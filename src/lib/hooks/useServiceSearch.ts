@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { backendHttpClient } from '@lib/helpers/httpClient';
 import { SubCategory } from '@stores/SubCategory/types';
 
+import { logger } from '@lib/logger';
 const MAX_RESULTS = 5;
 
 // Cache compartilhado entre telas: a lista de subcategorias muda raramente.
@@ -80,7 +81,7 @@ export const useServiceSearch = () => {
         }
       })
       .catch((error) => {
-        console.error('Erro ao buscar subcategorias:', error);
+        logger.error('Erro ao buscar subcategorias:', error);
       })
       .finally(() => setLoading(false));
   }, []);

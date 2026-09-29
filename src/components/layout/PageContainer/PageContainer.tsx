@@ -14,6 +14,7 @@ import { useThemeStore, ThemeMode } from '@stores/Theme';
 import { CONTENT_MAX_WIDTH, useBreakpoint } from '@lib/hooks/useBreakpoint';
 import { ColorsType } from '@theme/types';
 
+import { webStyle } from '@lib/types/web';
 /**
  * Web: com o conteudo centralizado (janela maior que 1200px + margens),
  * reserva o espaco da barra de rolagem dos dois lados para ele ficar na
@@ -25,7 +26,7 @@ export function useWebScrollGutter() {
   if (Platform.OS !== 'web' || width < CONTENT_MAX_WIDTH + gutter * 2) {
     return null;
   }
-  return { scrollbarGutter: 'stable both-edges' } as any;
+  return webStyle({ scrollbarGutter: 'stable both-edges' });
 }
 
 interface PageContainerProps extends ScrollViewProps {

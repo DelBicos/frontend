@@ -7,6 +7,7 @@ import {
   Image,
   ScrollView,
 } from 'react-native';
+import { AppointmentManagePanel } from '@components/features/AppointmentManage';
 import { useColors } from '@theme/ThemeProvider';
 import { Appointment } from '@stores/Appointment/types';
 import { useUserStore } from '@stores/User';
@@ -16,18 +17,15 @@ interface AppointmentDetailsModalProps {
   visible: boolean;
   onClose: () => void;
   appointment: Appointment | null;
-  onCancel?: () => void;
-  onAccept?: () => void;
-  onReject?: () => void;
+  /** Chamado depois de cancelar, reagendar, registrar falta ou abrir disputa. */
+  onChanged?: () => void;
 }
 
 export function AppointmentDetailsModal({
   visible,
   onClose,
   appointment,
-  onCancel,
-  onAccept,
-  onReject,
+  onChanged,
 }: AppointmentDetailsModalProps) {
   const colors = useColors();
   const styles = createStyles(colors);
@@ -83,6 +81,8 @@ export function AppointmentDetailsModal({
         return 'Concluído';
       case 'canceled':
         return 'Cancelado';
+      case 'no_show':
+        return 'Cliente não compareceu';
       default:
         return status;
     }
@@ -97,6 +97,7 @@ export function AppointmentDetailsModal({
       case 'completed':
         return colors.primaryBlue;
       case 'canceled':
+      case 'no_show':
         return colors.errorText;
       default:
         return colors.textSecondary;
@@ -230,10 +231,14 @@ export function AppointmentDetailsModal({
                 activeOpacity={0.8}>
                 <Text style={styles.okButtonText}>Fechar</Text>
               </TouchableOpacity>
-
-              {/* Aceitar/recusar ficam no card da Agenda. Cancelamento pelo
-                  cliente ainda nao existe no backend, entao nao ha botao. */}
             </View>
+
+            {/* Aceitar/recusar ficam no card da Agenda; aqui ficam as demais acoes. */}
+            <AppointmentManagePanel
+              appointment={appointment}
+              role={isProfessionalView ? 'professional' : 'client'}
+              onChanged={() => onChanged?.()}
+            />
           </ScrollView>
         </View>
       </View>

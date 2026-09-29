@@ -5,7 +5,13 @@ import { useIBGE } from '@lib/hooks//useIBGE';
 import { useViaCepStore } from '@stores/ViaCep';
 import { useColors } from '@theme/ThemeProvider';
 import React from 'react';
-import { Controller, useWatch } from 'react-hook-form';
+import {
+  Control,
+  Controller,
+  FieldErrors,
+  UseFormSetValue,
+  useWatch,
+} from 'react-hook-form';
 import { ActivityIndicator, Text, View } from 'react-native';
 import { createStyles } from './styles';
 
@@ -19,19 +25,25 @@ export interface AddressFormData {
   state: string;
 }
 
-interface AddressFormProps {
-  control: any;
-  errors: any;
-  setValue: any;
+/** Formularios que contem os campos de endereco (o cadastro tem outros alem deles). */
+interface AddressFormProps<T extends AddressFormData> {
+  control: Control<T>;
+  errors: FieldErrors<T>;
+  setValue: UseFormSetValue<T>;
   onSubmit?: () => void;
 }
 
-export const AddressForm: React.FC<AddressFormProps> = ({
-  control,
-  errors,
-  setValue,
+export function AddressForm<T extends AddressFormData>({
+  control: formControl,
+  errors: formErrors,
+  setValue: formSetValue,
   onSubmit,
-}) => {
+}: AddressFormProps<T>) {
+  // O react-hook-form e invariante no tipo do formulario: aqui so os campos
+  // de endereco importam, entao o formulario e visto como AddressFormData.
+  const control = formControl as unknown as Control<AddressFormData>;
+  const errors = formErrors as unknown as FieldErrors<AddressFormData>;
+  const setValue = formSetValue as unknown as UseFormSetValue<AddressFormData>;
   const { fetchCep, loading: cepLoading, error: cepError } = useViaCepStore();
   const colors = useColors();
   const styles = createStyles(colors);
@@ -91,7 +103,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
                 onBlur();
                 handleCepBlur(value);
               }}
-              error={errors.cep?.message as any}
+              error={errors.cep?.message}
               keyboardType="numeric"
               maxLength={9}
             />
@@ -121,7 +133,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
                 value={value}
                 onChangeText={onChange}
                 onBlur={onBlur}
-                error={errors.street?.message as any}
+                error={errors.street?.message}
               />
             )}
           />
@@ -138,7 +150,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
                 value={value}
                 onChangeText={onChange}
                 onBlur={onBlur}
-                error={errors.number?.message as any}
+                error={errors.number?.message}
                 keyboardType="numeric"
               />
             )}
@@ -158,7 +170,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
-              error={errors.complement?.message as any}
+              error={errors.complement?.message}
             />
           )}
         />
@@ -177,7 +189,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
-              error={errors.neighborhood?.message as any}
+              error={errors.neighborhood?.message}
             />
           )}
         />
@@ -232,4 +244,4 @@ export const AddressForm: React.FC<AddressFormProps> = ({
       {onSubmit && <View style={styles.footer}></View>}
     </View>
   );
-};
+}

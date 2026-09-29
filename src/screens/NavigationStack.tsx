@@ -21,9 +21,12 @@ import CheckoutScreen from './public/CheckoutScreen';
 import PaymentStatusScreen from './public/PaymentStatusScreen';
 import MySchedulesScreen from './private/client/MySchedulesScreen';
 import HelpScreen from '@screens/public/HelpScreen';
+import TermsScreen from '@screens/public/TermsScreen';
 import AboutUsScreen from '@screens/public/AboutUs';
 import AdminDashboard from './private/admin/AdminDashboard';
 import AdminAnalytics from './private/admin/AdminAnalytics';
+import AdminDisputes from './private/admin/AdminDisputes';
+import AdminVerifications from './private/admin/AdminVerifications';
 import ProfessionalDashboard from './private/ProfessionalDashboard';
 import ProfileScreen from '@screens/private/client/Profile/Tabs/ProfileScreen';
 import ServicesListScreen from '@screens/private/professional/Services/ServicesList';
@@ -252,6 +255,15 @@ const RootStack = createNativeStackNavigator({
         title: 'Painel do colaborador',
       },
     },
+    Terms: {
+      screen: TermsScreen,
+      linking: {
+        path: 'terms',
+      },
+      options: {
+        title: 'Termos de uso',
+      },
+    },
     Help: {
       screen: HelpScreen,
       linking: {
@@ -286,6 +298,24 @@ const RootStack = createNativeStackNavigator({
       },
       options: {
         title: 'Analytics',
+      },
+    },
+    AdminDisputes: {
+      screen: AdminDisputes,
+      linking: {
+        path: 'admin-disputes',
+      },
+      options: {
+        title: 'Disputas',
+      },
+    },
+    AdminVerifications: {
+      screen: AdminVerifications,
+      linking: {
+        path: 'admin-verifications',
+      },
+      options: {
+        title: 'Verificações',
       },
     },
     ChatList: {

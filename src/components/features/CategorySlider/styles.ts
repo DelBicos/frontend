@@ -1,6 +1,7 @@
 import { StyleSheet, Platform } from 'react-native';
 import { ColorsType } from '@theme/types';
 
+import { webStyle } from '@lib/types/web';
 export const createStyles = (colors: ColorsType) =>
   StyleSheet.create({
     grid: {
@@ -15,19 +16,17 @@ export const createStyles = (colors: ColorsType) =>
       overflow: 'hidden',
       backgroundColor: colors.cardBackground,
       ...Platform.select({
-        web: {
+        web: webStyle({
           boxShadow: '0px 6px 18px rgba(0, 0, 0, 0.12)',
           cursor: 'pointer',
           transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-        } as any,
+        }),
         default: { elevation: 3 },
       }),
     },
     cardHovered: {
       transform: [{ translateY: -3 }],
-      ...Platform.select({
-        web: { boxShadow: '0px 12px 24px rgba(0, 0, 0, 0.2)' } as any,
-      }),
+      ...webStyle({ boxShadow: '0px 12px 24px rgba(0, 0, 0, 0.2)' }),
     },
     cardImage: {
       flex: 1,

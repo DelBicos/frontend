@@ -1,6 +1,7 @@
+import VerifiedBadge from '@components/ui/VerifiedBadge';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
@@ -10,9 +11,10 @@ import { ThemeToggle } from '@components/ui/ThemeToggle';
 import { SettingsRow, SettingsSection } from '@components/ui/SettingsList';
 import { useProfileMenu } from '../MenuNavegacao/useProfileMenu';
 
+import { useAppNavigation } from '@screens/useAppNavigation';
 /** Preferencias e ajuda: iguais para quem esta ou nao logado. */
 export function ProfileExtras() {
-  const navigation = useNavigation<any>();
+  const navigation = useAppNavigation();
   return (
     <>
       <SettingsSection title="Preferências">
@@ -72,6 +74,7 @@ function ProfileMobileHome({ name, email, avatarUri }: ProfileMobileHomeProps) {
               {email}
             </Text>
           ) : null}
+          {user?.professional_verified ? <VerifiedBadge showLabel /> : null}
           {user?.professional_id ? (
             <View style={styles.badge}>
               <MaterialIcons name="work" size={13} color="#000000" />

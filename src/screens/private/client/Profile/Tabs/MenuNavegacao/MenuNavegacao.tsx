@@ -7,6 +7,7 @@ import { useColors } from '@theme/ThemeProvider';
 import { useProfileMenu } from './useProfileMenu';
 import { createStyles } from './styles';
 
+import type { WebPressableState } from '@lib/types/web';
 /** Barra lateral do perfil no web (telas largas). */
 const MenuNavegacao = () => {
   const route = useRoute();
@@ -28,7 +29,7 @@ const MenuNavegacao = () => {
               <Pressable
                 key={item.id}
                 onPress={() => open(item.id)}
-                style={({ hovered }: any) => [
+                style={({ hovered }: WebPressableState) => [
                   styles.menuItem,
                   hovered && !isActive && styles.menuItemHovered,
                   isActive && styles.activeMenuItem,
@@ -55,7 +56,7 @@ const MenuNavegacao = () => {
       ))}
       <Pressable
         onPress={signOut}
-        style={({ hovered }: any) => [
+        style={({ hovered }: WebPressableState) => [
           styles.menuItem,
           hovered && styles.menuItemHovered,
         ]}

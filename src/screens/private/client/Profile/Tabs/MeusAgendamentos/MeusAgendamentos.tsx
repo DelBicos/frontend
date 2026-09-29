@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { useIsFocused } from '@react-navigation/native';
 import AgendaCard from '@components/features/AgendaCard';
 import { AppointmentDetailsModal } from '@components/features/AppointmentDetailsModal';
 import { RateServiceModal } from '@components/features/RateServiceModal';
@@ -22,6 +22,7 @@ import { useUserStore } from '@stores/User';
 import { useColors } from '@theme/ThemeProvider';
 import { createStyles } from './styles';
 
+import { useAppNavigation } from '@screens/useAppNavigation';
 const POLLING_MS = 30000;
 
 const TAB_LABELS: Record<AgendaTab, string> = {
@@ -62,12 +63,13 @@ function MeusAgendamentos({ role = 'client' }: MeusAgendamentosProps) {
   const user = useUserStore((s) => s.user);
   const colors = useColors();
   const styles = createStyles(colors);
-  const navigation = useNavigation<any>();
+  const navigation = useAppNavigation();
   const isPro = role === 'professional';
 
   const [tab, setTab] = useState<AgendaTab>('upcoming');
   const [actionError, setActionError] = useState<string | null>(null);
-  const [details, setDetails] = useState<Appointment | null>(null);
+  // Guarda so o id: o detalhe acompanha a lista quando ela e atualizada.
+  const [detailsId, setDetailsId] = useState<Appointment['id'] | null>(null);
   const [toRate, setToRate] = useState<Appointment | null>(null);
 
   // Abas ficam montadas em segundo plano: so atualiza enquanto visivel.
@@ -83,6 +85,11 @@ function MeusAgendamentos({ role = 'client' }: MeusAgendamentosProps) {
     void fetchAppointments(role);
   }, [fetchAppointments, role]);
   useAppointmentStatusSocket(refresh);
+
+  const details = useMemo(
+    () => appointments.find((a) => a.id === detailsId) ?? null,
+    [appointments, detailsId],
+  );
 
   const groups = useMemo(
     () => groupAgenda(appointments, role),
@@ -139,7 +146,7 @@ function MeusAgendamentos({ role = 'client' }: MeusAgendamentosProps) {
     const confirmed = await confirmAction({
       title: 'Recusar pedido?',
       message:
-        'O cliente será avisado e, se já tiver pago, o valor será estornado.',
+        'O cliente será avisado e, se já tiver reservado o valor no cartão, a reserva será liberada sem cobrança.',
       confirmLabel: 'Recusar',
       destructive: true,
     });
@@ -196,7 +203,7 @@ function MeusAgendamentos({ role = 'client' }: MeusAgendamentosProps) {
       appointment={a}
       role={role}
       showDate={showDate}
-      onOpenDetails={() => setDetails(a)}
+      onOpenDetails={() => setDetailsId(a.id)}
       onAccept={() => accept(a)}
       onDecline={() => decline(a)}
       onComplete={() => complete(a)}
@@ -273,9 +280,9 @@ function MeusAgendamentos({ role = 'client' }: MeusAgendamentosProps) {
 
       <AppointmentDetailsModal
         visible={!!details}
-        onClose={() => setDetails(null)}
+        onClose={() => setDetailsId(null)}
         appointment={details}
-        onCancel={refresh}
+        onChanged={refresh}
       />
 
       {toRate && (

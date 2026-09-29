@@ -1,5 +1,6 @@
 import type { NavigationState, PartialState } from '@react-navigation/native';
 
+import type { FontAwesomeName } from '@lib/types/icons';
 type AnyState = NavigationState | PartialState<NavigationState>;
 
 export type BottomNavMode = 'client' | 'professional';
@@ -11,7 +12,7 @@ export interface BottomNavItem {
   /** Nome da aba dentro do navegador de abas (MainTabs/ProfessionalTabs). */
   tab: string;
   label: string;
-  icon: string;
+  icon: FontAwesomeName;
 }
 
 export const CLIENT_ITEMS: BottomNavItem[] = [
@@ -76,6 +77,7 @@ const ROUTE_SECTIONS: Record<string, BottomNavSection> = {
   ClientProfile: 'profile',
   ChatList: 'profile',
   Help: 'profile',
+  Terms: 'profile',
   AboutUs: 'profile',
   AdminDashboard: 'profile',
   AdminAnalytics: 'profile',

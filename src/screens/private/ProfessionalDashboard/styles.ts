@@ -1,6 +1,7 @@
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { ColorsType } from '@theme/types';
 
+import { webStyle } from '@lib/types/web';
 const GAP = 16;
 
 export const createStyles = (
@@ -190,7 +191,7 @@ export const createStyles = (
     upcomingCard: {
       flexDirection: 'row',
       alignItems: 'center',
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     dateBadge: {
       width: 56,
@@ -220,7 +221,7 @@ export const createStyles = (
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: colors.primaryOrange,
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     primaryButtonText: {
       fontFamily: 'Afacad-Bold',
@@ -236,7 +237,7 @@ export const createStyles = (
       justifyContent: 'center',
       borderWidth: 1.5,
       borderColor: colors.primaryBlack,
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     secondaryButtonText: {
       fontFamily: 'Afacad-Bold',
@@ -252,7 +253,7 @@ export const createStyles = (
       gap: 8,
       minHeight: 44,
       paddingHorizontal: 8,
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     iconButtonText: {
       fontFamily: 'Afacad-SemiBold',
@@ -274,7 +275,7 @@ export const createStyles = (
       backgroundColor: colors.cardBackground,
       borderWidth: 1,
       borderColor: colors.borderColor,
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     actionIcon: {
       width: 40,
@@ -333,7 +334,7 @@ export const createStyles = (
       alignItems: 'center',
       gap: 6,
       minHeight: 44,
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     // Faixa larga centrada na barra: o balao pode ser maior que a barra.
     chartTooltip: {

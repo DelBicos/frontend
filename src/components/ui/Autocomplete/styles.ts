@@ -1,15 +1,14 @@
 import { StyleSheet, Platform } from 'react-native';
 import { ColorsType } from '@theme/types';
 
+import { webStyle } from '@lib/types/web';
 export const createStyles = (colors: ColorsType) =>
   StyleSheet.create({
     container: {
       marginBottom: 16,
       zIndex: 100,
       position: 'relative',
-      ...Platform.select({
-        web: { overflow: 'visible' } as any,
-      }),
+      ...webStyle({ overflow: 'visible' }),
     },
     inputContainer: {
       position: 'relative',
@@ -46,9 +45,7 @@ export const createStyles = (colors: ColorsType) =>
       paddingHorizontal: 16,
       borderBottomWidth: 1,
       borderBottomColor: colors.divider,
-      ...Platform.select({
-        web: { cursor: 'pointer' } as any,
-      }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     itemText: {
       fontSize: 16,
@@ -63,13 +60,12 @@ export const createStyles = (colors: ColorsType) =>
       fontFamily: 'Afacad-Regular',
     },
     webOverlay: {
-      position: 'fixed' as any,
+      ...webStyle({ position: 'fixed', cursor: 'default' }),
       top: 0,
       left: 0,
       right: 0,
       bottom: 0,
       zIndex: 9998,
-      cursor: 'default',
       backgroundColor: 'transparent',
-    } as any,
+    },
   });

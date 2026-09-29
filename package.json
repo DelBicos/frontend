@@ -32,6 +32,7 @@
     "lint": "expo lint",
     "format:check": "prettier --check .",
     "format:fix": "prettier --write .",
+    "postinstall": "patch-package",
     "prepare": "husky",
     "docker:build": "docker-compose build",
     "docker:up": "docker-compose up -d",
@@ -115,6 +116,7 @@
     "husky": "^9.1.7",
     "jest-expo": "~54.0.18",
     "metro-react-native-babel-transformer": "^0.77.0",
+    "patch-package": "^8.0.1",
     "prettier": "^3.5.3",
     "react-native-svg-transformer": "^1.5.1",
     "typescript": "^5.7.2"

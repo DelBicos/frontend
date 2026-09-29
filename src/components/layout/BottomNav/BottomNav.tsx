@@ -81,7 +81,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ state }) => {
                   style={[styles.avatar, { borderColor: color }]}
                 />
               ) : (
-                <FontAwesome name={item.icon as any} size={22} color={color} />
+                <FontAwesome name={item.icon} size={22} color={color} />
               )}
             </View>
             <Text

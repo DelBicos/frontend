@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+
 import { useForm, Controller } from 'react-hook-form';
 import { FontAwesome } from '@expo/vector-icons';
 import CustomTextInput from '@components/ui/CustomTextInput';
@@ -23,6 +23,7 @@ import { register } from '@api/auth';
 import { getApiErrorMessage } from '@api/errors';
 import { createStyles } from './styles';
 
+import { useAppNavigation } from '@screens/useAppNavigation';
 type RegisterFormData = {
   name: string;
   surname: string;
@@ -38,7 +39,7 @@ const MIN_PASSWORD = 6;
 
 /** Criar conta: dados, acesso e endereco; depois confirma o e-mail. */
 function RegisterScreen() {
-  const navigation = useNavigation<any>();
+  const navigation = useAppNavigation();
   const colors = useColors();
   const { isCompact } = useBreakpoint();
   const auth = createAuthStyles(colors);
@@ -296,8 +297,14 @@ function RegisterScreen() {
                 ) : null}
               </View>
               <Text style={styles.termsText}>
-                Li e aceito os termos de uso e a política de privacidade do
-                DelBicos.
+                Li e aceito os{' '}
+                <Text
+                  style={{ textDecorationLine: 'underline' }}
+                  accessibilityRole="link"
+                  onPress={() => navigation.navigate('Terms')}>
+                  termos de uso
+                </Text>{' '}
+                e a política de privacidade do DelBicos.
               </Text>
             </Pressable>
             {errors.acceptTerms ? (

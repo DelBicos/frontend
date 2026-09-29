@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -14,6 +13,7 @@ import { ColorsType } from '@theme/types';
 import { useProfessionalStore } from '@stores/Professional';
 import Chip, { ChipGroup } from '@components/ui/Chip';
 
+import { webStyle } from '@lib/types/web';
 /** 0 = sem limite (o backend nao aplica a regra de raio). */
 const PRESETS = [5, 10, 20, 50, 0];
 
@@ -204,7 +204,7 @@ const createStyles = (colors: ColorsType) =>
       justifyContent: 'center',
       borderWidth: 1.5,
       borderColor: colors.primaryBlack,
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     disabled: {
       opacity: 0.4,

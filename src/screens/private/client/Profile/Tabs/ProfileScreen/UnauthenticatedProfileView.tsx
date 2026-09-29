@@ -1,17 +1,18 @@
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
 import { useBreakpoint } from '@lib/hooks/useBreakpoint';
 import { ProfileExtras } from '../ProfileWrapper/ProfileMobileHome';
 
+import { useAppNavigation } from '@screens/useAppNavigation';
 /** Aba Perfil sem login: convite para entrar + tema e ajuda. */
 export const UnauthenticatedProfileView: React.FC = () => {
   const colors = useColors();
   const styles = createStyles(colors);
-  const navigation = useNavigation<any>();
+  const navigation = useAppNavigation();
   const { gutter } = useBreakpoint();
 
   return (

@@ -1,4 +1,5 @@
-import formatBRL, {
+import {
+  formatBRL,
   formatBRLFromCents,
   formatBRLFromUnits,
 } from '../formatCurrency';

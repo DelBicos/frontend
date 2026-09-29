@@ -1,8 +1,10 @@
 import {
   formatDuration,
+  formatShortDay,
   initials,
   isSlotBookable,
   minBookingDate,
+  nextDays,
   sortResults,
   toDateKey,
 } from '../booking';
@@ -46,5 +48,19 @@ describe('booking', () => {
     expect(initials('Maria da Silva')).toBe('MS');
     expect(initials('Ana')).toBe('A');
     expect(initials('')).toBe('?');
+  });
+
+  it('lista os proximos dias virando o mes', () => {
+    expect(nextDays('2026-09-29', 4)).toEqual([
+      '2026-09-29',
+      '2026-09-30',
+      '2026-10-01',
+      '2026-10-02',
+    ]);
+    expect(nextDays('2026-12-31', 2)).toEqual(['2026-12-31', '2027-01-01']);
+  });
+
+  it('formata o dia curto com dia e mes', () => {
+    expect(formatShortDay('2026-09-29')).toMatch(/29\/09$/);
   });
 });

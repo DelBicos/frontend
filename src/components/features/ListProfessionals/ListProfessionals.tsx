@@ -20,6 +20,7 @@ import { useLocation } from '@lib/hooks/LocationContext';
 import { useWebScrollGutter } from '@components/layout/PageContainer';
 import { CONTENT_MAX_WIDTH, useBreakpoint } from '@lib/hooks/useBreakpoint';
 
+import type { DimensionValue } from 'react-native';
 /** Margem externa do ProfessionalCard (compensada no container para alinhar as bordas). */
 const CARD_MARGIN = 8;
 
@@ -71,7 +72,8 @@ const ListProfessionals = ({ listHeader, style }: ListProfessionalsProps) => {
       const itemWidth = numColumns > 1 ? `${100 / numColumns}%` : '100%';
 
       return (
-        <View style={[styles.cardWrapper, { width: itemWidth as any }]}>
+        <View
+          style={[styles.cardWrapper, { width: itemWidth as DimensionValue }]}>
           <ProfessionalCard professional={item} />
         </View>
       );

@@ -15,6 +15,25 @@ export function minBookingDate(now: number = Date.now()) {
   return toDateKey(new Date(now + MIN_ADVANCE_HOURS * 60 * 60 * 1000));
 }
 
+/** Os proximos `count` dias (AAAA-MM-DD) a partir de um dia AAAA-MM-DD. */
+export function nextDays(from: string, count: number) {
+  const start = slotDate(from, '00:00');
+  return Array.from({ length: count }, (_, i) => {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    return toDateKey(d);
+  });
+}
+
+/** "seg., 30/09" a partir de AAAA-MM-DD. */
+export function formatShortDay(day: string) {
+  const date = slotDate(day, '00:00');
+  const weekday = new Intl.DateTimeFormat('pt-BR', { weekday: 'short' }).format(
+    date,
+  );
+  return `${weekday}, ${pad(date.getDate())}/${pad(date.getMonth() + 1)}`;
+}
+
 /** Data local de um dia (AAAA-MM-DD) e horario (HH:mm). */
 export function slotDate(day: string, time: string) {
   const [year, month, dayOfMonth] = day.split('-').map(Number);

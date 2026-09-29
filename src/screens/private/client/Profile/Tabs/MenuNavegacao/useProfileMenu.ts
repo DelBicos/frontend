@@ -1,15 +1,12 @@
 import { useCallback } from 'react';
 import { Platform, useWindowDimensions } from 'react-native';
-import {
-  CommonActions,
-  useNavigation,
-  useRoute,
-} from '@react-navigation/native';
+import { CommonActions, useRoute } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useUserStore } from '@stores/User';
 import { ClientProfileSubRoutes } from '@screens/types';
 import { confirmAction } from '@lib/utils/confirmAction';
 
+import { useAppNavigation } from '@screens/useAppNavigation';
 type IconName = React.ComponentProps<typeof MaterialIcons>['name'];
 
 export interface ProfileMenuItem {
@@ -30,6 +27,7 @@ export const SUBROUTE_TITLES: Partial<Record<string, string>> = {
   [ClientProfileSubRoutes.DadosConta]: 'Dados da conta',
   [ClientProfileSubRoutes.MeusEnderecos]: 'Endereços',
   [ClientProfileSubRoutes.Seguranca]: 'Senha e segurança',
+  [ClientProfileSubRoutes.Verificacao]: 'Verificação de conta',
   [ClientProfileSubRoutes.Notificacoes]: 'Notificações',
   [ClientProfileSubRoutes.Conversas]: 'Conversas',
   [ClientProfileSubRoutes.Favoritos]: 'Favoritos',
@@ -44,7 +42,7 @@ export const SUBROUTE_TITLES: Partial<Record<string, string>> = {
  * barra lateral do web, para as duas terem as mesmas opcoes.
  */
 export function useProfileMenu() {
-  const navigation = useNavigation<any>();
+  const navigation = useAppNavigation();
   const route = useRoute();
   const { width } = useWindowDimensions();
   const { user, signOut } = useUserStore();
@@ -90,6 +88,11 @@ export function useProfileMenu() {
           id: ClientProfileSubRoutes.Seguranca,
           label: 'Senha e segurança',
           icon: 'lock-outline',
+        },
+        {
+          id: ClientProfileSubRoutes.Verificacao,
+          label: 'Verificação de conta',
+          icon: 'verified-user',
         },
         {
           id: ClientProfileSubRoutes.Notificacoes,

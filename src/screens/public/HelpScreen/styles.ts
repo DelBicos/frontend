@@ -1,6 +1,7 @@
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { ColorsType } from '@theme/types';
 
+import { webStyle } from '@lib/types/web';
 export const createStyles = (colors: ColorsType, isCompact: boolean) =>
   StyleSheet.create({
     chipsGroup: {
@@ -20,6 +21,18 @@ export const createStyles = (colors: ColorsType, isCompact: boolean) =>
       alignItems: 'center',
       gap: 12,
       marginBottom: 14,
+    },
+    termsLink: {
+      alignSelf: 'flex-start',
+      minHeight: 44,
+      justifyContent: 'center',
+      marginTop: 16,
+    },
+    termsLinkText: {
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 16,
+      color: colors.primaryBlack,
+      textDecorationLine: 'underline',
     },
     topicIcon: {
       width: 40,
@@ -72,7 +85,7 @@ export const createStyles = (colors: ColorsType, isCompact: boolean) =>
       paddingHorizontal: 22,
       borderRadius: 999,
       backgroundColor: colors.primaryOrange,
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     contactButtonText: {
       fontFamily: 'Afacad-Bold',

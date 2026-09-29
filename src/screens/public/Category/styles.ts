@@ -1,6 +1,7 @@
 import { Platform, StyleSheet } from 'react-native';
 import { ColorsType } from '@theme/types';
 
+import { webStyle } from '@lib/types/web';
 const GAP = 12;
 
 export const createStyles = (colors: ColorsType, isCompact: boolean) =>
@@ -66,7 +67,7 @@ export const createStyles = (colors: ColorsType, isCompact: boolean) =>
       gap: 6,
       minHeight: 44,
       paddingHorizontal: 4,
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     sectionActionText: {
       fontFamily: 'Afacad-SemiBold',
@@ -100,17 +101,15 @@ export const createStyles = (colors: ColorsType, isCompact: boolean) =>
       borderWidth: 1,
       borderColor: colors.borderColor,
       backgroundColor: colors.cardBackground,
-      ...Platform.select({
-        web: {
-          cursor: 'pointer',
-          transition: 'border-color 0.15s ease, transform 0.15s ease',
-        } as any,
+      ...webStyle({
+        cursor: 'pointer',
+        transition: 'border-color 0.15s ease, transform 0.15s ease',
       }),
     },
     tileActive: {
       borderColor: colors.primaryOrange,
       ...Platform.select({
-        web: { transform: [{ translateY: -2 }] } as any,
+        web: webStyle({ transform: [{ translateY: -2 }] }),
         default: { opacity: 0.8 },
       }),
     },
@@ -181,7 +180,7 @@ export const createStyles = (colors: ColorsType, isCompact: boolean) =>
       justifyContent: 'center',
       backgroundColor: colors.primaryOrange,
       maxWidth: '100%',
-      ...Platform.select({ web: { cursor: 'pointer' } as any }),
+      ...webStyle({ cursor: 'pointer' }),
     },
     primaryButtonText: {
       fontFamily: 'Afacad-Bold',
