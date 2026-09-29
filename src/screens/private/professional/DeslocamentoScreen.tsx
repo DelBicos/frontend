@@ -65,6 +65,7 @@ export const DeslocamentoScreen: React.FC = () => {
             } else if (appt.status === 'arrived') {
               setInTransit(true);
               setArrived(true);
+              setShowOtpModal(true);
             } else if (appt.status === 'in_progress') {
               setInTransit(true);
               setArrived(true);
@@ -133,14 +134,8 @@ export const DeslocamentoScreen: React.FC = () => {
         setShowOtpModal(true);
       }
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.error;
-      if (errorMessage && errorMessage.includes('distante')) {
-        Alert.alert('📍 Localização Distante', errorMessage);
-      } else {
-        // Modo de demonstração / fallback para testes
-        setArrived(true);
-        setShowOtpModal(true);
-      }
+      const errorMessage = error?.response?.data?.error || 'Erro ao confirmar chegada.';
+      Alert.alert('Atenção', errorMessage);
     } finally {
       setArrivedLoading(false);
     }
