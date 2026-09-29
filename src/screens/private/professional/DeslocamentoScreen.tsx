@@ -442,7 +442,7 @@ export const DeslocamentoScreen: React.FC = () => {
                   style={[stylesDark.gpsOptionBtn, stylesDark.googleGpsBtn]}
                   onPress={() => {
                     setShowMapModal(false);
-                    openGoogleMaps(params.address);
+                    openGoogleMaps(address);
                   }}
                   activeOpacity={0.85}
                 >
@@ -454,7 +454,7 @@ export const DeslocamentoScreen: React.FC = () => {
                   style={[stylesDark.gpsOptionBtn, stylesDark.wazeGpsBtn]}
                   onPress={() => {
                     setShowMapModal(false);
-                    openWaze(params.address);
+                    openWaze(address);
                   }}
                   activeOpacity={0.85}
                 >
@@ -567,7 +567,7 @@ export const DeslocamentoScreen: React.FC = () => {
                 style={[stylesDark.gpsOptionBtn, stylesDark.googleGpsBtn]}
                 onPress={() => {
                   setShowMapModal(false);
-                  openGoogleMaps(params.address);
+                  openGoogleMaps(address);
                 }}
                 activeOpacity={0.85}
               >
@@ -579,7 +579,7 @@ export const DeslocamentoScreen: React.FC = () => {
                 style={[stylesDark.gpsOptionBtn, stylesDark.wazeGpsBtn]}
                 onPress={() => {
                   setShowMapModal(false);
-                  openWaze(params.address);
+                  openWaze(address);
                 }}
                 activeOpacity={0.85}
               >
