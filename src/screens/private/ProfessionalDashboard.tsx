@@ -42,16 +42,7 @@ const ProfessionalDashboard: React.FC = () => {
           const todayStr = now.toISOString().slice(0, 10);
 
           const activeOrUpcoming = appointments.find((apt: any) => {
-            if (['in_transit', 'arrived', 'in_progress'].includes(apt.status)) {
-              return true;
-            }
-            if (apt.status === 'confirmed' && apt.start_time) {
-              const aptDate = new Date(apt.start_time);
-              const aptDateStr = aptDate.toISOString().slice(0, 10);
-              const diffMinutes = (aptDate.getTime() - now.getTime()) / (1000 * 60);
-              return aptDateStr === todayStr && diffMinutes <= 30;
-            }
-            return false;
+            return ['confirmed', 'in_transit', 'arrived', 'in_progress'].includes(apt.status);
           });
 
           setTodayAppointment(activeOrUpcoming || null);
@@ -352,8 +343,16 @@ const ProfessionalDashboard: React.FC = () => {
                 </Text>
               ) : null}
             </View>
-            <View style={{ backgroundColor: '#2563EB', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 }}>
-              <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 13 }}>Vamos! 🚗</Text>
+            <View style={{ backgroundColor: todayAppointment.status === 'arrived' ? '#16A34A' : todayAppointment.status === 'in_progress' ? '#059669' : '#2563EB', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 }}>
+              <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 13 }}>
+                {todayAppointment.status === 'arrived'
+                  ? 'Digitar Código 🔐'
+                  : todayAppointment.status === 'in_progress'
+                  ? 'Serviço em Andamento ⚡'
+                  : todayAppointment.status === 'in_transit'
+                  ? 'A Caminho 🚘'
+                  : 'Vamos! 🚗'}
+              </Text>
             </View>
           </TouchableOpacity>
         ) : null}
