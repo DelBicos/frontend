@@ -1,6 +1,9 @@
 export enum AppointmentStatus {
   PENDING = 'pending',
   CONFIRMED = 'confirmed',
+  IN_TRANSIT = 'in_transit',
+  ARRIVED = 'arrived',
+  IN_PROGRESS = 'in_progress',
   COMPLETED = 'completed',
   CANCELED = 'canceled',
 }
@@ -100,6 +103,7 @@ export interface Appointment {
   Client: Client;
   payment_intent_id?: string | null;
   payment_method?: string;
+  verification_code?: string | null;
   Professional: Professional;
   Address?: Address | null;
 }
