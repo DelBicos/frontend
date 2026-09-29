@@ -16,6 +16,7 @@ import { useColors } from '@theme/ThemeProvider';
 import { useThemeStore, ThemeMode } from '@stores/Theme';
 import { createStyles } from './styles';
 import { useNavigation } from '@react-navigation/native';
+import { backendHttpClient } from '@lib/helpers/httpClient';
 
 const ProfessionalDashboard: React.FC = () => {
   const { kpis, loading, error, fetchKpis, fetchEarnings, fetchCategories } =
@@ -28,6 +29,38 @@ const ProfessionalDashboard: React.FC = () => {
   const isDark = theme === ThemeMode.DARK;
   const isHighContrast = theme === ThemeMode.LIGHT_HI_CONTRAST;
   const styles = createStyles(colors, isDark, isHighContrast);
+
+  const [todayAppointment, setTodayAppointment] = useState<any>(null);
+
+  useEffect(() => {
+    if (user?.id) {
+      backendHttpClient
+        .get(`/api/appointments/user/${user.id}?role=professional`)
+        .then((res) => {
+          const appointments = res.data || [];
+          const now = new Date();
+          const todayStr = now.toISOString().slice(0, 10);
+
+          const activeOrUpcoming = appointments.find((apt: any) => {
+            if (['in_transit', 'arrived', 'in_progress'].includes(apt.status)) {
+              return true;
+            }
+            if (apt.status === 'confirmed' && apt.start_time) {
+              const aptDate = new Date(apt.start_time);
+              const aptDateStr = aptDate.toISOString().slice(0, 10);
+              const diffMinutes = (aptDate.getTime() - now.getTime()) / (1000 * 60);
+              return aptDateStr === todayStr && diffMinutes <= 30;
+            }
+            return false;
+          });
+
+          setTodayAppointment(activeOrUpcoming || null);
+        })
+        .catch((err) => {
+          console.log('Erro ao carregar agendamentos do prestador:', err);
+        });
+    }
+  }, [user?.id]);
 
   const QuickAction: React.FC<{
     title: string;
@@ -281,34 +314,49 @@ const ProfessionalDashboard: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Card do Serviço do Dia com Deslocamento */}
-        <TouchableOpacity
-          style={[styles.scheduleCard, { backgroundColor: '#EFF6FF', borderColor: '#3B82F6', borderWidth: 1 }]}
-          onPress={() =>
-            navigation.navigate('DeslocamentoScreen', {
-              appointmentId: '1',
-              serviceTitle: 'Serviço Agendado para Hoje',
-              clientName: 'Cliente DelBicos',
-              address: 'Rua das Flores, 123 - Centro, São Paulo - SP, CEP 01001-000, Brasil',
-              startTime: 'Hoje às 14:00',
-            })
-          }
-          activeOpacity={0.8}>
-          <View style={[styles.scheduleIconContainer, { backgroundColor: '#3B82F6' }]}>
-            <FontAwesome name="car" size={20} color="#FFFFFF" />
-          </View>
-          <View style={styles.scheduleCardContent}>
-            <Text style={[styles.scheduleCardTitle, { color: '#1E40AF', fontWeight: '700' }]}>
-              Serviço de Hoje: Iniciar Deslocamento
-            </Text>
-            <Text style={[styles.scheduleCardSubtitle, { color: '#3B82F6' }]}>
-              Clique para ver o endereço e notificar o cliente
-            </Text>
-          </View>
-          <View style={{ backgroundColor: '#2563EB', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 }}>
-            <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 13 }}>Vamos! 🚗</Text>
-          </View>
-        </TouchableOpacity>
+        {/* Card do Serviço do Dia com Deslocamento (Apenas quando houver agendamento no dia a 30min do horário ou ativo) */}
+        {todayAppointment ? (
+          <TouchableOpacity
+            style={[styles.scheduleCard, { backgroundColor: '#EFF6FF', borderColor: '#3B82F6', borderWidth: 1 }]}
+            onPress={() => {
+              const clientUser = todayAppointment.Client?.User;
+              const addr = todayAppointment.Address
+                ? `${todayAppointment.Address.street}, ${todayAppointment.Address.number} - ${todayAppointment.Address.neighborhood}, ${todayAppointment.Address.city} - ${todayAppointment.Address.state}`
+                : '';
+              const startTimeFormatted = new Date(todayAppointment.start_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+              navigation.navigate('DeslocamentoScreen', {
+                appointmentId: todayAppointment.id,
+                serviceTitle: todayAppointment.Service?.title || 'Serviço Agendado',
+                clientName: clientUser?.name || 'Cliente',
+                clientPhone: clientUser?.phone || '',
+                address: addr,
+                startTime: `Hoje às ${startTimeFormatted}`,
+                status: todayAppointment.status,
+              });
+            }}
+            activeOpacity={0.8}>
+            <View style={[styles.scheduleIconContainer, { backgroundColor: '#3B82F6' }]}>
+              <FontAwesome name="car" size={20} color="#FFFFFF" />
+            </View>
+            <View style={styles.scheduleCardContent}>
+              <Text style={[styles.scheduleCardTitle, { color: '#1E40AF', fontWeight: '700' }]}>
+                {todayAppointment.Client?.User?.name || 'Cliente'}
+              </Text>
+              <Text style={[styles.scheduleCardSubtitle, { color: '#2563EB', fontWeight: '600' }]}>
+                Serviço: {todayAppointment.Service?.title || 'Atendimento'}
+              </Text>
+              {todayAppointment.Address ? (
+                <Text style={{ fontSize: 12, color: '#64748B', marginTop: 2 }} numberOfLines={1}>
+                  {`${todayAppointment.Address.street}, ${todayAppointment.Address.number} - ${todayAppointment.Address.neighborhood}, ${todayAppointment.Address.city} - ${todayAppointment.Address.state}`}
+                </Text>
+              ) : null}
+            </View>
+            <View style={{ backgroundColor: '#2563EB', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 }}>
+              <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 13 }}>Vamos! 🚗</Text>
+            </View>
+          </TouchableOpacity>
+        ) : null}
 
         <TouchableOpacity
           style={styles.scheduleCard}
