@@ -10,6 +10,8 @@ export const getAppointmentStatusLabel = (status: AppointmentStatus) => {
       return 'Concluído';
     case AppointmentStatus.CANCELED:
       return 'Cancelado';
+    case AppointmentStatus.NO_SHOW:
+      return 'Não compareceu';
     default:
       return 'undefined';
   }

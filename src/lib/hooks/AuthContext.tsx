@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useUserStore } from '@stores/User';
 import { User } from '@stores/User/types';
 
+import { logger } from '@lib/logger';
 interface AuthContextData {
   user: User | null;
   token: string | null;
@@ -25,7 +26,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         try {
           await fetchCurrentUser();
         } catch (e) {
-          console.warn('[AuthProvider] Token expirado ou inválido:', e);
+          logger.warn('[AuthProvider] Token expirado ou inválido:', e);
         }
       }
       setIsLoading(false);

@@ -3,6 +3,7 @@ import { backendHttpClient } from '@lib/helpers/httpClient';
 import type { AppointmentStatusEvent } from '@hooks/useAppointmentStatusSocket';
 import { useAppointmentStatusSocket } from '@hooks/useAppointmentStatusSocket';
 
+import { logger } from '@lib/logger';
 interface AppointmentPollingResult {
   appointmentStatus: string | null;
   appointmentPaid: boolean;
@@ -75,7 +76,7 @@ export function useAppointmentPolling(
         }
       } catch (error) {
         if (!canceled) {
-          console.warn(
+          logger.warn(
             '[useAppointmentPolling] Error checking appointment status:',
             error,
           );

@@ -8,6 +8,8 @@ import {
 } from './types';
 import { backendHttpClient } from '@lib/helpers/httpClient';
 
+import { logger } from '@lib/logger';
+import { errorMessage } from '@lib/utils/errors';
 export const useFavoriteStore = create<FavoriteState>()(
   persist(
     (set, get) => ({
@@ -38,11 +40,11 @@ export const useFavoriteStore = create<FavoriteState>()(
 
           set({ favorites, loading: false });
           return;
-        } catch (error: any) {
-          console.error('❌ Erro ao sincronizar favoritos:', error);
+        } catch (error) {
+          logger.error('Erro ao sincronizar favoritos:', error);
           set({
             loading: false,
-            error: error.message || 'Erro ao sincronizar favoritos',
+            error: errorMessage(error, 'Erro ao sincronizar favoritos'),
           });
         }
       },
@@ -65,12 +67,8 @@ export const useFavoriteStore = create<FavoriteState>()(
             professionalId: professional.professionalId,
           });
           return;
-        } catch (error: any) {
-          console.error('❌ Erro ao salvar favorito no servidor:', error);
-          console.error(
-            'Detalhes do erro:',
-            error.response?.data || error.message,
-          );
+        } catch (error) {
+          logger.warn('Erro ao salvar favorito no servidor:', error);
           // Mantém local mesmo se falhar no servidor
         }
       },
@@ -86,12 +84,8 @@ export const useFavoriteStore = create<FavoriteState>()(
         try {
           await backendHttpClient.delete(`/api/favorites/${professionalId}`);
           return;
-        } catch (error: any) {
-          console.error('❌ Erro ao remover favorito do servidor:', error);
-          console.error(
-            'Detalhes do erro:',
-            error.response?.data || error.message,
-          );
+        } catch (error) {
+          logger.warn('Erro ao remover favorito do servidor:', error);
           // Mantém remoção local mesmo se falhar no servidor
         }
       },

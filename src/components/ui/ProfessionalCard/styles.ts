@@ -1,6 +1,7 @@
 import { StyleSheet, Platform } from 'react-native';
 import { ColorsType } from '@theme/types';
 
+import { webStyle } from '@lib/types/web';
 export const createStyles = (colors: ColorsType) =>
   StyleSheet.create({
     card: {
@@ -23,11 +24,11 @@ export const createStyles = (colors: ColorsType) =>
         android: {
           elevation: 3,
         },
-        web: {
+        web: webStyle({
           boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.08)',
           transition: 'transform 0.2s ease, box-shadow 0.2s ease',
           cursor: 'pointer',
-        } as any,
+        }),
       }),
     },
     image: {

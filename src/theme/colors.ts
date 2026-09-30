@@ -40,11 +40,11 @@ export const getColors = (): ColorsType => {
 // Default export: a Proxy that resolves color properties lazily from current theme.
 // This preserves the existing `import colors from '@theme/colors'` usage while
 // ensuring the values reflect the current theme at access time.
-const handler: ProxyHandler<any> = {
-  get(_, prop: string) {
-    const palette = getColors();
+const handler: ProxyHandler<Record<string, string>> = {
+  get(_, prop: string | symbol) {
+    const palette = getColors() as unknown as Record<string | symbol, string>;
     // Return undefined if property doesn't exist on palette
-    return (palette as any)[prop];
+    return palette[prop];
   },
   // Support enumeration and Object.keys
   ownKeys() {
@@ -54,11 +54,11 @@ const handler: ProxyHandler<any> = {
     return {
       configurable: true,
       enumerable: true,
-      value: (getColors() as any)[prop],
+      value: (getColors() as unknown as Record<string | symbol, string>)[prop],
     } as PropertyDescriptor;
   },
 };
 
-const colorsProxy = new Proxy({}, handler) as ColorsType;
+const colorsProxy = new Proxy({}, handler) as unknown as ColorsType;
 
 export default colorsProxy;

@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import * as Location from 'expo-location';
 
+import { errorMessage } from '@lib/utils/errors';
 export type Coords = {
   latitude: number;
   longitude: number;
@@ -17,8 +18,8 @@ export function useLocation() {
       const { status } = await Location.requestForegroundPermissionsAsync();
       setPermissionStatus(status);
       return status;
-    } catch (e: any) {
-      setError(e?.message || 'Erro ao solicitar permissão de localização');
+    } catch (e) {
+      setError(errorMessage(e, 'Erro ao solicitar permissão de localização'));
       return null;
     }
   }, []);
@@ -38,8 +39,8 @@ export function useLocation() {
       };
       setCoords(c);
       return c;
-    } catch (e: any) {
-      setError(e?.message || 'Erro ao obter localização');
+    } catch (e) {
+      setError(errorMessage(e, 'Erro ao obter localização'));
       return null;
     }
   }, [permissionStatus, requestPermission]);

@@ -5,6 +5,8 @@ import { MapComponentProps } from '@lib/hooks/types';
 import { useColors } from '@theme/ThemeProvider';
 import { createStyles } from './styles';
 
+import { logger } from '@lib/logger';
+import type { StyleProp, ViewStyle } from 'react-native';
 const containerStyle = {
   width: '100%',
   height: '100%',
@@ -21,13 +23,9 @@ const mapOptions = {
 
 const defaultCenter = { lat: -23.5505, lng: -46.6333 };
 
-const WebMapRenderer: React.FC<MapComponentProps & { style?: any }> = ({
-  region,
-  markerCoords,
-  address,
-  onMapPress,
-  style,
-}) => {
+const WebMapRenderer: React.FC<
+  MapComponentProps & { style?: StyleProp<ViewStyle> }
+> = ({ region, markerCoords, address, onMapPress, style }) => {
   const mapRef = useRef<google.maps.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,8 +68,8 @@ const WebMapRenderer: React.FC<MapComponentProps & { style?: any }> = ({
     [onMapPress],
   );
 
-  const handleLoadError = (err: any) => {
-    console.error('[WebMap] Erro ao carregar:', err);
+  const handleLoadError = (err: unknown) => {
+    logger.error('[WebMap] Erro ao carregar:', err);
     setError('Falha na conexão com Google Maps.');
   };
 

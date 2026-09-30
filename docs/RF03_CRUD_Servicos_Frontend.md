@@ -83,7 +83,7 @@ Formulário de criação e edição de serviço (abre em `Modal` full-screen via
   - Duração (`duration`) — `CustomSelect` com opções de 15 min a 3h.
   - Categoria (`category_id`) — `CustomSelect` alimentado por `useCategoryStore`.
   - Subcategoria (`subcategory_id`) — `CustomSelect` filtrado pela categoria selecionada, alimentado por `useSubCategoryStore`.
-  - Banner (`banner_uri`) — picker de imagem + upload direto para S3 via presigned URL (`POST /api/uploads` → `PUT S3`).
+  - Banner (`banner_uri`) — picker de imagem + upload direto para o Azure Blob Storage via URL temporária (`POST /api/uploads` → `PUT` na `uploadUrl`, com os `uploadHeaders`).
   - Ativo/Inativo (`active`) — `Switch`.
   - Disponibilidades (`availabilities`) — componente `AvailabilityManager`.
 - **Submit (`onSubmit`):**
@@ -91,7 +91,7 @@ Formulário de criação e edição de serviço (abre em `Modal` full-screen via
   - Chama `createService` ou `updateService` dependendo de `initial`.
   - Após salvar, chama `reloadMyServices()` e `reloadServices()` e fecha o modal.
 - **Proteção contra duplo-submit:** `submittingRef` + `Animated` no botão Salvar (opacidade reduzida durante envio).
-- **Upload de banner:** presigned URL + PUT direto no S3; somente salva `banner_uri` no form após sucesso.
+- **Upload de banner:** URL temporária (SAS) + PUT direto no Azure Blob Storage; somente salva `banner_uri` no form após sucesso.
 
 ---
 

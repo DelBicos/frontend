@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { checkForNewNotifications } from '../../utils/usePushNotifications';
 
+import { logger } from '@lib/logger';
 interface UseNotificationsReturn {
   checkNotifications: () => Promise<void>;
   isLoading: boolean;
@@ -36,7 +37,7 @@ export const useNotifications = (
       const errorMessage =
         error instanceof Error ? error.message : 'Erro desconhecido';
       setError(errorMessage);
-      console.error('Erro no checkNotifications:', errorMessage);
+      logger.error('Erro no checkNotifications:', errorMessage);
     } finally {
       setIsLoading(false);
     }

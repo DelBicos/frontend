@@ -9,6 +9,7 @@ import {
 import { useUserStore } from '@stores/User';
 import { backendHttpClient } from '@lib/helpers/httpClient';
 
+import { logger } from '@lib/logger';
 export const useAppointmentStore = create<AppointmentStore>()((set) => ({
   appointments: [],
   appointmentsByStatus: {},
@@ -16,7 +17,19 @@ export const useAppointmentStore = create<AppointmentStore>()((set) => ({
   activeRole: undefined,
 
   fetchAppointments: async (role) => {
-    set({ loading: true, appointments: [], activeRole: role });
+    // Atualiza em segundo plano: so limpa a lista quando o papel muda,
+    // senao cada atualizacao (polling, socket) fazia a tela "piscar".
+    const sameRole = useAppointmentStore.getState().activeRole === role;
+    set(
+      sameRole
+        ? { loading: true }
+        : {
+            loading: true,
+            appointments: [],
+            appointmentsByStatus: {},
+            activeRole: role,
+          },
+    );
     try {
       const { user } = useUserStore.getState();
       if (!user) throw new Error('Usuário não autenticado.');
@@ -48,7 +61,7 @@ export const useAppointmentStore = create<AppointmentStore>()((set) => ({
 
       set({ appointments: sortedData, appointmentsByStatus, loading: false });
     } catch (error) {
-      console.error('Failed to fetch appointments:', error);
+      logger.error('Failed to fetch appointments:', error);
       set({ appointments: [], loading: false });
     }
   },
@@ -80,7 +93,7 @@ export const useAppointmentStore = create<AppointmentStore>()((set) => ({
 
       return sheetData;
     } catch (error) {
-      console.error('Failed to fetch appointments as sheet:', error);
+      logger.error('Failed to fetch appointments as sheet:', error);
       return [];
     }
   },
@@ -93,12 +106,14 @@ export const useAppointmentStore = create<AppointmentStore>()((set) => ({
       );
       return response.status === 200;
     } catch (error) {
-      console.error('Failed to submit review:', error);
+      logger.error('Failed to submit review:', error);
       return false;
     }
   },
 
-  fetchInvoice: async (appointmentId: number): Promise<InvoiceData | null> => {
+  fetchInvoice: async (
+    appointmentId: string | number,
+  ): Promise<InvoiceData | null> => {
     try {
       const { user } = useUserStore.getState();
       if (!user) {
@@ -113,8 +128,22 @@ export const useAppointmentStore = create<AppointmentStore>()((set) => ({
       });
       return response.data as InvoiceData;
     } catch (error) {
-      console.error('Failed to fetch invoice:', error);
+      logger.error('Failed to fetch invoice:', error);
       return null;
+    }
+  },
+
+  completeAppointment: async (appointmentId) => {
+    try {
+      await backendHttpClient.post(
+        `api/appointments/${appointmentId}/complete`,
+      );
+      const store = useAppointmentStore.getState();
+      await store.fetchAppointments(store.activeRole);
+      return true;
+    } catch (error) {
+      logger.error('Failed to complete appointment:', error);
+      return false;
     }
   },
 
@@ -131,18 +160,7 @@ export const useAppointmentStore = create<AppointmentStore>()((set) => ({
       }
       return false;
     } catch (error) {
-      console.error('Failed to update appointment status:', error);
-      return false;
-    }
-  },
-  cancelAppointment: async (appointmentId) => {
-    try {
-      await backendHttpClient.post(`api/appointments/${appointmentId}/cancel`);
-      const store = useAppointmentStore.getState();
-      await store.fetchAppointments(store.activeRole);
-      return true;
-    } catch (error) {
-      console.error('Failed to cancel appointment:', error);
+      logger.error('Failed to update appointment status:', error);
       return false;
     }
   },

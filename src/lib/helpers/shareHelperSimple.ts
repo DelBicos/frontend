@@ -2,6 +2,7 @@ import { deleteAsync } from 'expo-file-system/legacy';
 import { isAvailableAsync, shareAsync } from 'expo-sharing';
 import { Alert, Platform } from 'react-native';
 
+import { logger } from '@lib/logger';
 /**
  * Compartilha um arquivo de forma simples
  */
@@ -55,7 +56,7 @@ export const downloadFile = async (
       return true;
     }
   } catch (error) {
-    console.error('Erro ao fazer download:', error);
+    logger.error('Erro ao fazer download:', error);
     return false;
   }
 };

@@ -1,128 +1,156 @@
-import { StyleSheet, Platform } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { ColorsType } from '@theme/types';
 
-export const createStyles = (
-  colors: ColorsType,
-  isDark: boolean = false,
-  isHighContrast: boolean = false,
-) =>
+const cardShadow = Platform.select({
+  web: { boxShadow: '0px 2px 8px rgba(0,0,0,0.06)' } as object,
+  default: { elevation: 1 },
+});
+
+export const createStyles = (colors: ColorsType, isCompact: boolean) =>
   StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: isDark
-        ? colors.secondaryGray
-        : isHighContrast
-          ? colors.primaryWhite
-          : '#DDE6F0',
-    },
-    scrollContainer: {
-      flexGrow: 1,
-      padding: 24,
-    },
-    mainContent: {
-      flexDirection: Platform.OS === 'web' ? 'row' : 'column',
-      width: '100%',
-      gap: 24,
-    },
-    leftColumn: {
-      flex: Platform.OS === 'web' ? 3 : 1,
-      minWidth: Platform.OS === 'web' ? 300 : '100%',
-    },
-    rightColumn: {
-      flex: Platform.OS === 'web' ? 2 : 1,
-      minWidth: Platform.OS === 'web' ? 300 : '100%',
-      marginTop: Platform.OS !== 'web' ? 24 : 0,
-    },
-    pageTitle: {
-      fontSize: 24,
-      fontFamily: 'Afacad-Bold',
-      color: colors.primaryBlue,
-      marginBottom: 16,
-    },
-    subCategoryListContainer: {
-      paddingBottom: 16,
-    },
-    subCategoryButton: {
-      flex: 1,
-      minHeight: 60,
+    columns: {
       flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: 40,
+    },
+    mainColumn: {
+      flex: 1,
+      minWidth: 0,
+    },
+    sideColumn: {
+      width: 420,
+    },
+    section: {
+      marginBottom: isCompact ? 28 : 32,
+    },
+    loading: {
+      marginVertical: 40,
+    },
+    emptyText: {
+      fontFamily: 'Afacad-Regular',
+      fontSize: 17,
+      color: colors.textSecondary,
+    },
+
+    // --- Servicos (radio) ---
+    grid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      marginHorizontal: -6,
+    },
+    gridItem: {
+      padding: 6,
+    },
+    option: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 14,
+      minHeight: 64,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: 14,
+      borderWidth: 2,
+      borderColor: colors.borderColor,
+      backgroundColor: colors.cardBackground,
+      ...Platform.select({
+        web: { cursor: 'pointer', transition: 'border-color 0.15s' } as object,
+      }),
+    },
+    optionHover: {
+      borderColor: colors.textTertiary,
+    },
+    optionSelected: {
+      borderColor: colors.primaryOrange,
+      backgroundColor: colors.backgroundElevated,
+    },
+    optionIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.inputBackground,
+    },
+    optionText: {
+      flex: 1,
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 17,
+      lineHeight: 22,
+      color: colors.primaryBlack,
+    },
+    radio: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: colors.textTertiary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    radioSelected: {
+      borderColor: colors.primaryOrange,
+      backgroundColor: colors.primaryOrange,
+    },
+
+    // --- Calendario ---
+    calendarCard: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+      paddingVertical: 8,
+      paddingHorizontal: 4,
+      overflow: 'hidden',
+      ...cardShadow,
+    },
+
+    // --- Resumo e continuar ---
+    summary: {
+      gap: 10,
+      padding: 16,
+      borderRadius: 16,
       backgroundColor: colors.cardBackground,
       borderWidth: 1,
       borderColor: colors.borderColor,
-      borderRadius: 12,
-      justifyContent: 'flex-start',
+      ...cardShadow,
+    },
+    summaryRow: {
+      flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: 20,
-      paddingVertical: 12,
-      margin: 6,
-      ...Platform.select({
-        web: {
-          boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)',
-          transition: 'all 0.2s ease-in-out',
-          cursor: 'pointer',
-        },
-        default: {
-          elevation: 2,
-        },
-      }),
+      gap: 10,
     },
-    subCategoryIcon: {
-      marginRight: 16,
-      width: 24, // Ensures icons are aligned
-      textAlign: 'center',
-    },
-    subCategoryText: {
-      fontSize: 15,
+    summaryText: {
+      flex: 1,
       fontFamily: 'Afacad-SemiBold',
-      color: colors.primaryOrange,
-      textAlign: 'left',
+      fontSize: 17,
+      color: colors.primaryBlack,
     },
-
-    calendarContainer: {
-      backgroundColor: colors.primaryOrange,
-      borderRadius: 16,
-      overflow: 'hidden',
-      paddingBottom: 10,
-      borderWidth: 1,
-      borderColor: colors.primaryOrange,
-      ...Platform.select({
-        ios: {
-          shadowColor: colors.primaryBlack,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-        },
-        android: {
-          elevation: 4,
-        },
-        web: {
-          boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
-        },
-      }),
+    summaryMissing: {
+      fontFamily: 'Afacad-Regular',
+      color: colors.textSecondary,
     },
-
     continueButton: {
-      backgroundColor: colors.primaryBlue,
-      paddingVertical: 16,
+      marginTop: 6,
+      minHeight: 52,
       borderRadius: 12,
+      flexDirection: 'row',
       alignItems: 'center',
-      marginTop: 24,
+      justifyContent: 'center',
+      gap: 10,
+      backgroundColor: colors.primaryOrange,
+    },
+    continueButtonHover: {
+      backgroundColor: colors.primaryOrangeHover,
     },
     continueButtonDisabled: {
-      backgroundColor: colors.textTertiary,
-      opacity: 0.7,
+      backgroundColor: colors.inputBackground,
     },
-    continueButtonText: {
-      color: colors.primaryWhite,
+    continueText: {
       fontFamily: 'Afacad-Bold',
-      fontSize: 16,
+      fontSize: 18,
+      color: '#000000',
     },
-    footer: {
-      padding: 20,
-      textAlign: 'center',
-      fontSize: 12,
-      color: colors.textTertiary,
-      fontFamily: 'Afacad-Regular',
-      marginTop: 'auto',
+    continueTextDisabled: {
+      color: colors.textSecondary,
     },
   });

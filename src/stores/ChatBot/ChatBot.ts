@@ -72,7 +72,9 @@ export const useChatBotStore = create<ChatBotStore>()(
       // do armazenamento falha, mantendo o chat utilizável sem persistência.
       onRehydrateStorage: (state) => () => state.setHasHydrated(true),
       // Persiste apenas o sessionId — histórico e estado são restaurados via API
-      partialize: (state) => ({ sessionId: state.sessionId }) as any,
+      // A tipagem do persist exige o estado completo; so o sessionId e gravado.
+      partialize: (state) =>
+        ({ sessionId: state.sessionId }) as unknown as ChatBotStore,
     },
   ),
 );

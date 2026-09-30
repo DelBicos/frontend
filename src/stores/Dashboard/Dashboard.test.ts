@@ -35,7 +35,9 @@ describe('dashboard store', () => {
 
   it('fetchEarnings stores earnings array', async () => {
     const sample = [{ month: '10-2025', total: 100 }];
-    const expected = [{ month: '10-2025', total: 100, parsedDate: '2025-10-01' }];
+    const expected = [
+      { month: '10-2025', total: 100, parsedDate: '2025-10-01' },
+    ];
     (backendHttpClient.get as jest.Mock).mockResolvedValueOnce({
       data: sample,
     });
