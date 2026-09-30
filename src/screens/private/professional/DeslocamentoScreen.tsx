@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { openGoogleMaps, openWaze } from '@utils/mapsHelper';
 import { backendHttpClient } from '@lib/helpers/httpClient';
+import { sendLocationUpdate } from '@hooks/useLocationSocket';
 
 export interface DeslocamentoParams {
   appointmentId: number | string;
@@ -91,6 +92,55 @@ export const DeslocamentoScreen: React.FC = () => {
   const inputRef3 = useRef<TextInput>(null);
   const inputRefs = [inputRef0, inputRef1, inputRef2, inputRef3];
 
+  const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
+
+  const startGpsTracking = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') return;
+
+      if (locationSubscriptionRef.current) {
+        locationSubscriptionRef.current.remove();
+      }
+
+      const subscription = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.High,
+          timeInterval: 5000,
+          distanceInterval: 5,
+        },
+        (loc) => {
+          if (params.appointmentId) {
+            sendLocationUpdate({
+              appointment_id: Number(params.appointmentId),
+              latitude: loc.coords.latitude,
+              longitude: loc.coords.longitude,
+              heading: loc.coords.heading || 0,
+              speed: loc.coords.speed || 0,
+            });
+          }
+        },
+      );
+
+      locationSubscriptionRef.current = subscription;
+    } catch (err) {
+      console.log('Erro ao iniciar rastreamento contínuo de GPS:', err);
+    }
+  };
+
+  const stopGpsTracking = () => {
+    if (locationSubscriptionRef.current) {
+      locationSubscriptionRef.current.remove();
+      locationSubscriptionRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      stopGpsTracking();
+    };
+  }, []);
+
   const handleEstouACaminho = async () => {
     setLoading(true);
     setInTransit(true);
@@ -98,8 +148,13 @@ export const DeslocamentoScreen: React.FC = () => {
       if (params.appointmentId) {
         await backendHttpClient.post(`/api/appointments/${params.appointmentId}/in-transit`);
       }
+      await startGpsTracking();
+      Alert.alert(
+        'A Caminho! 🚗',
+        'Você informou que está a caminho do local. Sua localização está sendo transmitida em tempo real para o cliente a cada 5 segundos.',
+      );
     } catch (error) {
-      // Silenciosamente tolera respostas em modo de teste
+      await startGpsTracking();
     } finally {
       setLoading(false);
     }
@@ -107,6 +162,8 @@ export const DeslocamentoScreen: React.FC = () => {
 
   const handleChegueiNoLocal = async () => {
     setArrivedLoading(true);
+    stopGpsTracking(); // Task 3: Parar transmissão automaticamente no check-in
+
     let coords: { latitude?: number; longitude?: number } = {};
 
     try {

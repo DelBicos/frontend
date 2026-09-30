@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Modal,
   View,
@@ -12,6 +12,7 @@ import { useColors } from '@theme/ThemeProvider';
 import { Appointment } from '@stores/Appointment/types';
 import { useUserStore } from '@stores/User';
 import { createStyles } from './styles';
+import { ClientTrackingMapModal } from '@components/features/ClientTrackingMapModal/ClientTrackingMapModal';
 
 interface AppointmentDetailsModalProps {
   visible: boolean;
@@ -33,6 +34,7 @@ export function AppointmentDetailsModal({
   const colors = useColors();
   const styles = createStyles(colors);
   const user = useUserStore((state) => state.user);
+  const [showTrackingModal, setShowTrackingModal] = useState(false);
 
   if (!appointment) return null;
 
@@ -189,6 +191,29 @@ export function AppointmentDetailsModal({
               </View>
             ) : null}
 
+            {/* Botão de Rastreamento no Mapa em Tempo Real */}
+            {appointment.status === 'in_transit' || appointment.status === 'arrived' ? (
+              <TouchableOpacity
+                style={{
+                  backgroundColor: '#2563EB',
+                  paddingVertical: 14,
+                  paddingHorizontal: 20,
+                  borderRadius: 14,
+                  marginHorizontal: 16,
+                  marginBottom: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                }}
+                onPress={() => setShowTrackingModal(true)}
+                activeOpacity={0.8}>
+                <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 15 }}>
+                  Acompanhar Prestador no Mapa 🗺️
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+
             {/* Título da seção */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Detalhes do Agendamento</Text>
@@ -327,6 +352,11 @@ export function AppointmentDetailsModal({
           </ScrollView>
         </View>
       </View>
+      <ClientTrackingMapModal
+        visible={showTrackingModal}
+        onClose={() => setShowTrackingModal(false)}
+        appointment={appointment}
+      />
     </Modal>
   );
 }
