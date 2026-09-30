@@ -1,3 +1,7 @@
+// Fuso fixo nos testes: o mesmo do CI (GitHub Actions roda em UTC). Assim um
+// teste que depende do fuso da maquina falha aqui tambem, nao so no CI.
+process.env.TZ = 'UTC';
+
 module.exports = {
   preset: 'jest-expo',
   setupFiles: ['<rootDir>/jest.setup.js'],

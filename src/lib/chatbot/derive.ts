@@ -246,7 +246,7 @@ export function deriveBotAction(
       ? localDateTimeInTimeZoneToISO(ctxDate, ctxTime)
       : new Date().toISOString();
 
-  // Calcula endTime a partir de serviceDuration (minutos), se disponivel no contexto
+  // Fim = inicio + duracao do servico (minutos), sobre o mesmo instante de SP.
   let endTime = startTime;
   if (
     context.serviceDuration &&
@@ -254,9 +254,9 @@ export function deriveBotAction(
     ctxDate &&
     ctxTime
   ) {
-    const end = parseLocalDateTime(ctxDate, ctxTime);
-    end.setMinutes(end.getMinutes() + context.serviceDuration);
-    endTime = end.toISOString();
+    endTime = new Date(
+      new Date(startTime).getTime() + context.serviceDuration * 60_000,
+    ).toISOString();
   }
 
   // Backend usa `servicePrice` (centavos) — fallback para `price`
