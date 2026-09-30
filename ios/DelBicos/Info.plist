@@ -62,7 +62,7 @@
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>Este aplicativo precisa acessar sua localização para mostrar serviços disponíveis na sua região.</string>
     <key>NSMicrophoneUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to access your microphone</string>
+    <string>O DelBicos usa o microfone somente para transformar seu comando de voz em uma solicitação de agendamento.</string>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your photos</string>
     <key>RCTNewArchEnabled</key>

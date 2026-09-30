@@ -37,14 +37,15 @@ export type NavigationParams = {
     singleSubCategory?: { id: number; title: string };
   };
   ClientProfile: { subroute?: ClientProfileSubRoutes };
-  SearchResult: { subCategoryId: number; date: string };
+  SearchResult: { subCategoryId: number; date: string } | { query: string };
   Checkout: {
     professionalId: number;
-    priceFrom: number;
+    priceFrom?: number;
     selectedTime: string;
     imageUrl?: string;
     professionalName?: string;
     serviceId: number;
+    appointmentId?: number;
   };
   PaymentStatus:
     | {
@@ -72,4 +73,5 @@ export type NavigationParams = {
     serviceTitle?: string | null;
     roomStatus?: ChatRoomStatus;
   };
+  ChatBot: undefined;
 };

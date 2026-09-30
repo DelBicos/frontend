@@ -10,6 +10,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { useColors } from '@theme/ThemeProvider';
 import { createStyles } from './styles';
@@ -48,6 +49,25 @@ function AddressSelectionModal({
 
   const colors = useColors();
   const styles = createStyles(colors);
+  const { width: viewportWidth, height: viewportHeight } =
+    useWindowDimensions();
+  const isCompactLayout = viewportWidth <= 520 || viewportHeight <= 640;
+  const modalVerticalMargin = isCompactLayout ? 32 : 48;
+  const modalMaxHeight = Math.max(280, viewportHeight - modalVerticalMargin);
+  const listMaxHeight = Math.max(
+    isCompactLayout ? 96 : 104,
+    Math.min(
+      isCompactLayout ? 240 : 320,
+      viewportHeight - (isCompactLayout ? 264 : 300),
+    ),
+  );
+  const estimatedListHeight =
+    addresses.length > 0
+      ? addresses.length * (isCompactLayout ? 124 : 108)
+      : isCompactLayout
+        ? 100
+        : 112;
+  const addressListHeight = Math.min(estimatedListHeight, listMaxHeight);
 
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
@@ -141,10 +161,16 @@ function AddressSelectionModal({
         </View>
 
         <View style={styles.addressInfo}>
-          <Text style={styles.addressText} numberOfLines={1}>
+          <Text
+            style={styles.addressText}
+            numberOfLines={2}
+            ellipsizeMode="tail">
             {formatAddress(item)}
           </Text>
-          <Text style={styles.addressSubtext} numberOfLines={1}>
+          <Text
+            style={styles.addressSubtext}
+            numberOfLines={2}
+            ellipsizeMode="tail">
             {item.neighborhood} - {item.city}/{item.state}
           </Text>
         </View>
@@ -161,8 +187,13 @@ function AddressSelectionModal({
       <View style={styles.modalOverlay}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={{ width: '100%', alignItems: 'center' }}>
-          <View style={styles.modalContent}>
+          style={styles.keyboardAvoidingView}>
+          <View
+            style={[
+              styles.modalContent,
+              isCompactLayout && styles.modalContentCompact,
+              { maxHeight: modalMaxHeight },
+            ]}>
             {viewMode === 'list' ? (
               <>
                 {/* Header */}
@@ -194,11 +225,17 @@ function AddressSelectionModal({
                     <Text style={styles.stateText}>{error}</Text>
                   </View>
                 ) : (
-                  <View style={styles.listContainer}>
+                  <View
+                    style={[
+                      styles.listContainer,
+                      { height: addressListHeight },
+                    ]}>
                     <FlatList
                       data={addresses}
                       keyExtractor={(item) => item.id.toString()}
                       renderItem={renderAddressItem}
+                      style={styles.addressList}
+                      contentContainerStyle={styles.listContent}
                       showsVerticalScrollIndicator={true}
                       ListEmptyComponent={
                         <View style={styles.centerState}>
@@ -211,7 +248,7 @@ function AddressSelectionModal({
                   </View>
                 )}
 
-                <View>
+                <View style={styles.actionsContainer}>
                   <TouchableOpacity
                     style={styles.newAddressButton}
                     onPress={() => setViewMode('create')}

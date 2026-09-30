@@ -4,6 +4,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import * as React from 'react';
 import { useFonts } from 'expo-font';
 import { Navigation } from '@screens/NavigationStack';
+import { navigationRef } from '@screens/navigationRef';
 import { LocationProvider } from '@lib/hooks/LocationContext';
 import { MenuProvider } from 'react-native-popup-menu';
 import { ThemeProvider, useColors } from '@theme/ThemeProvider';
@@ -21,8 +22,8 @@ import { registerTokenProvider } from '@lib/helpers/httpClient';
 import { useUserStore } from '@stores/User';
 import { useThemeStore } from '@stores/Theme';
 import { ThemeMode } from '@stores/Theme/types';
-
 import { AuthProvider } from '@lib/hooks/AuthContext';
+import { ChatWidget } from '@components/features/ChatBot/ChatWidget';
 
 // Pre-carrega assets de navegação com captura de erro resiliente
 Asset.loadAsync([...NavigationAssets]).catch(() => {});
@@ -47,7 +48,15 @@ const styles = StyleSheet.create({
 function AppContent() {
   const theme = useThemeStore((state) => state.theme);
   const colors = useColors();
+  const { user } = useUserStore();
   const isDark = theme === ThemeMode.DARK;
+  const [currentRouteName, setCurrentRouteName] = React.useState<
+    string | undefined
+  >();
+
+  const syncCurrentRoute = React.useCallback(() => {
+    setCurrentRouteName(navigationRef.getCurrentRoute()?.name);
+  }, []);
 
   const navTheme = React.useMemo(
     () => ({
@@ -86,16 +95,25 @@ function AppContent() {
         <LocationProvider>
           <VLibrasSetup />
           <NotificationManager />
-          <Navigation
-            theme={navTheme}
-            linking={{
-              enabled: 'auto',
-              prefixes: ['delbicos://'],
-            }}
-            onReady={() => {
-              SplashScreen.hideAsync().catch(() => {});
-            }}
-          />
+          <View style={styles.safeArea}>
+            <Navigation
+              ref={navigationRef}
+              theme={navTheme}
+              linking={{
+                enabled: 'auto',
+                prefixes: ['delbicos://'],
+              }}
+              onReady={() => {
+                syncCurrentRoute();
+                SplashScreen.hideAsync().catch(() => {});
+              }}
+              onStateChange={syncCurrentRoute}
+            />
+            {/* Evita montar um segundo chat sobre a tela dedicada do assistente. */}
+            {!!user && currentRouteName !== 'ChatBot' && (
+              <ChatWidget bottomOffset={Platform.OS === 'web' ? 24 : 80} />
+            )}
+          </View>
         </LocationProvider>
       </SafeAreaView>
     </View>

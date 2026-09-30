@@ -135,4 +135,15 @@ export const useAppointmentStore = create<AppointmentStore>()((set) => ({
       return false;
     }
   },
+  cancelAppointment: async (appointmentId) => {
+    try {
+      await backendHttpClient.post(`api/appointments/${appointmentId}/cancel`);
+      const store = useAppointmentStore.getState();
+      await store.fetchAppointments(store.activeRole);
+      return true;
+    } catch (error) {
+      console.error('Failed to cancel appointment:', error);
+      return false;
+    }
+  },
 }));

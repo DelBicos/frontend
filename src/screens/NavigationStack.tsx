@@ -30,6 +30,7 @@ import ServicesListScreen from '@screens/private/professional/Services/ServicesL
 import ProfessionalRadiusScreen from '@screens/private/professional/RadiusScreen/ProfessionalRadiusScreen';
 import ChatListScreen from '@screens/private/chat/ChatListScreen';
 import ChatThreadScreen from '@screens/private/chat/ChatThreadScreen';
+import ChatBotScreen from '@screens/private/chatbot/ChatBotScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -311,6 +312,11 @@ const RootStack = createNativeStackNavigator({
       screen: CheckoutScreen,
       linking: {
         path: 'checkout', // A URL será algo como /checkout?professionalId=...&time=...
+        parse: {
+          professionalId: (value) => Number(value),
+          serviceId: (value) => Number(value),
+          appointmentId: (value) => Number(value),
+        },
       },
       options: {
         headerShown: false, // Opcional: Esconde o header padrão
@@ -320,6 +326,9 @@ const RootStack = createNativeStackNavigator({
       screen: PaymentStatusScreen,
       linking: {
         path: 'payment-status', // <-- Esta é a URL de retorno
+        parse: {
+          appointmentId: (value) => Number(value),
+        },
       },
       options: {
         headerShown: false, // Sem header
@@ -341,9 +350,6 @@ const RootStack = createNativeStackNavigator({
           ProfessionalServicesTab: 'services',
           ProfessionalProfileTab: 'profile',
         },
-      },
-      options: {
-        headerShown: false,
       },
     },
     Help: {
@@ -403,6 +409,16 @@ const RootStack = createNativeStackNavigator({
         },
       },
       options: {
+        headerShown: false,
+      },
+    },
+    ChatBot: {
+      screen: ChatBotScreen,
+      linking: {
+        path: 'chatbot',
+      },
+      options: {
+        title: 'Assistente',
         headerShown: false,
       },
     },

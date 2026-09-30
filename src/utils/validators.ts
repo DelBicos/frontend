@@ -23,3 +23,30 @@ export const isValidCPF = (cpfValue: string | null | undefined): boolean => {
 
   return true;
 };
+
+// ─── ChatBot ──────────────────────────────────────────────────────────────────
+
+/**
+ * Valida que o session_id do chatbot é um inteiro positivo.
+ * O backend rejeita com 400 qualquer valor que não seja inteiro > 0.
+ */
+export function isValidChatBotSessionId(id: unknown): id is number {
+  return Number.isInteger(id) && (id as number) > 0;
+}
+
+/**
+ * Valida o shape mínimo de uma mensagem armazenada no histórico do chatbot.
+ * Impede que dados malformados do backend sejam inseridos no estado.
+ */
+export function isValidChatBotStoredMessage(msg: unknown): boolean {
+  if (!msg || typeof msg !== 'object') return false;
+  const m = msg as Record<string, unknown>;
+  return (
+    typeof m.id === 'string' &&
+    m.id.length > 0 &&
+    (m.role === 'user' || m.role === 'bot') &&
+    typeof m.text === 'string' &&
+    typeof m.createdAt === 'string'
+  );
+}
+

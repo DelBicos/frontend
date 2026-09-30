@@ -1,0 +1,1 @@
+export { ChatInputBar } from './ChatInputBar';
