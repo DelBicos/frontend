@@ -21,7 +21,7 @@ import {
   isCurrentRestoreRequest,
   nextRestoreRequestId,
 } from '../conversationRequest';
-import { localDateTimeToISO } from '@lib/helpers/datetime';
+import { localDateTimeInTimeZoneToISO } from '@lib/helpers/datetime';
 
 describe('deriveQuickReplies', () => {
   it('pede confirmacao Sim/Nao quando ha servico pendente', () => {
@@ -138,7 +138,7 @@ describe('deriveBotAction', () => {
     expect(action.type).toBe('confirm_appointment');
     const appointment = action.appointment!;
     expect(appointment.startTime).toBe(
-      localDateTimeToISO('2026-10-05', '10:00'),
+      localDateTimeInTimeZoneToISO('2026-10-05', '10:00'),
     );
     expect(
       new Date(appointment.endTime).getTime() -
@@ -163,7 +163,7 @@ describe('resolveSelectedTimeIso', () => {
         date: '2026-10-05',
         time: '10:00',
       } as any),
-    ).toBe(localDateTimeToISO('2026-10-05', '10:00'));
+    ).toBe(localDateTimeInTimeZoneToISO('2026-10-05', '10:00'));
   });
 
   it('interpreta slot com data ou horario digitado', () => {
@@ -173,12 +173,12 @@ describe('resolveSelectedTimeIso', () => {
         'COLETANDO_HORARIO',
         {} as any,
       ),
-    ).toBe(localDateTimeToISO('2026-10-06', '08:15'));
+    ).toBe(localDateTimeInTimeZoneToISO('2026-10-06', '08:15'));
     expect(
       resolveSelectedTimeIso(' 9:30 ', 'COLETANDO_HORARIO', {
         date: '2026-10-05',
       } as any),
-    ).toBe(localDateTimeToISO('2026-10-05', '9:30'));
+    ).toBe(localDateTimeInTimeZoneToISO('2026-10-05', '9:30'));
   });
 
   it('retorna undefined sem estado ou fora dos estados relevantes', () => {

@@ -176,7 +176,7 @@ function MeusAgendamentos({ role = 'client' }: MeusAgendamentosProps) {
       professionalId: a.professional_id,
       selectedTime: a.start_time,
       serviceId: a.Service.id,
-      appointmentId: a.id,
+      appointmentId: String(a.id),
       imageUrl: a.Service.banner_uri || undefined,
       professionalName: a.Professional?.User?.name,
     });

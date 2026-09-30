@@ -57,7 +57,8 @@ export type NavigationParams = {
     imageUrl?: string;
     professionalName?: string;
     serviceId: number;
-    appointmentId?: number;
+    /** Id publico (short_id) de um agendamento pendente a pagar. */
+    appointmentId?: string;
   };
   PaymentStatus:
     | {

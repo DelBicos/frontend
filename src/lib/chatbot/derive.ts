@@ -1,8 +1,9 @@
 import { formatBRLFromCents } from '@lib/helpers/formatCurrency';
 import {
-  localDateTimeToISO,
+  localDateTimeInTimeZoneToISO,
   parseLocalDateTime,
   parseSlotParts,
+  resolveBotSelectedTimeIso,
 } from '@lib/helpers/datetime';
 import type {
   ChatBotAction,
@@ -242,7 +243,7 @@ export function deriveBotAction(
   const ctxTime = context.time ?? context.selectedTime;
   const startTime =
     ctxDate && ctxTime
-      ? localDateTimeToISO(ctxDate, ctxTime)
+      ? localDateTimeInTimeZoneToISO(ctxDate, ctxTime)
       : new Date().toISOString();
 
   // Calcula endTime a partir de serviceDuration (minutos), se disponivel no contexto
@@ -298,39 +299,12 @@ export function resolveSelectedTimeIso(
   state: ChatBotState | null,
   context: ChatBotContext | null,
 ): string | undefined {
-  if (!state || !context) return undefined;
-
-  const ctxDate = context.date ?? context.selectedDate;
-  const ctxTime = context.time ?? context.selectedTime;
-
-  if (state === 'CONFIRMACAO' && ctxDate && ctxTime) {
-    try {
-      return localDateTimeToISO(ctxDate, ctxTime);
-    } catch (e) {
-      logger.warn('[useChatSession] Error formatting ISO for CONFIRMACAO:', e);
-    }
+  try {
+    // Sempre no fuso de São Paulo (o servidor confere o mesmo instante) e,
+    // em remarcações, com a nova data/hora.
+    return resolveBotSelectedTimeIso(messageText, state, context);
+  } catch (e) {
+    logger.warn('[useChatSession] Erro ao montar o horário escolhido:', e);
+    return undefined;
   }
-
-  if (state === 'COLETANDO_HORARIO') {
-    const slotParts = parseSlotParts(messageText.trim(), ctxDate);
-    if (slotParts && slotParts.time && slotParts.time.includes(':')) {
-      try {
-        return localDateTimeToISO(slotParts.date, slotParts.time);
-      } catch (e) {
-        logger.warn('[useChatSession] Error formatting ISO for slotParts:', e);
-      }
-    }
-    if (ctxDate && /^\d{1,2}:\d{2}$/.test(messageText.trim())) {
-      try {
-        return localDateTimeToISO(ctxDate, messageText.trim());
-      } catch (e) {
-        logger.warn(
-          '[useChatSession] Error formatting ISO for time string:',
-          e,
-        );
-      }
-    }
-  }
-
-  return undefined;
 }

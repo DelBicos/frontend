@@ -104,7 +104,8 @@ export function useCheckout() {
       serviceId: service.id,
       selectedTime,
       addressId: address.id,
-      appointmentId: appointmentId ? Number(appointmentId) : undefined,
+      // O id publico (short_id) vai como texto; o servidor resolve e valida.
+      appointmentId: appointmentId ? String(appointmentId) : undefined,
     })
       .then((secret) => {
         if (!cancelled) setClientSecret(secret);

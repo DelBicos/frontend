@@ -6,8 +6,8 @@ export interface CreatePaymentIntentInput {
   /** Data/hora ISO do inicio do atendimento. */
   selectedTime: string;
   addressId: number;
-  /** Agendamento pendente ja criado (fluxo do chatbot). */
-  appointmentId?: number;
+  /** Agendamento pendente ja criado (fluxo do chatbot): o id publico (short_id). */
+  appointmentId?: string;
 }
 
 /**

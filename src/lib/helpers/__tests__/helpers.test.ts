@@ -7,9 +7,11 @@ import {
   formatAppointmentDateTime,
   getClientTimezone,
   getClientUtcOffsetMinutes,
+  localDateTimeInTimeZoneToISO,
   localDateTimeToISO,
   parseLocalDateTime,
   parseSlotParts,
+  resolveBotSelectedTimeIso,
 } from '../datetime';
 import {
   isNowBetween,
@@ -112,5 +114,25 @@ describe('availability utils', () => {
     );
     expect(isServiceAvailableNow(null)).toBe(false);
     jest.useRealTimers();
+  });
+});
+
+describe('horario do chatbot no fuso de Sao Paulo', () => {
+  it('converte data e hora de SP para o instante UTC', () => {
+    expect(localDateTimeInTimeZoneToISO('2030-01-10', '10:00')).toBe(
+      '2030-01-10T13:00:00.000Z',
+    );
+  });
+
+  it('na remarcacao, usa a nova data e hora', () => {
+    expect(
+      resolveBotSelectedTimeIso('sim', 'CONFIRMACAO', {
+        pendingAction: 'RESCHEDULE',
+        date: '2030-01-10',
+        time: '10:00',
+        newDate: '2030-01-11',
+        newTime: '15:30',
+      }),
+    ).toBe('2030-01-11T18:30:00.000Z');
   });
 });

@@ -4,7 +4,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { navigationRef } from '@screens/navigationRef';
 import { useColors } from '@theme/ThemeProvider';
 import { ChatBotContext } from '@stores/ChatBot/types';
-import { localDateTimeToISO } from '@lib/helpers/datetime';
+import { localDateTimeInTimeZoneToISO } from '@lib/helpers/datetime';
 import { createStyles } from '../styles';
 
 interface AppointmentStatusBannerProps {
@@ -58,13 +58,14 @@ export const AppointmentStatusBanner: React.FC<
     const selectedClock = ctx?.newTime || ctx?.time || ctx?.selectedTime;
     const selectedTime =
       selectedDate && selectedClock
-        ? localDateTimeToISO(selectedDate, selectedClock)
+        ? localDateTimeInTimeZoneToISO(selectedDate, selectedClock)
         : selectedDate || '';
     const params = {
       professionalId: ctx?.professionalId ?? 0,
       selectedTime,
       serviceId: ctx?.serviceId ?? 0,
-      appointmentId,
+      // O servidor aceita o id do agendamento como texto (numerico ou short_id).
+      appointmentId: String(appointmentId),
       imageUrl: undefined,
       professionalName: ctx?.professionalName,
     };
