@@ -42,7 +42,16 @@ const ProfessionalDashboard: React.FC = () => {
           const todayStr = now.toISOString().slice(0, 10);
 
           const activeOrUpcoming = appointments.find((apt: any) => {
-            return ['confirmed', 'in_transit', 'arrived', 'in_progress'].includes(apt.status);
+            if (['in_transit', 'arrived', 'in_progress'].includes(apt.status)) {
+              return true;
+            }
+            if (apt.status === 'confirmed') {
+              const startTimeMs = new Date(apt.start_time).getTime();
+              const nowMs = Date.now();
+              const diffMinutes = (startTimeMs - nowMs) / (1000 * 60);
+              return diffMinutes <= 30;
+            }
+            return false;
           });
 
           setTodayAppointment(activeOrUpcoming || null);
