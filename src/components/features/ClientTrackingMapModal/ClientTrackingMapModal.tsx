@@ -12,7 +12,12 @@ import {
 import { Ionicons, FontAwesome, FontAwesome5 } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
 import { Appointment } from '@stores/Appointment/types';
-import { useLocationSocket, LocationUpdateEvent } from '@hooks/useLocationSocket';
+import {
+  useLocationSocket,
+  LocationUpdateEvent,
+  ProximityWarningEvent,
+  LocationArrivedEvent,
+} from '@hooks/useLocationSocket';
 
 interface ClientTrackingMapModalProps {
   visible: boolean;
@@ -20,7 +25,8 @@ interface ClientTrackingMapModalProps {
   appointment: Appointment | null;
 }
 
-const GOOGLE_MAPS_API_KEY = 'AIzaSyCtayctpZpx9eot7Iv3t2-TYkrUlZbEnpo';
+const GOOGLE_MAPS_API_KEY =
+  process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyCtayctpZpx9eot7Iv3t2-TYkrUlZbEnpo';
 
 function calculateDistanceInMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371000;
@@ -47,13 +53,23 @@ export const ClientTrackingMapModal: React.FC<ClientTrackingMapModalProps> = ({
   const [profCoords, setProfCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [liveStatus, setLiveStatus] = useState<string>(appointment?.status || 'in_transit');
   const [mapLoading, setMapLoading] = useState<boolean>(true);
+  const [proximityAlert, setProximityAlert] = useState<string | null>(null);
 
-  // Socket escutando atualizações de geolocalização a cada 5 segundos
-  useLocationSocket(appointment?.id, (event: LocationUpdateEvent) => {
-    if (event.latitude && event.longitude) {
-      setProfCoords({ latitude: event.latitude, longitude: event.longitude });
-    }
-  });
+  // Socket escutando atualizações de geolocalização a cada 5 segundos, alertas de 5 min e evento de chegada
+  useLocationSocket(
+    appointment?.id,
+    (event: LocationUpdateEvent) => {
+      if (event.latitude && event.longitude) {
+        setProfCoords({ latitude: event.latitude, longitude: event.longitude });
+      }
+    },
+    (event: ProximityWarningEvent) => {
+      setProximityAlert(event.message || '🚘 Prestador a cerca de 5 minutos da sua casa!');
+    },
+    (event: LocationArrivedEvent) => {
+      setLiveStatus('arrived');
+    },
+  );
 
   useEffect(() => {
     if (appointment?.status) {
@@ -129,6 +145,16 @@ export const ClientTrackingMapModal: React.FC<ClientTrackingMapModalProps> = ({
             <View style={styles.loadingOverlay}>
               <ActivityIndicator size="large" color="#FF6B00" />
               <Text style={styles.loadingText}>Carregando Google Maps...</Text>
+            </View>
+          )}
+
+          {/* Banner de Alerta de Proximidade (5 Minutos para Chegar) */}
+          {(proximityAlert || (estimatedMinutes <= 5 && liveStatus === 'in_transit')) && (
+            <View style={styles.proximityBannerOverlay}>
+              <Ionicons name="notifications" size={18} color="#FFFFFF" />
+              <Text style={styles.proximityBannerText}>
+                {proximityAlert || '🚘 Prestador a cerca de 5 minutos da sua casa!'}
+              </Text>
             </View>
           )}
 
@@ -268,6 +294,27 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     marginTop: 10,
+  },
+  proximityBannerOverlay: {
+    position: 'absolute',
+    top: 85,
+    left: 16,
+    right: 16,
+    backgroundColor: '#2563EB',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    elevation: 6,
+    zIndex: 6,
+  },
+  proximityBannerText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+    flex: 1,
   },
   houseCardOverlay: {
     position: 'absolute',

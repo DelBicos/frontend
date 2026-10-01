@@ -17,7 +17,9 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { openGoogleMaps, openWaze } from '@utils/mapsHelper';
 import { backendHttpClient } from '@lib/helpers/httpClient';
-import { sendLocationUpdate } from '@hooks/useLocationSocket';
+import { sendLocationUpdate, sendLocationArrived } from '@hooks/useLocationSocket';
+import { useUserStore } from '@stores/User';
+import { LgpdConsentModal } from '@components/features/LgpdConsentModal';
 
 export interface DeslocamentoParams {
   appointmentId: number | string;
@@ -40,6 +42,9 @@ export const DeslocamentoScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [arrivedLoading, setArrivedLoading] = useState(false);
   const [showMapModal, setShowMapModal] = useState(false);
+  const [destCoords, setDestCoords] = useState<{ lat?: number; lng?: number }>({});
+  const { user, getLocationConsent, acceptLocationConsent } = useUserStore();
+  const [showLgpdModal, setShowLgpdModal] = useState(false);
 
   // Dynamic state loaded from DB
   const [clientName, setClientName] = useState(params.clientName || 'Cliente DelBicos');
@@ -60,6 +65,9 @@ export const DeslocamentoScreen: React.FC = () => {
             if (appt.Address) {
               const addrStr = `${appt.Address.street}, ${appt.Address.number} - ${appt.Address.neighborhood}, ${appt.Address.city} - ${appt.Address.state}`;
               setAddress(addrStr);
+              if (appt.Address.lat && appt.Address.lng) {
+                setDestCoords({ lat: Number(appt.Address.lat), lng: Number(appt.Address.lng) });
+              }
             }
             if (appt.status === 'in_transit') {
               setInTransit(true);
@@ -113,6 +121,8 @@ export const DeslocamentoScreen: React.FC = () => {
           if (params.appointmentId) {
             sendLocationUpdate({
               appointment_id: Number(params.appointmentId),
+              dest_lat: destCoords.lat,
+              dest_lng: destCoords.lng,
               latitude: loc.coords.latitude,
               longitude: loc.coords.longitude,
               heading: loc.coords.heading || 0,
@@ -141,7 +151,7 @@ export const DeslocamentoScreen: React.FC = () => {
     };
   }, []);
 
-  const handleEstouACaminho = async () => {
+  const executeEstouACaminho = async () => {
     setLoading(true);
     setInTransit(true);
     try {
@@ -160,9 +170,23 @@ export const DeslocamentoScreen: React.FC = () => {
     }
   };
 
+  const handleEstouACaminho = async () => {
+    if (!user?.location_consent_accepted) {
+      const consent = await getLocationConsent();
+      if (!consent?.accepted) {
+        setShowLgpdModal(true);
+        return;
+      }
+    }
+    await executeEstouACaminho();
+  };
+
   const handleChegueiNoLocal = async () => {
     setArrivedLoading(true);
     stopGpsTracking(); // Task 3: Parar transmissão automaticamente no check-in
+    if (params.appointmentId) {
+      sendLocationArrived({ appointment_id: Number(params.appointmentId) });
+    }
 
     let coords: { latitude?: number; longitude?: number } = {};
 
@@ -521,6 +545,22 @@ export const DeslocamentoScreen: React.FC = () => {
             </View>
           </View>
         </Modal>
+        <LgpdConsentModal
+          visible={showLgpdModal}
+          onClose={() => setShowLgpdModal(false)}
+          onAccept={async () => {
+            await acceptLocationConsent();
+            setShowLgpdModal(false);
+            await executeEstouACaminho();
+          }}
+          onDecline={() => {
+            setShowLgpdModal(false);
+            Alert.alert(
+              'Consentimento Necessário (LGPD)',
+              'Conforme as diretrizes da LGPD (Lei nº 13.709/2018), a transmissão do seu deslocamento em tempo real exige a autorização de geolocalização.',
+            );
+          }}
+        />
       </SafeAreaView>
     );
   }
@@ -646,6 +686,22 @@ export const DeslocamentoScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
+      <LgpdConsentModal
+        visible={showLgpdModal}
+        onClose={() => setShowLgpdModal(false)}
+        onAccept={async () => {
+          await acceptLocationConsent();
+          setShowLgpdModal(false);
+          await executeEstouACaminho();
+        }}
+        onDecline={() => {
+          setShowLgpdModal(false);
+          Alert.alert(
+            'Consentimento Necessário (LGPD)',
+            'Conforme as diretrizes da LGPD (Lei nº 13.709/2018), a transmissão do seu deslocamento em tempo real exige a autorização de geolocalização.',
+          );
+        }}
+      />
     </SafeAreaView>
   );
 };
