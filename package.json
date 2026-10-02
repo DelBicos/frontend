@@ -33,6 +33,8 @@
     "format:check": "prettier --check .",
     "format:fix": "prettier --write .",
     "prepare": "husky",
+    "rules:sync": "node scripts/rules/sync.mjs",
+    "rules:check": "node scripts/rules/sync.mjs --check",
     "docker:build": "docker-compose build",
     "docker:up": "docker-compose up -d",
     "docker:start": "docker-compose exec delbicos-frontend npm run start",
