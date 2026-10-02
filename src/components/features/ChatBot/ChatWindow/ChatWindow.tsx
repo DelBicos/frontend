@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
-import { useChatSession } from '@hooks/useChatSession';
+import { useChatSession } from './hooks/useChatSession';
 import {
   MAX_VOICE_RECORDING_DURATION_MS,
   useVoiceRecorder,

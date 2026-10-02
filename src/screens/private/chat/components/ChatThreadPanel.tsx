@@ -19,7 +19,7 @@ import {
   ChatRoomStatus,
   ChatCorrespondent,
 } from '@stores/Chat';
-import { useChatSocket } from '@hooks/useChatSocket';
+import { useChatSocket } from './useChatSocket';
 import { createThreadPanelStyles } from './threadPanelStyles';
 
 const PAGE_SIZE = 20;

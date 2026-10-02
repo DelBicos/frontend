@@ -8,6 +8,7 @@ module.exports = {
     '^@stores/(.*)$': '<rootDir>/src/stores/$1',
     '^@theme/(.*)$': '<rootDir>/src/theme/$1',
     '^@lib/(.*)$': '<rootDir>/src/lib/$1',
+    '^@hooks/(.*)$': '<rootDir>/src/hooks/$1',
     '^@screens/(.*)$': '<rootDir>/src/screens/$1',
     '^@assets/(.*)$': '<rootDir>/src/assets/$1',
   },

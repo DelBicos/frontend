@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import useServicesLastQuery from '@hooks/useServicesLastQuery';
+import useServicesLastQuery from './useServicesLastQuery';
 import { useColors } from '@theme/ThemeProvider';
 
 const ServicesDebug: React.FC = () => {

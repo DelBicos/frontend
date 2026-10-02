@@ -1,7 +1,7 @@
 import Autocomplete from '@components/ui/Autocomplete/Autocomplete';
 import CustomSelect from '@components/ui/CustomSelect/CustomSelect';
 import CustomTextInput from '@components/ui/CustomTextInput';
-import { useIBGE } from '@lib/hooks//useIBGE';
+import { useIBGE } from './useIBGE';
 import { useViaCepStore } from '@stores/ViaCep';
 import { useColors } from '@theme/ThemeProvider';
 import React from 'react';

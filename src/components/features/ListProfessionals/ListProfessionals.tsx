@@ -14,7 +14,7 @@ import ProfessionalCard from '@components/ui/ProfessionalCard';
 import { useProfessionalStore } from '@stores/Professional';
 // Importamos 'ListedProfessional' que é o tipo que o Card espera e o Store retorna
 import { ListedProfessional } from '@stores/Professional/types';
-import { usePagination } from '@lib/hooks/usePagination';
+import { usePagination } from './usePagination';
 import { useColors } from '@theme/ThemeProvider';
 import { createStyles } from './styles';
 import { useLocation } from '@lib/hooks/LocationContext';

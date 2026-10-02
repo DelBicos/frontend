@@ -19,7 +19,7 @@ import ListProfessionals from '@components/features/ListProfessionals';
 import ListServices from '@components/features/ListServices';
 import { FontAwesome, FontAwesome5 } from '@expo/vector-icons';
 import { HighlightCard, HighlightItem } from '@components/ui/HighlightCard';
-import { useServiceSearch } from '@lib/hooks/useServiceSearch';
+import { useServiceSearch } from './useServiceSearch';
 import { useCategoryStore } from '@stores/Category';
 import { SubCategory } from '@stores/SubCategory/types';
 import { getCategoryIconName } from '@lib/constants/categoryIcons';
