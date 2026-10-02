@@ -1,7 +1,7 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
-import { MapComponentProps } from '@lib/hooks/types';
+import { MapComponentProps } from '@components/ui/MapComponent/types';
 import { useColors } from '@theme/ThemeProvider';
 import { createStyles } from './styles';
 
@@ -24,7 +24,7 @@ const defaultCenter = { lat: -23.5505, lng: -46.6333 };
 const WebMapRenderer: React.FC<MapComponentProps & { style?: any }> = ({
   region,
   markerCoords,
-  address,
+  formattedAddress,
   onMapPress,
   style,
 }) => {
@@ -119,7 +119,7 @@ const WebMapRenderer: React.FC<MapComponentProps & { style?: any }> = ({
                 lat: markerCoords.latitude,
                 lng: markerCoords.longitude,
               }}
-              title={address?.formatted || 'Local selecionado'}
+              title={formattedAddress || 'Local selecionado'}
             />
           )}
         </GoogleMap>

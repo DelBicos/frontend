@@ -1,7 +1,7 @@
 import React from 'react';
 import { Platform, View, StyleSheet } from 'react-native';
 import MapRenderer from '../MapRenderer';
-import { MapComponentProps } from '@lib/hooks/types';
+import { MapComponentProps } from './types';
 import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
 // eslint-disable-next-line import/no-named-as-default
@@ -10,7 +10,7 @@ import MapErrorBoundary from '@components/ui/MapComponent/MapErrorBoundary';
 export const MapComponent: React.FC<MapComponentProps> = ({
   region,
   markerCoords,
-  address,
+  formattedAddress,
   onMapPress,
 }) => {
   const colors = useColors();
@@ -22,7 +22,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({
         <MapRenderer
           region={region}
           markerCoords={markerCoords}
-          address={address}
+          formattedAddress={formattedAddress}
           onMapPress={onMapPress}
           style={styles.mapRenderer}
         />

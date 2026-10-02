@@ -455,6 +455,13 @@ export const useUserStore = create<UserStore>()(
     {
       name: 'user-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      onRehydrateStorage: () => (state) => {
+        if (state?.token) {
+          state.fetchCurrentUser().catch((e) => {
+            console.warn('[UserStore] Token expirado ou inválido:', e);
+          });
+        }
+      },
       //@ts-ignore
       partialize: (state) => ({
         user: state.user,

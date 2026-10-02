@@ -17,7 +17,7 @@ import { ListedProfessional } from '@stores/Professional/types';
 import { usePagination } from './usePagination';
 import { useColors } from '@theme/ThemeProvider';
 import { createStyles } from './styles';
-import { useLocation } from '@lib/hooks/LocationContext';
+import { useLocationStore } from '@stores/Location';
 
 const useResponsiveColumns = () => {
   const { width } = useWindowDimensions();
@@ -40,7 +40,7 @@ const ListProfessionals = ({ listHeader, style }: ListProfessionalsProps) => {
   const styles = createStyles(colors);
   const { fetchProfessionals } = useProfessionalStore();
   const numColumns = useResponsiveColumns();
-  const { address } = useLocation();
+  const { address } = useLocationStore();
 
   const fetcher = useCallback(
     (page: number, limit: number) => {

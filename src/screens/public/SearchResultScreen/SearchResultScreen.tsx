@@ -18,7 +18,7 @@ import ProfessionalResultCard, {
   ProfessionalResult,
 } from '@components/features/ProfessionalResultCard';
 import { useProfessionalStore } from '@stores/Professional';
-import { useLocation } from '@lib/hooks/LocationContext';
+import { useLocationStore } from '@stores/Location';
 import { useServicesStore, type ServiceItem } from '@stores/Services/Services';
 import ServiceCard from '@components/features/ListServices/ServiceCard';
 // radius filters removed (RF04 reverted)
@@ -51,7 +51,7 @@ function SearchResultScreen() {
 
   const { fetchProfessionalsByAvailability } = useProfessionalStore();
   const { searchServicesSemantically } = useServicesStore();
-  const { address } = useLocation();
+  const { address } = useLocationStore();
   const { width } = useWindowDimensions();
 
   const [isLoading, setIsLoading] = useState(true);

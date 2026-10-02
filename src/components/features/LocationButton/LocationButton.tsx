@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { MapComponent } from '../../ui/MapComponent/MapComponent';
-import { Region } from '@lib/hooks/types';
+import { Region } from '@components/ui/MapComponent/types';
 import { useColors } from '@theme/ThemeProvider';
 import { createStyles } from './styles';
 

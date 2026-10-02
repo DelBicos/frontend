@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
-import { useLocation } from '@lib/hooks/LocationContext';
+import { useLocationStore } from '@stores/Location';
 import CustomTextInput from '@components/ui/CustomTextInput';
 import LogoV3 from '@assets/LogoV3.png';
 import { createStyles } from './styles';
@@ -18,7 +18,7 @@ import { useColors } from '@theme/ThemeProvider';
 
 function LoginScreen() {
   const navigation = useNavigation();
-  const { setLocation } = useLocation();
+  const { setLocation } = useLocationStore();
   const [cep, setCep] = useState('');
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [isLoadingCep, setIsLoadingCep] = useState(false);

@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { View, ActivityIndicator, Text } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
-import { MapComponentProps } from '@lib/hooks/types';
+import { MapComponentProps } from '@components/ui/MapComponent/types';
 import { useColors } from '@theme/ThemeProvider';
 import { createStyles } from './styles';
 
@@ -12,7 +12,7 @@ interface NativeMapRendererProps extends MapComponentProps {
 const NativeMapRenderer: React.FC<NativeMapRendererProps> = ({
   region,
   markerCoords,
-  address,
+  formattedAddress,
   onMapPress,
   style,
 }) => {
@@ -58,7 +58,7 @@ const NativeMapRenderer: React.FC<NativeMapRendererProps> = ({
           <Marker
             coordinate={markerCoords}
             title="Localização Selecionada"
-            description={address?.formatted || 'Clique para selecionar'}
+            description={formattedAddress || 'Clique para selecionar'}
             pinColor={colors.primaryBlue}
           />
         )}

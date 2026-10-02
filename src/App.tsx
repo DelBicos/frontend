@@ -5,7 +5,6 @@ import * as React from 'react';
 import { useFonts } from 'expo-font';
 import { Navigation } from '@screens/NavigationStack';
 import { navigationRef } from '@screens/navigationRef';
-import { LocationProvider } from '@lib/hooks/LocationContext';
 import { MenuProvider } from 'react-native-popup-menu';
 import { ThemeProvider, useColors } from '@theme/ThemeProvider';
 import { Platform, StatusBar, StyleSheet, View } from 'react-native';
@@ -22,7 +21,6 @@ import { registerTokenProvider } from '@lib/helpers/httpClient';
 import { useUserStore } from '@stores/User';
 import { useThemeStore } from '@stores/Theme';
 import { ThemeMode } from '@stores/Theme/types';
-import { AuthProvider } from '@lib/hooks/AuthContext';
 import { ChatWidget } from '@components/features/ChatBot/ChatWidget';
 
 // Pre-carrega assets de navegação com captura de erro resiliente
@@ -92,29 +90,27 @@ function AppContent() {
       <SafeAreaView
         style={styles.safeArea}
         edges={Platform.OS !== 'web' ? ['top', 'bottom'] : []}>
-        <LocationProvider>
-          <VLibrasSetup />
-          <NotificationManager />
-          <View style={styles.safeArea}>
-            <Navigation
-              ref={navigationRef}
-              theme={navTheme}
-              linking={{
-                enabled: 'auto',
-                prefixes: ['delbicos://'],
-              }}
-              onReady={() => {
-                syncCurrentRoute();
-                SplashScreen.hideAsync().catch(() => {});
-              }}
-              onStateChange={syncCurrentRoute}
-            />
-            {/* Evita montar um segundo chat sobre a tela dedicada do assistente. */}
-            {!!user && currentRouteName !== 'ChatBot' && (
-              <ChatWidget bottomOffset={Platform.OS === 'web' ? 24 : 80} />
-            )}
-          </View>
-        </LocationProvider>
+        <VLibrasSetup />
+        <NotificationManager />
+        <View style={styles.safeArea}>
+          <Navigation
+            ref={navigationRef}
+            theme={navTheme}
+            linking={{
+              enabled: 'auto',
+              prefixes: ['delbicos://'],
+            }}
+            onReady={() => {
+              syncCurrentRoute();
+              SplashScreen.hideAsync().catch(() => {});
+            }}
+            onStateChange={syncCurrentRoute}
+          />
+          {/* Evita montar um segundo chat sobre a tela dedicada do assistente. */}
+          {!!user && currentRouteName !== 'ChatBot' && (
+            <ChatWidget bottomOffset={Platform.OS === 'web' ? 24 : 80} />
+          )}
+        </View>
       </SafeAreaView>
     </View>
   );
@@ -150,9 +146,7 @@ export function App() {
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <MenuProvider>
         <ThemeProvider>
-          <AuthProvider>
-            <AppContent />
-          </AuthProvider>
+          <AppContent />
         </ThemeProvider>
       </MenuProvider>
     </SafeAreaProvider>

@@ -44,16 +44,12 @@ export interface AddressData {
   formatted_address?: string; // Endereço formatado pelo LocationIQ (backup)
 }
 
-export interface Region {
-  latitude: number;
-  longitude: number;
-  latitudeDelta: number;
-  longitudeDelta: number;
-}
-
-export interface MapComponentProps {
-  region: Region | null;
-  markerCoords: { latitude: number; longitude: number } | null;
-  address?: AddressData;
-  onMapPress: (event: any) => void;
-}
+export type LocationStore = {
+  address: AddressData | null;
+  city: string | undefined;
+  state: string | undefined;
+  loading: boolean;
+  error: string | null;
+  setLocation: (city: string, state: string) => Promise<void>;
+  lookupByCoordinates: (latitude: number, longitude: number) => Promise<void>;
+};

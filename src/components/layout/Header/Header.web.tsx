@@ -3,8 +3,8 @@ import { Button } from '@components/ui/Button';
 import { MapComponent } from '@components/ui/MapComponent/MapComponent';
 import { ThemeToggle } from '@components/ui/ThemeToggle';
 import { FontAwesome } from '@expo/vector-icons';
-import { useLocation } from '@lib/hooks/LocationContext';
-import { Region } from '@lib/hooks/types';
+import { useLocationStore } from '@stores/Location';
+import { Region } from '@components/ui/MapComponent/types';
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import { NativeStackHeaderProps } from '@react-navigation/native-stack';
 import { NavigationParams } from '@screens/types';
@@ -51,7 +51,7 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = () => {
     setLocation,
     lookupByCoordinates,
     loading: isLocationLoading,
-  } = useLocation();
+  } = useLocationStore();
 
   const navigation = useNavigation();
   const [search, setSearch] = useState('');
