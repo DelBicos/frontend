@@ -15,19 +15,7 @@ import { useThemeStore, ThemeMode } from '@stores/Theme';
 import { useColors } from '@theme/ThemeProvider';
 import { createStyles } from './styles';
 import { FontAwesome5 } from '@expo/vector-icons';
-
-const CATEGORY_ICONS: Record<number, string> = {
-  1: 'heartbeat',
-  2: 'cut',
-  3: 'tools',
-  4: 'lightbulb',
-  5: 'home',
-  6: 'paw',
-};
-
-function getCategoryIconName(id: number) {
-  return CATEGORY_ICONS[id] || 'shapes';
-}
+import { getCategoryIconName } from '@lib/constants/categoryIcons';
 
 interface CategoryCardProps {
   category: Category;

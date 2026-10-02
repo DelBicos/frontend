@@ -17,8 +17,7 @@ import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { useColors } from '@theme/ThemeProvider';
 import { useThemeStore, ThemeMode } from '@stores/Theme';
 import { FontAwesome5 } from '@expo/vector-icons';
-
-import { getIconForSubCategory } from '@utils/icons';
+import { getCategoryIconName } from '@lib/constants/categoryIcons';
 
 type SubCategoryRouteParams = {
   categoryId: number;
@@ -72,9 +71,10 @@ LocaleConfig.defaultLocale = 'pt-br';
 
 const SubCategoryButton: React.FC<{
   item: SubCategory;
+  iconName: string;
   onPress: () => void;
   isActive: boolean;
-}> = ({ item, onPress, isActive }) => {
+}> = ({ item, iconName, onPress, isActive }) => {
   const { theme } = useThemeStore();
   const isHighContrast = theme === ThemeMode.LIGHT_HI_CONTRAST;
   const isDark = theme === ThemeMode.DARK;
@@ -123,7 +123,7 @@ const SubCategoryButton: React.FC<{
       accessibilityRole="button"
       accessibilityState={{ selected: isActive }}>
       <FontAwesome5
-        name={getIconForSubCategory(item.title)}
+        name={iconName}
         size={20}
         color={styleProps.text}
         style={styles.subCategoryIcon as any}
@@ -206,6 +206,7 @@ function SubCategoryScreen() {
 
   const numColumns = width > 768 ? 2 : 1;
   const isButtonDisabled = !selectedSubCategory || !selectedDate;
+  const categoryIconName = getCategoryIconName(categoryId);
 
   return (
     <ScrollView
@@ -229,6 +230,7 @@ function SubCategoryScreen() {
               renderItem={({ item }) => (
                 <SubCategoryButton
                   item={item as SubCategory}
+                  iconName={categoryIconName}
                   isActive={selectedSubCategory === item.id}
                   onPress={() => setSelectedSubCategory(item.id)}
                 />

@@ -14,8 +14,8 @@ import {
   SafeAreaView,
   initialWindowMetrics,
 } from 'react-native-safe-area-context';
-import { initGAWeb } from './utils/ga-web';
-import { initClarityWeb } from './utils/clarity';
+import { initGAWeb } from '@lib/helpers/ga-web';
+import { initClarityWeb } from '@lib/helpers/clarity';
 import { GOOGLE_ANALYTICS_ID, CLARITY_ID } from './config/varEnvs';
 import VLibrasSetup from '@components/features/Accessibility/VLibrasSetup';
 import { registerTokenProvider } from '@lib/helpers/httpClient';

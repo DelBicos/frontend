@@ -16,7 +16,7 @@ import { useUserStore } from '@stores/User';
 import { backendHttpClient } from '@lib/helpers/httpClient';
 import { Address } from '@stores/User/types';
 import { useColors } from '@theme/ThemeProvider';
-import { checkForNewNotifications } from '@utils/usePushNotifications';
+import { checkForNewNotifications } from '@lib/helpers/notifications';
 import { FeedbackModal } from '@components/ui/FeedbackModal';
 import CodeInput from '@components/ui/CodeInput';
 

@@ -15,7 +15,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { useUserStore } from '@stores/User';
 import CustomTextInput from '@components/ui/CustomTextInput';
 import PasswordInput from '@components/ui/PasswordInput';
-import { checkForNewNotifications } from '@utils/usePushNotifications';
+import { checkForNewNotifications } from '@lib/helpers/notifications';
 
 import LogoV3 from '@assets/LogoV3.png';
 import { createStyles } from './styles';

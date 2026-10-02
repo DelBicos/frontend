@@ -22,8 +22,7 @@ import { HighlightCard, HighlightItem } from '@components/ui/HighlightCard';
 import { useServiceSearch } from '@lib/hooks/useServiceSearch';
 import { useCategoryStore } from '@stores/Category';
 import { SubCategory } from '@stores/SubCategory/types';
-
-import { getIconForSubCategory } from '@utils/icons';
+import { getCategoryIconName } from '@lib/constants/categoryIcons';
 
 const HIGHLIGHT_DATA: HighlightItem[] = [
   {
@@ -183,7 +182,7 @@ const FeedScreen: React.FC = () => {
                           onPress={() => handleSelectService(item)}>
                           <View style={styles.dropdownIcon}>
                             <FontAwesome5
-                              name={getIconForSubCategory(item.title)}
+                              name={getCategoryIconName(item.category_id)}
                               size={16}
                               color={colors.primaryBlue}
                             />

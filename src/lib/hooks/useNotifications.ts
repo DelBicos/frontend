@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { checkForNewNotifications } from '../../utils/usePushNotifications';
+import { checkForNewNotifications } from '@lib/helpers/notifications';
 
 interface UseNotificationsReturn {
   checkNotifications: () => Promise<void>;

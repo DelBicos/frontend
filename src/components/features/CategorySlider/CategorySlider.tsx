@@ -17,23 +17,10 @@ import {
   View,
 } from 'react-native';
 import { createStyles } from './styles';
-
-// Mantemos os ícones mapeados por enquanto, até que decida trazê-los do banco também!
-const CATEGORY_ICONS: Record<number, string> = {
-  1: 'heartbeat',
-  2: 'cut',
-  3: 'tools',
-  4: 'lightbulb',
-  5: 'home',
-  6: 'paw',
-};
+import { getCategoryIconName } from '@lib/constants/categoryIcons';
 
 const PLACEHOLDER_IMAGE =
   'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=800&auto=format&fit=crop';
-
-function getCategoryIconName(id: number) {
-  return CATEGORY_ICONS[id] || 'shapes';
-}
 
 interface CategoryCardProps {
   category: Category;

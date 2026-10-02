@@ -5,7 +5,7 @@ import { useColors } from '@theme/ThemeProvider';
 import { createStyles } from './styles';
 import { useNavigation } from '@react-navigation/native';
 import { useCategoryStore } from '@stores/Category';
-import { isServiceAvailableNow } from '@lib/utils/availability';
+import { isServiceAvailableNow } from '@lib/helpers/availability';
 
 const formatPrice = (cents?: number) => {
   if (cents == null) return '—';

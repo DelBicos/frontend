@@ -11,7 +11,7 @@ import { createStyles } from './styles';
 import { useColors } from '@theme/ThemeProvider';
 import useServicesStore from '@stores/Services/Services';
 import ServiceCard from './ServiceCard';
-import { isServiceAvailableNow } from '@lib/utils/availability';
+import { isServiceAvailableNow } from '@lib/helpers/availability';
 import { useCategoryStore } from '@stores/Category';
 import { useSubCategoryStore } from '@stores/SubCategory';
 import { useIsFocused } from '@react-navigation/native';
