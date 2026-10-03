@@ -92,6 +92,7 @@ function MeusAgendamentos({ role }: MeusAgendamentosProps = {}) {
     appointmentsByStatus,
     fetchAppointments,
     updateAppointmentStatus,
+    cancelAppointment,
   } = useAppointmentStore();
   const { addFavorite, removeFavorite, isFavorite } = useFavoriteStore();
   const { user } = useUserStore();
@@ -410,7 +411,10 @@ function MeusAgendamentos({ role }: MeusAgendamentosProps = {}) {
         visible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
         appointment={selectedAppointment}
-        onCancel={() => fetchAppointments(role)}
+        onCancel={async () => {
+          if (!selectedAppointment) return false;
+          return cancelAppointment(selectedAppointment.id);
+        }}
         onAccept={
           user?.id === selectedAppointment?.Professional?.user_id
             ? handleAccept

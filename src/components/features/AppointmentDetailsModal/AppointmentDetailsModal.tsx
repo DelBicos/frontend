@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Modal,
   View,
@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
-  Alert,
 } from 'react-native';
 import { useColors } from '@theme/ThemeProvider';
 import { Appointment } from '@stores/Appointment/types';
@@ -18,7 +17,7 @@ interface AppointmentDetailsModalProps {
   visible: boolean;
   onClose: () => void;
   appointment: Appointment | null;
-  onCancel?: () => void;
+  onCancel?: () => Promise<boolean>;
   onAccept?: () => void;
   onReject?: () => void;
 }
@@ -35,10 +34,20 @@ export function AppointmentDetailsModal({
   const styles = createStyles(colors);
   const user = useUserStore((state) => state.user);
   const [showTrackingModal, setShowTrackingModal] = useState(false);
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
+  const [canceling, setCanceling] = useState(false);
+  const [cancelError, setCancelError] = useState('');
+  const cancelInFlight = useRef(false);
+
+  useEffect(() => {
+    setConfirmingCancel(false);
+    setCancelError('');
+  }, [visible, appointment?.id]);
 
   if (!appointment) return null;
 
-  const isProfessionalView = user?.professional_id === appointment.professional_id;
+  const isProfessionalView =
+    user?.professional_id === appointment.professional_id;
 
   const headerAvatar = isProfessionalView
     ? appointment.Client?.User?.avatar_uri
@@ -50,8 +59,15 @@ export function AppointmentDetailsModal({
 
   const formattedFullAddress = (() => {
     if (!appointment.Address) return 'Endereço não informado';
-    const { street, number, complement, neighborhood, city, state, postal_code } =
-      appointment.Address;
+    const {
+      street,
+      number,
+      complement,
+      neighborhood,
+      city,
+      state,
+      postal_code,
+    } = appointment.Address;
     return `${street}, ${number}${complement ? ` (${complement})` : ''} - ${neighborhood}, ${city}/${state}${postal_code ? ` - CEP ${postal_code}` : ''}`;
   })();
 
@@ -68,27 +84,28 @@ export function AppointmentDetailsModal({
     });
   };
 
-  const handleCancelAppointment = () => {
-    Alert.alert(
-      'Cancelar Agendamento',
-      'Tem certeza que deseja cancelar este agendamento?',
-      [
-        {
-          text: 'Não',
-          style: 'cancel',
-        },
-        {
-          text: 'Sim, Cancelar',
-          style: 'destructive',
-          onPress: () => {
-            if (onCancel) {
-              onCancel();
-            }
-            onClose();
-          },
-        },
-      ],
-    );
+  const handleCancelAppointment = async () => {
+    if (!onCancel || cancelInFlight.current) return;
+    cancelInFlight.current = true;
+    setCanceling(true);
+    setCancelError('');
+    try {
+      if (await onCancel()) {
+        setConfirmingCancel(false);
+        onClose();
+      } else {
+        setCancelError(
+          'Não foi possível cancelar o agendamento. Tente novamente.',
+        );
+      }
+    } catch {
+      setCancelError(
+        'Não foi possível cancelar o agendamento. Tente novamente.',
+      );
+    } finally {
+      cancelInFlight.current = false;
+      setCanceling(false);
+    }
   };
 
   const getStatusText = (status: string) => {
@@ -137,7 +154,9 @@ export function AppointmentDetailsModal({
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onClose}>
+      onRequestClose={() => {
+        if (!canceling) onClose();
+      }}>
       <View style={styles.overlay}>
         <View
           style={[
@@ -305,6 +324,7 @@ export function AppointmentDetailsModal({
             <View style={styles.buttonContainer}>
               <TouchableOpacity
                 style={styles.okButton}
+                disabled={canceling}
                 onPress={onClose}
                 activeOpacity={0.8}>
                 <Text style={styles.okButtonText}>Ok</Text>
@@ -336,16 +356,53 @@ export function AppointmentDetailsModal({
                   </TouchableOpacity>
                 </>
               ) : (
+                onCancel &&
+                !isProfessionalView &&
                 appointment.status !== 'completed' &&
                 appointment.status !== 'canceled' && (
-                  <TouchableOpacity
-                    style={styles.cancelButton}
-                    onPress={handleCancelAppointment}
-                    activeOpacity={0.8}>
-                    <Text style={styles.cancelButtonText}>
-                      Cancelar Agendamento
-                    </Text>
-                  </TouchableOpacity>
+                  <>
+                    {confirmingCancel && (
+                      <>
+                        <Text style={styles.infoValue}>
+                          Tem certeza que deseja cancelar este agendamento?
+                        </Text>
+                        <TouchableOpacity
+                          disabled={canceling}
+                          onPress={() => {
+                            setConfirmingCancel(false);
+                            setCancelError('');
+                          }}
+                          style={styles.okButton}>
+                          <Text style={styles.okButtonText}>
+                            Não, manter agendamento
+                          </Text>
+                        </TouchableOpacity>
+                      </>
+                    )}
+                    {!!cancelError && (
+                      <Text
+                        accessibilityRole="alert"
+                        style={{ color: colors.errorText }}>
+                        {cancelError}
+                      </Text>
+                    )}
+                    <TouchableOpacity
+                      style={styles.cancelButton}
+                      disabled={canceling}
+                      onPress={() => {
+                        if (confirmingCancel) void handleCancelAppointment();
+                        else setConfirmingCancel(true);
+                      }}
+                      activeOpacity={0.8}>
+                      <Text style={styles.cancelButtonText}>
+                        {canceling
+                          ? 'Cancelando…'
+                          : confirmingCancel
+                            ? 'Sim, cancelar agendamento'
+                            : 'Cancelar Agendamento'}
+                      </Text>
+                    </TouchableOpacity>
+                  </>
                 )
               )}
             </View>
