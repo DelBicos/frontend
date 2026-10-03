@@ -85,6 +85,11 @@ export interface ChatBotSuggestedSlotData {
  * Reflete o que o bot já coletou até o momento.
  */
 export interface ChatBotContext {
+  appointmentQuery?: {
+    statuses: ('pending' | 'confirmed' | 'completed' | 'canceled')[];
+    offset: number;
+    hasMore: boolean;
+  };
   intent?: string;
   pendingAction?: 'CREATE' | 'CANCEL' | 'RESCHEDULE' | string;
   timeZone?: string;
