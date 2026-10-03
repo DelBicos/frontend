@@ -23,6 +23,7 @@ import {
 import { ChatBotMessage, ChatBotAction } from '@stores/ChatBot/types';
 import { TypingIndicator } from '../TypingIndicator';
 import { QuickReplies } from '../QuickReplies';
+import { AppointmentQueryReplies } from './AppointmentQueryReplies';
 import ConfirmationModal from '@components/ui/ConfirmationModal';
 import { MessageBubble } from './MessageBubble';
 import { ChatHeader } from './ChatHeader';
@@ -363,6 +364,16 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           disabled={loading || isRecording || isVoicePreparing}
         />
       )}
+
+      {conversationState === 'INICIO' &&
+        conversationContext?.appointmentQuery &&
+        !loading && (
+          <AppointmentQueryReplies
+            query={conversationContext.appointmentQuery}
+            onSelect={handleQuickReply}
+            disabled={loading || isRecording || isVoicePreparing}
+          />
+        )}
 
       {appointmentId && (
         <AppointmentStatusBanner
