@@ -33,6 +33,8 @@ export const AppointmentStatusBanner: React.FC<
   const colors = useColors();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
+  if (conversationContext?.pendingAction === 'CANCEL') return null;
+
   const iconName =
     appointmentStatus === 'confirmed'
       ? appointmentPaid
