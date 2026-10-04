@@ -22,6 +22,10 @@ import { HighlightCard, HighlightItem } from '@components/ui/HighlightCard';
 import { useServiceSearch } from '@lib/hooks/useServiceSearch';
 import { useCategoryStore } from '@stores/Category';
 import { SubCategory } from '@stores/SubCategory/types';
+import { useUserStore } from '@stores/User';
+import { backendHttpClient } from '@lib/helpers/httpClient';
+import { useAppointmentStatusSocket } from '@hooks/useAppointmentStatusSocket';
+import { ClientTrackingMapModal } from '@components/features/ClientTrackingMapModal/ClientTrackingMapModal';
 
 import { getIconForSubCategory } from '@utils/icons';
 
@@ -62,6 +66,33 @@ const FeedScreen: React.FC = () => {
   const [search, setSearch] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const navigation = useNavigation();
+
+  const user = useUserStore((state) => state.user);
+  const [activeAppointment, setActiveAppointment] = useState<any>(null);
+  const [showTrackingModal, setShowTrackingModal] = useState(false);
+
+  const fetchActiveClientAppointment = () => {
+    if (user?.id) {
+      backendHttpClient
+        .get(`/api/appointments/user/${user.id}?role=client`)
+        .then((res) => {
+          const appointments = res.data || [];
+          const active = appointments.find((apt: any) =>
+            ['in_transit', 'arrived'].includes(apt.status),
+          );
+          setActiveAppointment(active || null);
+        })
+        .catch(() => {});
+    }
+  };
+
+  useEffect(() => {
+    fetchActiveClientAppointment();
+  }, [user?.id]);
+
+  useAppointmentStatusSocket(() => {
+    fetchActiveClientAppointment();
+  });
 
   const colors = useColors();
   const { theme } = useThemeStore();
@@ -211,6 +242,64 @@ const FeedScreen: React.FC = () => {
                 )}
               </View>
             )}
+            {/* Banner de Rastreamento Ativo do Cliente */}
+            {activeAppointment ? (
+              <TouchableOpacity
+                style={{
+                  backgroundColor: '#FF6B00',
+                  marginHorizontal: 16,
+                  marginTop: 12,
+                  marginBottom: 8,
+                  padding: 14,
+                  borderRadius: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  elevation: 5,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 4,
+                }}
+                onPress={() => setShowTrackingModal(true)}
+                activeOpacity={0.85}>
+                <View
+                  style={{
+                    backgroundColor: '#FFFFFF',
+                    width: 42,
+                    height: 42,
+                    borderRadius: 21,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: 12,
+                  }}>
+                  <FontAwesome
+                    name={activeAppointment.status === 'arrived' ? 'map-marker' : 'car'}
+                    size={20}
+                    color="#FF6B00"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 15 }}>
+                    {activeAppointment.status === 'arrived'
+                      ? 'Prestador Chegou no Local! 🎯'
+                      : 'Prestador a Caminho! 🚘'}
+                  </Text>
+                  <Text style={{ color: '#FFF7ED', fontSize: 12, marginTop: 2 }} numberOfLines={1}>
+                    {activeAppointment.Professional?.User?.name || 'Profissional'} está a caminho. Toque para ver no mapa 🗺️
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    backgroundColor: '#FFFFFF',
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                    borderRadius: 12,
+                  }}>
+                  <Text style={{ color: '#FF6B00', fontWeight: '800', fontSize: 12 }}>Ver Mapa</Text>
+                </View>
+              </TouchableOpacity>
+            ) : null}
+
             {/* Seção Carrossel Destaques */}
             <View style={styles.carouselSection}>
               <View style={styles.carouselContainer}>
@@ -287,6 +376,11 @@ const FeedScreen: React.FC = () => {
             <Text style={styles.title}>Profissionais próximos a você</Text>
           </>
         }
+      />
+      <ClientTrackingMapModal
+        visible={showTrackingModal}
+        onClose={() => setShowTrackingModal(false)}
+        appointment={activeAppointment}
       />
     </View>
   );

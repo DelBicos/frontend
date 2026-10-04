@@ -47,8 +47,6 @@ export const useUserStore = create<UserStore>()(
 
       fetchCurrentUser: async () => {
         try {
-          // debug logs removed
-
           const { user } = (await backendHttpClient.get('/api/user/me')).data;
 
           const userData: User = {
@@ -65,9 +63,10 @@ export const useUserStore = create<UserStore>()(
               user.Professional?.id ||
               user.professional?.id ||
               undefined,
+            location_consent_accepted: user.location_consent_accepted,
+            location_consent_at: user.location_consent_at,
+            location_consent_revoked_at: user.location_consent_revoked_at,
           };
-
-          // fetchCurrentUser debug logs removed
 
           const prevUser = get().user;
           set({
@@ -109,9 +108,10 @@ export const useUserStore = create<UserStore>()(
               user.Professional?.id ||
               user.professional?.id ||
               undefined,
+            location_consent_accepted: user.location_consent_accepted,
+            location_consent_at: user.location_consent_at,
+            location_consent_revoked_at: user.location_consent_revoked_at,
           };
-
-          // signInPassword debug logs removed
 
           const addressData: Address | null = user.address
             ? {
@@ -314,7 +314,6 @@ export const useUserStore = create<UserStore>()(
           let fileUrl = initialFileUrl;
 
           if (isProxyUpload) {
-            // Proxy ImgBB — usa backendHttpClient que já tem a baseURL configurada
             const proxyRes = await backendHttpClient.put<{ fileUrl?: string }>(
               uploadUrl,
               blob,
@@ -324,7 +323,6 @@ export const useUserStore = create<UserStore>()(
             );
             if (proxyRes.data?.fileUrl) fileUrl = proxyRes.data.fileUrl;
           } else {
-            // S3 — PUT direto na AWS
             const uploadResponse = await fetch(uploadUrl, {
               method: 'PUT',
               body: blob,
@@ -440,7 +438,6 @@ export const useUserStore = create<UserStore>()(
       },
 
       signOut: () => {
-        // O chatbot não pode sobreviver à autenticação que o criou.
         useChatBotStore.getState().clearSession();
         set({
           user: null,
@@ -450,6 +447,65 @@ export const useUserStore = create<UserStore>()(
           verificationEmail: null,
           lastCodeSentAt: null,
         });
+      },
+
+      getLocationConsent: async () => {
+        try {
+          const { data } = await backendHttpClient.get('/api/user/location-consent');
+          if (data && get().user) {
+            set({
+              user: {
+                ...get().user!,
+                location_consent_accepted: data.accepted,
+                location_consent_at: data.accepted_at,
+                location_consent_revoked_at: data.revoked_at,
+              },
+            });
+          }
+          return data;
+        } catch (error) {
+          console.error('Erro ao buscar consentimento LGPD de localização:', error);
+          return { accepted: false, accepted_at: null, revoked_at: null };
+        }
+      },
+
+      acceptLocationConsent: async () => {
+        try {
+          const { data } = await backendHttpClient.post('/api/user/location-consent');
+          const currentUser = get().user;
+          if (currentUser) {
+            set({
+              user: {
+                ...currentUser,
+                location_consent_accepted: true,
+                location_consent_at: data?.consent?.accepted_at || new Date().toISOString(),
+                location_consent_revoked_at: null,
+              },
+            });
+          }
+        } catch (error: any) {
+          console.error('Erro ao aceitar consentimento LGPD:', error);
+          throw new Error(error.response?.data?.error || 'Erro ao registrar consentimento.');
+        }
+      },
+
+      revokeLocationConsent: async () => {
+        try {
+          const { data } = await backendHttpClient.post('/api/user/revoke-location-consent');
+          const currentUser = get().user;
+          if (currentUser) {
+            set({
+              user: {
+                ...currentUser,
+                location_consent_accepted: false,
+                location_consent_revoked_at: data?.consent?.revoked_at || new Date().toISOString(),
+              },
+            });
+          }
+        } catch (error: any) {
+          console.error('Erro ao revogar consentimento LGPD:', error);
+          throw new Error(error.response?.data?.error || 'Erro ao revogar consentimento.');
+        }
       },
     }),
     {

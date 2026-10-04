@@ -29,7 +29,7 @@ const env = {
 };
 
 const result = isWindows
-  ? spawnSync('bash', ['./gradlew', ...args], {
+  ? spawnSync('cmd.exe', ['/c', 'gradlew.bat', ...args], {
       cwd: androidDir,
       stdio: 'inherit',
       env,

@@ -44,7 +44,6 @@ const NativeMapRenderer: React.FC<NativeMapRendererProps> = ({
     <View style={[styles.container, style]}>
       <MapView
         ref={mapRef}
-        provider={PROVIDER_GOOGLE}
         style={styles.map}
         initialRegion={region as Region}
         onPress={handlePress}
