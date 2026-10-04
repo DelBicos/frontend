@@ -26,9 +26,15 @@ interface ClientTrackingMapModalProps {
 }
 
 const GOOGLE_MAPS_API_KEY =
-  process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyCtayctpZpx9eot7Iv3t2-TYkrUlZbEnpo';
+  process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ||
+  'AIzaSyCtayctpZpx9eot7Iv3t2-TYkrUlZbEnpo';
 
-function calculateDistanceInMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+function calculateDistanceInMeters(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+): number {
   const R = 6371000;
   const radLat1 = (lat1 * Math.PI) / 180;
   const radLat2 = (lat2 * Math.PI) / 180;
@@ -37,8 +43,10 @@ function calculateDistanceInMeters(lat1: number, lon1: number, lat2: number, lon
 
   const a =
     Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
-    Math.cos(radLat1) * Math.cos(radLat2) *
-    Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2);
+    Math.cos(radLat1) *
+      Math.cos(radLat2) *
+      Math.sin(deltaLon / 2) *
+      Math.sin(deltaLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
   return Math.round(R * c);
@@ -50,21 +58,28 @@ export const ClientTrackingMapModal: React.FC<ClientTrackingMapModalProps> = ({
   appointment,
 }) => {
   const colors = useColors();
-  const [profCoords, setProfCoords] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [liveStatus, setLiveStatus] = useState<string>(appointment?.status || 'in_transit');
+  const [profCoords, setProfCoords] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [liveStatus, setLiveStatus] = useState<string>(
+    appointment?.status || 'in_transit',
+  );
   const [mapLoading, setMapLoading] = useState<boolean>(true);
   const [proximityAlert, setProximityAlert] = useState<string | null>(null);
 
   // Socket escutando atualizações de geolocalização a cada 5 segundos, alertas de 5 min e evento de chegada
   useLocationSocket(
-    appointment?.id,
+    appointment?.numeric_id || appointment?.id,
     (event: LocationUpdateEvent) => {
       if (event.latitude && event.longitude) {
         setProfCoords({ latitude: event.latitude, longitude: event.longitude });
       }
     },
     (event: ProximityWarningEvent) => {
-      setProximityAlert(event.message || '🚘 Prestador a cerca de 5 minutos da sua casa!');
+      setProximityAlert(
+        event.message || '🚘 Prestador a cerca de 5 minutos da sua casa!',
+      );
     },
     (event: LocationArrivedEvent) => {
       setLiveStatus('arrived');
@@ -82,10 +97,21 @@ export const ClientTrackingMapModal: React.FC<ClientTrackingMapModalProps> = ({
   const destLat = Number(appointment.Address?.lat) || -23.55052;
   const destLng = Number(appointment.Address?.lng) || -46.633308;
 
-  const currentProfLat = profCoords?.latitude || destLat - 0.005;
-  const currentProfLng = profCoords?.longitude || destLng - 0.005;
+  const hasLiveCoords =
+    profCoords !== null &&
+    profCoords.latitude != null &&
+    profCoords.longitude != null;
+  const currentProfLat = hasLiveCoords ? profCoords.latitude : destLat;
+  const currentProfLng = hasLiveCoords ? profCoords.longitude : destLng;
 
-  const distanceMeters = calculateDistanceInMeters(currentProfLat, currentProfLng, destLat, destLng);
+  const distanceMeters = hasLiveCoords
+    ? calculateDistanceInMeters(
+        currentProfLat,
+        currentProfLng,
+        destLat,
+        destLng,
+      )
+    : 0;
   const distanceFormatted =
     distanceMeters < 1000
       ? `${distanceMeters} metros da sua casa`
@@ -93,14 +119,17 @@ export const ClientTrackingMapModal: React.FC<ClientTrackingMapModalProps> = ({
 
   const estimatedMinutes = Math.max(1, Math.ceil(distanceMeters / 300));
 
-  const centerLat = (destLat + currentProfLat) / 2;
-  const centerLng = (destLng + currentProfLng) / 2;
+  const centerLat = hasLiveCoords ? (destLat + currentProfLat) / 2 : destLat;
+  const centerLng = hasLiveCoords ? (destLng + currentProfLng) / 2 : destLng;
+
+  const markersParam = hasLiveCoords
+    ? `&markers=color:0x2563EB%7Clabel:H%7C${destLat},${destLng}&markers=color:0xFF6B00%7Clabel:C%7C${currentProfLat},${currentProfLng}`
+    : `&markers=color:0x2563EB%7Clabel:H%7C${destLat},${destLng}`;
 
   // URL Oficial da API do Google Maps Static Maps
   const googleMapImageUrl =
     `https://maps.googleapis.com/maps/api/staticmap?center=${centerLat},${centerLng}&zoom=15&size=650x650&scale=2&maptype=roadmap` +
-    `&markers=color:0x2563EB%7Clabel:H%7C${destLat},${destLng}` +
-    `&markers=color:0xFF6B00%7Clabel:C%7C${currentProfLat},${currentProfLng}` +
+    markersParam +
     `&key=${GOOGLE_MAPS_API_KEY}`;
 
   const handleCallProf = () => {
@@ -111,7 +140,11 @@ export const ClientTrackingMapModal: React.FC<ClientTrackingMapModalProps> = ({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent={false}
+      onRequestClose={onClose}>
       <View style={styles.container}>
         {/* Top Bar Header */}
         <View style={[styles.header, { backgroundColor: colors.primaryWhite }]}>
@@ -122,10 +155,12 @@ export const ClientTrackingMapModal: React.FC<ClientTrackingMapModalProps> = ({
             <Text style={styles.headerTitle}>Acompanhamento em Tempo Real</Text>
             <Text style={styles.headerSubtitle}>
               {liveStatus === 'in_transit'
-                ? '🚘 Transmitindo localização a cada 5s'
+                ? hasLiveCoords
+                  ? '🚘 Transmitindo localização a cada 5s'
+                  : '⏳ Aguardando localização do prestador...'
                 : liveStatus === 'arrived'
-                ? '🎯 Prestador no local (Rastreamento encerrado)'
-                : '⚡ Atendimento em andamento'}
+                  ? '🎯 Prestador no local (Rastreamento encerrado)'
+                  : '⚡ Atendimento em andamento'}
             </Text>
           </View>
         </View>
@@ -149,11 +184,15 @@ export const ClientTrackingMapModal: React.FC<ClientTrackingMapModalProps> = ({
           )}
 
           {/* Banner de Alerta de Proximidade (5 Minutos para Chegar) */}
-          {(proximityAlert || (estimatedMinutes <= 5 && liveStatus === 'in_transit')) && (
+          {(proximityAlert ||
+            (hasLiveCoords &&
+              estimatedMinutes <= 5 &&
+              liveStatus === 'in_transit')) && (
             <View style={styles.proximityBannerOverlay}>
               <Ionicons name="notifications" size={18} color="#FFFFFF" />
               <Text style={styles.proximityBannerText}>
-                {proximityAlert || '🚘 Prestador a cerca de 5 minutos da sua casa!'}
+                {proximityAlert ||
+                  '🚘 Prestador a cerca de 5 minutos da sua casa!'}
               </Text>
             </View>
           )}
@@ -166,29 +205,54 @@ export const ClientTrackingMapModal: React.FC<ClientTrackingMapModalProps> = ({
             <View style={styles.houseTextInfo}>
               <Text style={styles.houseTitle}>Sua Casa (Ponto de Destino)</Text>
               <Text style={styles.houseAddress} numberOfLines={1}>
-                {appointment.Address?.street || 'Endereço'}, {appointment.Address?.number || ''}
+                {appointment.Address?.street || 'Endereço'},{' '}
+                {appointment.Address?.number || ''}
               </Text>
             </View>
           </View>
 
           {/* Badge Flutuante de Distância em Tempo Real */}
           <View style={styles.distanceBadgeOverlay}>
-            <View style={styles.distanceBadgeRow}>
-              <FontAwesome5 name="car" size={16} color="#FF6B00" />
-              <Text style={styles.distanceBadgeText}>
-                Distância: <Text style={{ color: '#FF6B00', fontWeight: '800' }}>{distanceFormatted}</Text>
-              </Text>
-            </View>
-            <Text style={styles.etaText}>
-              Tempo estimado de chegada: <Text style={{ color: '#22C55E', fontWeight: '800' }}>~{estimatedMinutes} min</Text>
-            </Text>
+            {hasLiveCoords ? (
+              <>
+                <View style={styles.distanceBadgeRow}>
+                  <FontAwesome5 name="car" size={16} color="#FF6B00" />
+                  <Text style={styles.distanceBadgeText}>
+                    Distância:{' '}
+                    <Text style={{ color: '#FF6B00', fontWeight: '800' }}>
+                      {distanceFormatted}
+                    </Text>
+                  </Text>
+                </View>
+                <Text style={styles.etaText}>
+                  Tempo estimado de chegada:{' '}
+                  <Text style={{ color: '#22C55E', fontWeight: '800' }}>
+                    ~{estimatedMinutes} min
+                  </Text>
+                </Text>
+              </>
+            ) : (
+              <View style={styles.distanceBadgeRow}>
+                <Ionicons name="time-outline" size={18} color="#FF6B00" />
+                <Text style={styles.distanceBadgeText}>
+                  Aguardando sinal GPS do prestador...
+                </Text>
+              </View>
+            )}
           </View>
 
           {/* Barra de Coordenadas GPS Ao Vivo */}
           <View style={styles.gpsCoordsBarOverlay}>
-            <View style={styles.liveDot} />
+            <View
+              style={[
+                styles.liveDot,
+                !hasLiveCoords && { backgroundColor: '#EAB308' },
+              ]}
+            />
             <Text style={styles.gpsCoordsText}>
-              GPS Ao Vivo: Lat {currentProfLat.toFixed(5)} | Lng {currentProfLng.toFixed(5)} (Atualizado a cada 5s)
+              {hasLiveCoords
+                ? `GPS Ao Vivo: Lat ${currentProfLat.toFixed(5)} | Lng ${currentProfLng.toFixed(5)} (Atualizado a cada 5s)`
+                : 'GPS em espera: Aguardando prestador iniciar rota'}
             </Text>
           </View>
         </View>
@@ -197,7 +261,14 @@ export const ClientTrackingMapModal: React.FC<ClientTrackingMapModalProps> = ({
         <View style={styles.bottomCard}>
           <View style={styles.dragHandle} />
 
-          <View style={[styles.statusBanner, { backgroundColor: liveStatus === 'arrived' ? '#16A34A' : '#FF6B00' }]}>
+          <View
+            style={[
+              styles.statusBanner,
+              {
+                backgroundColor:
+                  liveStatus === 'arrived' ? '#16A34A' : '#FF6B00',
+              },
+            ]}>
             <FontAwesome
               name={liveStatus === 'arrived' ? 'check-circle' : 'car'}
               size={18}
@@ -207,34 +278,50 @@ export const ClientTrackingMapModal: React.FC<ClientTrackingMapModalProps> = ({
               {liveStatus === 'in_transit'
                 ? 'Profissional a caminho do seu endereço'
                 : liveStatus === 'arrived'
-                ? 'Profissional chegou na sua casa! 🎯'
-                : 'Serviço em andamento ⚡'}
+                  ? 'Profissional chegou na sua casa! 🎯'
+                  : 'Serviço em andamento ⚡'}
             </Text>
           </View>
 
           {/* Caixa do Código de Segurança de 4 dígitos */}
           {appointment.verification_code || liveStatus === 'arrived' ? (
             <View style={styles.pinBox}>
-              <Text style={styles.pinBoxTitle}>CÓDIGO DE INÍCIO DO SERVIÇO 🔑</Text>
-              <Text style={styles.pinBoxCode}>{appointment.verification_code || '----'}</Text>
-              <Text style={styles.pinBoxSub}>Informe este código ao profissional ao recebê-lo em casa</Text>
+              <Text style={styles.pinBoxTitle}>
+                CÓDIGO DE INÍCIO DO SERVIÇO 🔑
+              </Text>
+              <Text style={styles.pinBoxCode}>
+                {appointment.verification_code || '----'}
+              </Text>
+              <Text style={styles.pinBoxSub}>
+                Informe este código ao profissional ao recebê-lo em casa
+              </Text>
             </View>
           ) : null}
 
           {/* Dados do Prestador */}
           <View style={styles.profRow}>
             <View style={styles.profInfo}>
-              <Text style={styles.profName}>{appointment.Professional?.User?.name || 'Prestador'}</Text>
-              <Text style={styles.serviceTitle}>{appointment.Service?.title || 'Serviço Agendado'}</Text>
+              <Text style={styles.profName}>
+                {appointment.Professional?.User?.name || 'Prestador'}
+              </Text>
+              <Text style={styles.serviceTitle}>
+                {appointment.Service?.title || 'Serviço Agendado'}
+              </Text>
             </View>
             {appointment.Professional?.User?.phone ? (
-              <TouchableOpacity style={styles.callBtn} onPress={handleCallProf} activeOpacity={0.8}>
+              <TouchableOpacity
+                style={styles.callBtn}
+                onPress={handleCallProf}
+                activeOpacity={0.8}>
                 <Ionicons name="call" size={20} color="#FFFFFF" />
               </TouchableOpacity>
             ) : null}
           </View>
 
-          <TouchableOpacity style={styles.backBtn} onPress={onClose} activeOpacity={0.8}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={onClose}
+            activeOpacity={0.8}>
             <Text style={styles.backBtnText}>Fechar Acompanhamento</Text>
           </TouchableOpacity>
         </View>
@@ -510,4 +597,3 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 });
-

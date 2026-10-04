@@ -17,7 +17,11 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { openGoogleMaps, openWaze } from '@utils/mapsHelper';
 import { backendHttpClient } from '@lib/helpers/httpClient';
-import { sendLocationUpdate, sendLocationArrived } from '@hooks/useLocationSocket';
+import {
+  useLocationSocket,
+  sendLocationUpdate,
+  sendLocationArrived,
+} from '@hooks/useLocationSocket';
 import { useUserStore } from '@stores/User';
 import { LgpdConsentModal } from '@components/features/LgpdConsentModal';
 
@@ -36,21 +40,49 @@ export const DeslocamentoScreen: React.FC = () => {
   const route = useRoute();
   const params = (route.params || {}) as DeslocamentoParams;
 
-  const [inTransit, setInTransit] = useState(params.status === 'in_transit' || params.status === 'arrived' || params.status === 'in_progress');
-  const [arrived, setArrived] = useState(params.status === 'arrived' || params.status === 'in_progress');
+  const rawId = params.appointmentId;
+  const initialNumId =
+    typeof rawId === 'number'
+      ? rawId
+      : /^\d+$/.test(String(rawId))
+        ? Number(rawId)
+        : undefined;
+  const [numericAppointmentId, setNumericAppointmentId] = useState<
+    number | undefined
+  >(initialNumId);
+
+  // Inicializa o socket de localização nesta tela
+  useLocationSocket(numericAppointmentId);
+
+  const [inTransit, setInTransit] = useState(
+    params.status === 'in_transit' ||
+      params.status === 'arrived' ||
+      params.status === 'in_progress',
+  );
+  const [arrived, setArrived] = useState(
+    params.status === 'arrived' || params.status === 'in_progress',
+  );
   const [inProgress, setInProgress] = useState(params.status === 'in_progress');
   const [loading, setLoading] = useState(false);
   const [arrivedLoading, setArrivedLoading] = useState(false);
   const [showMapModal, setShowMapModal] = useState(false);
-  const [destCoords, setDestCoords] = useState<{ lat?: number; lng?: number }>({});
+  const [destCoords, setDestCoords] = useState<{ lat?: number; lng?: number }>(
+    {},
+  );
   const { user, getLocationConsent, acceptLocationConsent } = useUserStore();
   const [showLgpdModal, setShowLgpdModal] = useState(false);
 
   // Dynamic state loaded from DB
-  const [clientName, setClientName] = useState(params.clientName || 'Cliente DelBicos');
+  const [clientName, setClientName] = useState(
+    params.clientName || 'Cliente DelBicos',
+  );
   const [clientPhone, setClientPhone] = useState(params.clientPhone || '');
-  const [serviceTitle, setServiceTitle] = useState(params.serviceTitle || 'Serviço Agendado');
-  const [address, setAddress] = useState(params.address || 'Endereço de atendimento');
+  const [serviceTitle, setServiceTitle] = useState(
+    params.serviceTitle || 'Serviço Agendado',
+  );
+  const [address, setAddress] = useState(
+    params.address || 'Endereço de atendimento',
+  );
 
   useEffect(() => {
     if (params.appointmentId) {
@@ -59,18 +91,30 @@ export const DeslocamentoScreen: React.FC = () => {
         .then((res) => {
           const appt = res.data;
           if (appt) {
+            const numId = appt.numeric_id || appt.id;
+            if (
+              typeof numId === 'number' ||
+              (typeof numId === 'string' && /^\d+$/.test(numId))
+            ) {
+              setNumericAppointmentId(Number(numId));
+            }
             if (appt.Client?.User?.name) setClientName(appt.Client.User.name);
-            if (appt.Client?.User?.phone) setClientPhone(appt.Client.User.phone);
+            if (appt.Client?.User?.phone)
+              setClientPhone(appt.Client.User.phone);
             if (appt.Service?.title) setServiceTitle(appt.Service.title);
             if (appt.Address) {
               const addrStr = `${appt.Address.street}, ${appt.Address.number} - ${appt.Address.neighborhood}, ${appt.Address.city} - ${appt.Address.state}`;
               setAddress(addrStr);
               if (appt.Address.lat && appt.Address.lng) {
-                setDestCoords({ lat: Number(appt.Address.lat), lng: Number(appt.Address.lng) });
+                setDestCoords({
+                  lat: Number(appt.Address.lat),
+                  lng: Number(appt.Address.lng),
+                });
               }
             }
             if (appt.status === 'in_transit') {
               setInTransit(true);
+              startGpsTracking();
             } else if (appt.status === 'arrived') {
               setInTransit(true);
               setArrived(true);
@@ -100,7 +144,9 @@ export const DeslocamentoScreen: React.FC = () => {
   const inputRef3 = useRef<TextInput>(null);
   const inputRefs = [inputRef0, inputRef1, inputRef2, inputRef3];
 
-  const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
+  const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(
+    null,
+  );
 
   const startGpsTracking = async () => {
     try {
@@ -118,9 +164,14 @@ export const DeslocamentoScreen: React.FC = () => {
           distanceInterval: 5,
         },
         (loc) => {
-          if (params.appointmentId) {
+          const targetApptId =
+            numericAppointmentId ||
+            (typeof params.appointmentId === 'number'
+              ? params.appointmentId
+              : Number(params.appointmentId));
+          if (targetApptId && !isNaN(targetApptId)) {
             sendLocationUpdate({
-              appointment_id: Number(params.appointmentId),
+              appointment_id: targetApptId,
               dest_lat: destCoords.lat,
               dest_lng: destCoords.lng,
               latitude: loc.coords.latitude,
@@ -153,18 +204,23 @@ export const DeslocamentoScreen: React.FC = () => {
 
   const executeEstouACaminho = async () => {
     setLoading(true);
-    setInTransit(true);
     try {
       if (params.appointmentId) {
-        await backendHttpClient.post(`/api/appointments/${params.appointmentId}/in-transit`);
+        await backendHttpClient.post(
+          `/api/appointments/${params.appointmentId}/in-transit`,
+        );
       }
+      setInTransit(true);
       await startGpsTracking();
       Alert.alert(
         'A Caminho! 🚗',
         'Você informou que está a caminho do local. Sua localização está sendo transmitida em tempo real para o cliente a cada 5 segundos.',
       );
-    } catch (error) {
-      await startGpsTracking();
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.error ||
+        'Erro ao atualizar status para em deslocamento.';
+      Alert.alert('Erro', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -183,17 +239,15 @@ export const DeslocamentoScreen: React.FC = () => {
 
   const handleChegueiNoLocal = async () => {
     setArrivedLoading(true);
-    stopGpsTracking(); // Task 3: Parar transmissão automaticamente no check-in
-    if (params.appointmentId) {
-      sendLocationArrived({ appointment_id: Number(params.appointmentId) });
-    }
 
     let coords: { latitude?: number; longitude?: number } = {};
 
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status === 'granted') {
-        const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+        });
         coords = {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
@@ -205,17 +259,28 @@ export const DeslocamentoScreen: React.FC = () => {
 
     try {
       if (params.appointmentId) {
-        const response = await backendHttpClient.post(`/api/appointments/${params.appointmentId}/arrived`, coords);
+        const response = await backendHttpClient.post(
+          `/api/appointments/${params.appointmentId}/arrived`,
+          coords,
+        );
         if (response.data && response.data.success) {
+          stopGpsTracking();
+          const targetApptId =
+            numericAppointmentId || Number(params.appointmentId);
+          if (targetApptId && !isNaN(targetApptId)) {
+            sendLocationArrived({ appointment_id: targetApptId });
+          }
           setArrived(true);
           setShowOtpModal(true);
         }
       } else {
+        stopGpsTracking();
         setArrived(true);
         setShowOtpModal(true);
       }
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.error || 'Erro ao confirmar chegada.';
+      const errorMessage =
+        error?.response?.data?.error || 'Erro ao confirmar chegada.';
       Alert.alert('Atenção', errorMessage);
     } finally {
       setArrivedLoading(false);
@@ -252,19 +317,30 @@ export const DeslocamentoScreen: React.FC = () => {
 
     try {
       if (params.appointmentId) {
-        const res = await backendHttpClient.post(`/api/appointments/${params.appointmentId}/start-service`, { code });
+        const res = await backendHttpClient.post(
+          `/api/appointments/${params.appointmentId}/start-service`,
+          { code },
+        );
         if (res.data && res.data.success) {
           setInProgress(true);
           setShowOtpModal(false);
-          Alert.alert('Serviço Iniciado! 🚀', 'Atendimento iniciado com sucesso.');
+          Alert.alert(
+            'Serviço Iniciado! 🚀',
+            'Atendimento iniciado com sucesso.',
+          );
         }
       } else {
         setInProgress(true);
         setShowOtpModal(false);
-        Alert.alert('Serviço Iniciado! 🚀', 'Atendimento iniciado com sucesso.');
+        Alert.alert(
+          'Serviço Iniciado! 🚀',
+          'Atendimento iniciado com sucesso.',
+        );
       }
     } catch (error: any) {
-      const msg = error?.response?.data?.error || 'Código incorreto. Peça o código de 4 dígitos ao cliente.';
+      const msg =
+        error?.response?.data?.error ||
+        'Código incorreto. Peça o código de 4 dígitos ao cliente.';
       setOtpError(msg);
     } finally {
       setOtpLoading(false);
@@ -281,15 +357,17 @@ export const DeslocamentoScreen: React.FC = () => {
 
   const handleOpenChat = () => {
     try {
-      (navigation as any).navigate('ChatScreen', { appointmentId: params.appointmentId });
-    } catch (err) {
+      (navigation as any).navigate('ChatScreen', {
+        appointmentId: params.appointmentId,
+      });
+    } catch {
       if (params.clientPhone) {
         handleCallClient();
       } else {
         Alert.alert('Chat', 'Inicie a conversa pelo menu de mensagens.');
       }
     }
-  };  // =========================================================================
+  }; // =========================================================================
   // TELA 2: MODO "A CAMINHO" (ESTILO LIMPO & AZUL DELBICOS)
   // =========================================================================
   if (inTransit) {
@@ -297,29 +375,37 @@ export const DeslocamentoScreen: React.FC = () => {
       <SafeAreaView style={stylesDark.container}>
         {/* Header limpo */}
         <View style={stylesDark.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={stylesDark.headerBtn}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={stylesDark.headerBtn}>
             <Ionicons name="chevron-back" size={24} color="#2563EB" />
           </TouchableOpacity>
           <Text style={stylesDark.headerTitle}>DESLOCAMENTO</Text>
-          <TouchableOpacity onPress={handleOpenChat} style={stylesDark.headerBtn}>
-            <Ionicons name="chatbubble-ellipses-outline" size={22} color="#2563EB" />
+          <TouchableOpacity
+            onPress={handleOpenChat}
+            style={stylesDark.headerBtn}>
+            <Ionicons
+              name="chatbubble-ellipses-outline"
+              size={22}
+              color="#2563EB"
+            />
           </TouchableOpacity>
         </View>
 
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={[stylesDark.content, { flexGrow: 1, paddingBottom: 100 }]}
-          showsVerticalScrollIndicator={false}
-        >
+          contentContainerStyle={[
+            stylesDark.content,
+            { flexGrow: 1, paddingBottom: 100 },
+          ]}
+          showsVerticalScrollIndicator={false}>
           {/* Card Principal de Serviço & Endereço */}
           <View style={stylesDark.orderCard}>
             <View style={stylesDark.orderCardMainRow}>
               {/* Informações à esquerda */}
               <View style={stylesDark.orderInfoLeft}>
                 {/* Nome do Cliente em cima */}
-                <Text style={stylesDark.orderBadge}>
-                  {clientName}
-                </Text>
+                <Text style={stylesDark.orderBadge}>{clientName}</Text>
 
                 {/* Nome do Serviço */}
                 <Text style={stylesDark.orderTitle}>
@@ -336,8 +422,7 @@ export const DeslocamentoScreen: React.FC = () => {
               <TouchableOpacity
                 style={stylesDark.mapBoxBtn}
                 onPress={() => setShowMapModal(true)}
-                activeOpacity={0.8}
-              >
+                activeOpacity={0.8}>
                 <View style={stylesDark.mapBoxIconCircle}>
                   <Ionicons name="navigate-sharp" size={24} color="#FF6B00" />
                 </View>
@@ -348,38 +433,72 @@ export const DeslocamentoScreen: React.FC = () => {
             <View style={stylesDark.cardDivider} />
 
             <View style={stylesDark.cardFooterRow}>
-              <Text style={stylesDark.cardFooterText}>Horário: {params.startTime || 'Hoje'}</Text>
+              <Text style={stylesDark.cardFooterText}>
+                Horário: {params.startTime || 'Hoje'}
+              </Text>
             </View>
           </View>
 
           {/* Banner de Dica / Status */}
           {inProgress ? (
-            <View style={[stylesDark.tipBox, { borderColor: '#10B981', backgroundColor: '#F0FDF4' }]}>
-              <Ionicons name="checkmark-circle" size={24} color="#10B981" style={stylesDark.tipIcon} />
+            <View
+              style={[
+                stylesDark.tipBox,
+                { borderColor: '#10B981', backgroundColor: '#F0FDF4' },
+              ]}>
+              <Ionicons
+                name="checkmark-circle"
+                size={24}
+                color="#10B981"
+                style={stylesDark.tipIcon}
+              />
               <View style={stylesDark.tipContent}>
-                <Text style={[stylesDark.tipTitle, { color: '#065F46' }]}>Serviço em Andamento ⚡</Text>
+                <Text style={[stylesDark.tipTitle, { color: '#065F46' }]}>
+                  Serviço em Andamento ⚡
+                </Text>
                 <Text style={[stylesDark.tipSub, { color: '#047857' }]}>
-                  Atendimento iniciado com sucesso. Realize o serviço conforme o agendamento.
+                  Atendimento iniciado com sucesso. Realize o serviço conforme o
+                  agendamento.
                 </Text>
               </View>
             </View>
           ) : arrived ? (
-            <View style={[stylesDark.tipBox, { borderColor: '#FF6B00', backgroundColor: '#FFF7ED' }]}>
-              <Ionicons name="key-outline" size={24} color="#FF6B00" style={stylesDark.tipIcon} />
+            <View
+              style={[
+                stylesDark.tipBox,
+                { borderColor: '#FF6B00', backgroundColor: '#FFF7ED' },
+              ]}>
+              <Ionicons
+                name="key-outline"
+                size={24}
+                color="#FF6B00"
+                style={stylesDark.tipIcon}
+              />
               <View style={stylesDark.tipContent}>
-                <Text style={[stylesDark.tipTitle, { color: '#C2410C' }]}>Chegada Confirmada 🎯</Text>
+                <Text style={[stylesDark.tipTitle, { color: '#C2410C' }]}>
+                  Chegada Confirmada 🎯
+                </Text>
                 <Text style={[stylesDark.tipSub, { color: '#EA580C' }]}>
-                  Solicite o código de 4 dígitos enviado ao cliente para iniciar o atendimento.
+                  Solicite o código de 4 dígitos enviado ao cliente para iniciar
+                  o atendimento.
                 </Text>
               </View>
             </View>
           ) : (
             <View style={stylesDark.tipBox}>
-              <Ionicons name="bulb-outline" size={24} color="#2563EB" style={stylesDark.tipIcon} />
+              <Ionicons
+                name="bulb-outline"
+                size={24}
+                color="#2563EB"
+                style={stylesDark.tipIcon}
+              />
               <View style={stylesDark.tipContent}>
-                <Text style={stylesDark.tipTitle}>Deslocamento em Andamento</Text>
+                <Text style={stylesDark.tipTitle}>
+                  Deslocamento em Andamento
+                </Text>
                 <Text style={stylesDark.tipSub}>
-                  Você informou que está a caminho. Ao chegar no local de atendimento, clique no botão abaixo.
+                  Você informou que está a caminho. Ao chegar no local de
+                  atendimento, clique no botão abaixo.
                 </Text>
               </View>
             </View>
@@ -388,7 +507,12 @@ export const DeslocamentoScreen: React.FC = () => {
           {/* Banner com o Nome do Serviço */}
           <View style={stylesDark.codeCard}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Ionicons name="construct-outline" size={20} color="#2563EB" style={{ marginRight: 8 }} />
+              <Ionicons
+                name="construct-outline"
+                size={20}
+                color="#2563EB"
+                style={{ marginRight: 8 }}
+              />
               <Text style={stylesDark.codeCardText}>
                 Serviço: {params.serviceTitle || 'Serviço Agendado'}
               </Text>
@@ -399,32 +523,58 @@ export const DeslocamentoScreen: React.FC = () => {
         {/* Botão de Ação Inferior */}
         <View style={stylesDark.bottomBar}>
           {inProgress ? (
-            <View style={[stylesDark.bottomActionBtn, { backgroundColor: '#10B981' }]}>
-              <Ionicons name="time-outline" size={22} color="#FFFFFF" style={{ marginRight: 8 }} />
-              <Text style={stylesDark.bottomActionBtnText}>Serviço em Andamento ⏱️</Text>
+            <View
+              style={[
+                stylesDark.bottomActionBtn,
+                { backgroundColor: '#10B981' },
+              ]}>
+              <Ionicons
+                name="time-outline"
+                size={22}
+                color="#FFFFFF"
+                style={{ marginRight: 8 }}
+              />
+              <Text style={stylesDark.bottomActionBtnText}>
+                Serviço em Andamento ⏱️
+              </Text>
             </View>
           ) : arrived ? (
             <TouchableOpacity
-              style={[stylesDark.bottomActionBtn, { backgroundColor: '#FF6B00' }]}
+              style={[
+                stylesDark.bottomActionBtn,
+                { backgroundColor: '#FF6B00' },
+              ]}
               onPress={() => setShowOtpModal(true)}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="key-outline" size={22} color="#FFFFFF" style={{ marginRight: 8 }} />
-              <Text style={stylesDark.bottomActionBtnText}>Digitar Código do Cliente 🔐</Text>
+              activeOpacity={0.85}>
+              <Ionicons
+                name="key-outline"
+                size={22}
+                color="#FFFFFF"
+                style={{ marginRight: 8 }}
+              />
+              <Text style={stylesDark.bottomActionBtnText}>
+                Digitar Código do Cliente 🔐
+              </Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
               style={stylesDark.bottomActionBtn}
               onPress={handleChegueiNoLocal}
               disabled={arrivedLoading}
-              activeOpacity={0.85}
-            >
+              activeOpacity={0.85}>
               {arrivedLoading ? (
                 <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
                 <>
-                  <Ionicons name="checkmark-circle-outline" size={22} color="#FFFFFF" style={{ marginRight: 8 }} />
-                  <Text style={stylesDark.bottomActionBtnText}>Cheguei no Local 🎯</Text>
+                  <Ionicons
+                    name="checkmark-circle-outline"
+                    size={22}
+                    color="#FFFFFF"
+                    style={{ marginRight: 8 }}
+                  />
+                  <Text style={stylesDark.bottomActionBtnText}>
+                    Cheguei no Local 🎯
+                  </Text>
                 </>
               )}
             </TouchableOpacity>
@@ -443,9 +593,12 @@ export const DeslocamentoScreen: React.FC = () => {
                 <View style={{ width: 24 }} />
               </View>
 
-              <Text style={stylesDark.otpTitle}>Digite o código do cliente</Text>
+              <Text style={stylesDark.otpTitle}>
+                Digite o código do cliente
+              </Text>
               <Text style={stylesDark.otpSub}>
-                O cliente recebeu um código de 4 números. Peça este código para iniciar o serviço.
+                O cliente recebeu um código de 4 números. Peça este código para
+                iniciar o serviço.
               </Text>
 
               {/* 4 BOXES DE INPUT */}
@@ -474,25 +627,39 @@ export const DeslocamentoScreen: React.FC = () => {
               ) : null}
 
               <View style={stylesDark.otpRequirements}>
-                <Ionicons name="checkmark-circle-outline" size={16} color="#10B981" />
-                <Text style={stylesDark.otpReqText}>Código de 4 números fornecido pelo cliente</Text>
+                <Ionicons
+                  name="checkmark-circle-outline"
+                  size={16}
+                  color="#10B981"
+                />
+                <Text style={stylesDark.otpReqText}>
+                  Código de 4 números fornecido pelo cliente
+                </Text>
               </View>
 
               <TouchableOpacity
-                style={[stylesDark.otpConfirmBtn, otpLoading && { opacity: 0.7 }]}
+                style={[
+                  stylesDark.otpConfirmBtn,
+                  otpLoading && { opacity: 0.7 },
+                ]}
                 onPress={handleConfirmOtp}
                 disabled={otpLoading}
-                activeOpacity={0.85}
-              >
+                activeOpacity={0.85}>
                 {otpLoading ? (
                   <ActivityIndicator color="#FFFFFF" size="small" />
                 ) : (
-                  <Text style={stylesDark.otpConfirmBtnText}>Confirmar e Iniciar Serviço</Text>
+                  <Text style={stylesDark.otpConfirmBtnText}>
+                    Confirmar e Iniciar Serviço
+                  </Text>
                 )}
               </TouchableOpacity>
 
-              <TouchableOpacity style={stylesDark.otpHelpLink} onPress={handleCallClient}>
-                <Text style={stylesDark.otpHelpText}>Não consegue o código? Ligar para o cliente</Text>
+              <TouchableOpacity
+                style={stylesDark.otpHelpLink}
+                onPress={handleCallClient}>
+                <Text style={stylesDark.otpHelpText}>
+                  Não consegue o código? Ligar para o cliente
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -520,8 +687,7 @@ export const DeslocamentoScreen: React.FC = () => {
                     setShowMapModal(false);
                     openGoogleMaps(address);
                   }}
-                  activeOpacity={0.85}
-                >
+                  activeOpacity={0.85}>
                   <Ionicons name="location-sharp" size={26} color="#FFF" />
                   <Text style={stylesDark.gpsOptionText}>Google Maps</Text>
                 </TouchableOpacity>
@@ -532,14 +698,15 @@ export const DeslocamentoScreen: React.FC = () => {
                     setShowMapModal(false);
                     openWaze(address);
                   }}
-                  activeOpacity={0.85}
-                >
+                  activeOpacity={0.85}>
                   <Ionicons name="car-sport" size={26} color="#FFF" />
                   <Text style={stylesDark.gpsOptionText}>Waze</Text>
                 </TouchableOpacity>
               </View>
 
-              <TouchableOpacity style={stylesDark.modalCancelBtn} onPress={() => setShowMapModal(false)}>
+              <TouchableOpacity
+                style={stylesDark.modalCancelBtn}
+                onPress={() => setShowMapModal(false)}>
                 <Text style={stylesDark.modalCancelText}>Cancelar</Text>
               </TouchableOpacity>
             </View>
@@ -572,16 +739,22 @@ export const DeslocamentoScreen: React.FC = () => {
     <SafeAreaView style={stylesMinimal.container}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={[stylesMinimal.content, { flexGrow: 1, paddingBottom: 40 }]}
-        showsVerticalScrollIndicator={false}
-      >
+        contentContainerStyle={[
+          stylesMinimal.content,
+          { flexGrow: 1, paddingBottom: 40 },
+        ]}
+        showsVerticalScrollIndicator={false}>
         {/* Header minimalista */}
         <View style={stylesMinimal.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={stylesMinimal.backBtn}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={stylesMinimal.backBtn}>
             <Ionicons name="arrow-back" size={20} color="#0F172A" />
             <Text style={stylesMinimal.backText}>Voltar</Text>
           </TouchableOpacity>
-          <Text style={stylesMinimal.screenTitle}>Deslocamento para Serviço</Text>
+          <Text style={stylesMinimal.screenTitle}>
+            Deslocamento para Serviço
+          </Text>
         </View>
 
         {/* Card Único e Minimalista */}
@@ -607,7 +780,9 @@ export const DeslocamentoScreen: React.FC = () => {
             </View>
 
             {!!clientPhone && (
-              <TouchableOpacity onPress={handleCallClient} style={stylesMinimal.phoneCallBtn}>
+              <TouchableOpacity
+                onPress={handleCallClient}
+                style={stylesMinimal.phoneCallBtn}>
                 <Ionicons name="call-outline" size={14} color="#2563EB" />
                 <Text style={stylesMinimal.phoneCallText}>{clientPhone}</Text>
               </TouchableOpacity>
@@ -626,14 +801,18 @@ export const DeslocamentoScreen: React.FC = () => {
           style={stylesMinimal.actionBtn}
           onPress={handleEstouACaminho}
           disabled={loading}
-          activeOpacity={0.88}
-        >
+          activeOpacity={0.88}>
           {loading ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
             <View style={stylesMinimal.actionBtnContent}>
               <Text style={stylesMinimal.actionBtnText}>Estou a Caminho</Text>
-              <Ionicons name="car-sport" size={22} color="#FFFFFF" style={{ marginLeft: 8 }} />
+              <Ionicons
+                name="car-sport"
+                size={22}
+                color="#FFFFFF"
+                style={{ marginLeft: 8 }}
+              />
             </View>
           )}
         </TouchableOpacity>
@@ -661,8 +840,7 @@ export const DeslocamentoScreen: React.FC = () => {
                   setShowMapModal(false);
                   openGoogleMaps(address);
                 }}
-                activeOpacity={0.85}
-              >
+                activeOpacity={0.85}>
                 <Ionicons name="location-sharp" size={26} color="#FFF" />
                 <Text style={stylesDark.gpsOptionText}>Google Maps</Text>
               </TouchableOpacity>
@@ -673,14 +851,15 @@ export const DeslocamentoScreen: React.FC = () => {
                   setShowMapModal(false);
                   openWaze(address);
                 }}
-                activeOpacity={0.85}
-              >
+                activeOpacity={0.85}>
                 <Ionicons name="car-sport" size={26} color="#FFF" />
                 <Text style={stylesDark.gpsOptionText}>Waze</Text>
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={stylesDark.modalCancelBtn} onPress={() => setShowMapModal(false)}>
+            <TouchableOpacity
+              style={stylesDark.modalCancelBtn}
+              onPress={() => setShowMapModal(false)}>
               <Text style={stylesDark.modalCancelText}>Cancelar</Text>
             </TouchableOpacity>
           </View>
@@ -1225,4 +1404,3 @@ const stylesDark = StyleSheet.create({
 });
 
 export default DeslocamentoScreen;
-

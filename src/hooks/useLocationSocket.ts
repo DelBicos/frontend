@@ -74,7 +74,11 @@ export function useLocationSocket(
   onLocationUpdate?: (event: LocationUpdateEvent) => void,
   onProximityWarning?: (event: ProximityWarningEvent) => void,
   onLocationArrived?: (event: LocationArrivedEvent) => void,
-): { connected: boolean; sendLocation: typeof sendLocationUpdate; sendArrived: typeof sendLocationArrived } {
+): {
+  connected: boolean;
+  sendLocation: typeof sendLocationUpdate;
+  sendArrived: typeof sendLocationArrived;
+} {
   const token = useUserStore((state) => state.token);
   const locationCbRef = useRef(onLocationUpdate);
   const proximityCbRef = useRef(onProximityWarning);
@@ -96,23 +100,44 @@ export function useLocationSocket(
     const socket = ensureLocationSocket(token);
     if (!socket) return;
 
-    const handleConnect = () => setConnected(true);
+    const joinRoom = () => {
+      if (appointmentId) {
+        const numericId = Number(appointmentId);
+        if (!isNaN(numericId) && numericId > 0) {
+          socket.emit('appointment:join', numericId);
+        }
+      }
+    };
+
+    const handleConnect = () => {
+      setConnected(true);
+      joinRoom();
+    };
     const handleDisconnect = () => setConnected(false);
 
     const handleLocationUpdate = (event: LocationUpdateEvent) => {
-      if (appointmentId && String(event.appointment_id) === String(appointmentId)) {
+      if (
+        appointmentId &&
+        String(event.appointment_id) === String(appointmentId)
+      ) {
         locationCbRef.current?.(event);
       }
     };
 
     const handleProximityWarning = (event: ProximityWarningEvent) => {
-      if (appointmentId && String(event.appointment_id) === String(appointmentId)) {
+      if (
+        appointmentId &&
+        String(event.appointment_id) === String(appointmentId)
+      ) {
         proximityCbRef.current?.(event);
       }
     };
 
     const handleLocationArrived = (event: LocationArrivedEvent) => {
-      if (appointmentId && String(event.appointment_id) === String(appointmentId)) {
+      if (
+        appointmentId &&
+        String(event.appointment_id) === String(appointmentId)
+      ) {
         arrivedCbRef.current?.(event);
       }
     };
@@ -123,8 +148,8 @@ export function useLocationSocket(
     socket.on('location:proximity_warning', handleProximityWarning);
     socket.on('location:arrived', handleLocationArrived);
 
-    if (appointmentId) {
-      socket.emit('appointment:join', Number(appointmentId));
+    if (socket.connected) {
+      joinRoom();
     }
 
     setConnected(socket.connected);
@@ -138,6 +163,9 @@ export function useLocationSocket(
     };
   }, [token, appointmentId]);
 
-  return { connected, sendLocation: sendLocationUpdate, sendArrived: sendLocationArrived };
+  return {
+    connected,
+    sendLocation: sendLocationUpdate,
+    sendArrived: sendLocationArrived,
+  };
 }
-
