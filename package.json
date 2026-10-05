@@ -34,6 +34,8 @@
     "format:fix": "prettier --write .",
     "postinstall": "patch-package",
     "prepare": "husky",
+    "rules:sync": "node scripts/rules/sync.mjs",
+    "rules:check": "node scripts/rules/sync.mjs --check",
     "docker:build": "docker-compose build",
     "docker:up": "docker-compose up -d",
     "docker:start": "docker-compose exec delbicos-frontend npm run start",
