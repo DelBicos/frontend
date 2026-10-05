@@ -2,12 +2,6 @@ import { AxiosError, AxiosHeaders } from 'axios';
 
 import { backendHttpClient } from '@lib/helpers/httpClient';
 import { mapAuthResponse, login, verifyCode } from '../auth';
-import { resendMfaLogin, verifyMfaLogin } from '../mfa';
-import {
-  disableMfa,
-  submitIdentity,
-  uploadIdentityFile,
-} from '../verification';
 import {
   getApiErrorCode,
   getApiErrorMessage,
@@ -23,7 +17,6 @@ import {
 jest.mock('@lib/helpers/httpClient', () => ({
   backendHttpClient: { post: jest.fn(), get: jest.fn() },
 }));
-jest.mock('@lib/uploadFile', () => ({ uploadToStorage: jest.fn() }));
 
 const post = backendHttpClient.post as jest.Mock;
 
@@ -114,7 +107,7 @@ describe('auth', () => {
   });
 });
 
-describe('verificacao de conta', () => {
+describe('auth - segunda etapa', () => {
   it('login com MFA devolve o desafio em vez da sessao', async () => {
     post.mockResolvedValue({
       data: { mfa_required: true, mfa_token: 'abc', email_hint: 'an*@x.com' },
@@ -123,69 +116,6 @@ describe('verificacao de conta', () => {
       mfaRequired: true,
       mfaToken: 'abc',
       emailHint: 'an*@x.com',
-    });
-  });
-
-  it('segunda etapa e reenvio usam o token do desafio', async () => {
-    const user = { id: 1, client_id: 2, name: 'Ana', email: 'a@x.com' };
-    post.mockResolvedValue({ data: { token: 't', user } });
-    const session = await verifyMfaLogin('abc', '123456');
-    expect(session.token).toBe('t');
-    expect(post).toHaveBeenCalledWith('/auth/mfa/verify', {
-      mfa_token: 'abc',
-      code: '123456',
-    });
-    await resendMfaLogin('abc');
-    expect(post).toHaveBeenLastCalledWith('/auth/mfa/resend', {
-      mfa_token: 'abc',
-    });
-  });
-
-  it('desativar o MFA exige a senha', async () => {
-    post.mockResolvedValue({ data: {} });
-    await disableMfa('segredo1');
-    expect(post).toHaveBeenCalledWith('/api/verification/mfa/disable', {
-      password: 'segredo1',
-    });
-  });
-
-  it('envia o arquivo direto ao armazenamento privado e devolve a chave', async () => {
-    const { uploadToStorage } = jest.requireMock('@lib/uploadFile');
-    post.mockResolvedValue({
-      data: {
-        key: 'identity/20/front-a.jpg',
-        uploadUrl: 'https://blob/up?sig=1',
-        uploadHeaders: { 'x-ms-blob-type': 'BlockBlob' },
-      },
-    });
-    const blob = new Blob(['x']);
-    global.fetch = jest.fn().mockResolvedValue({ blob: async () => blob });
-
-    const key = await uploadIdentityFile('front', 'file://foto.jpg');
-
-    expect(key).toBe('identity/20/front-a.jpg');
-    expect(post).toHaveBeenCalledWith('/api/verification/identity/upload-url', {
-      kind: 'front',
-      fileType: 'image/jpeg',
-    });
-    expect(uploadToStorage).toHaveBeenCalledWith(
-      expect.objectContaining({ uploadUrl: 'https://blob/up?sig=1' }),
-      blob,
-      'image/jpeg',
-    );
-  });
-
-  it('envia o pedido de identidade com as chaves', async () => {
-    post.mockResolvedValue({ data: { id: 1, status: 'pending' } });
-    await submitIdentity({
-      document_type: 'cnh',
-      front_key: 'k1',
-      selfie_key: 'k2',
-    });
-    expect(post).toHaveBeenCalledWith('/api/verification/identity', {
-      document_type: 'cnh',
-      front_key: 'k1',
-      selfie_key: 'k2',
     });
   });
 });

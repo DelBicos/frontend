@@ -5,11 +5,7 @@ import CodeEntry from '@components/ui/CodeEntry';
 import InlineAlert from '@components/ui/InlineAlert';
 import PasswordInput from '@components/ui/PasswordInput';
 import { useColors } from '@theme/ThemeProvider';
-import {
-  confirmEnableMfa,
-  disableMfa,
-  requestEnableMfa,
-} from '@api/verification';
+import { useVerificationStore } from '@stores/Verification';
 import { getApiErrorMessage } from '@api/errors';
 import { ProfileCard } from '../../components/ProfilePage';
 import { createStyles } from './styles';
@@ -26,6 +22,8 @@ type Step = 'idle' | 'code' | 'password';
 /** Ativa ou desativa a verificacao em duas etapas por codigo no e-mail. */
 function MfaCard({ enabled, onChanged }: Props) {
   const colors = useColors();
+  const { requestEnableMfa, confirmEnableMfa, disableMfa } =
+    useVerificationStore();
   const styles = createStyles(colors);
   const [step, setStep] = useState<Step>('idle');
   const [hint, setHint] = useState('');

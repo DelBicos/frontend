@@ -16,12 +16,9 @@ import {
   Sheet,
   SheetButton,
 } from '@components/features/AppointmentManage/Sheet';
-import {
-  AdminVerification,
-  IdentityStatus,
-  listAdminVerifications,
-  reviewAdminVerification,
-} from '@api/verification';
+import { useAdminStore } from '@stores/Admin';
+import type { AdminVerification } from '@stores/Admin/types';
+import type { IdentityStatus } from '@stores/Verification/types';
 import { getApiErrorMessage } from '@api/errors';
 import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
@@ -39,6 +36,7 @@ const DOCUMENT_LABELS = { rg: 'RG', cnh: 'CNH' } as const;
 /** Fila de verificacao de identidade dos profissionais. */
 export default function AdminVerifications() {
   const colors = useColors();
+  const { listVerifications } = useAdminStore();
   const styles = createStyles(colors);
   const [filter, setFilter] = useState<Filter>('pending');
   const [items, setItems] = useState<AdminVerification[]>([]);
@@ -50,7 +48,7 @@ export default function AdminVerifications() {
     setLoading(true);
     setError(null);
     try {
-      setItems(await listAdminVerifications(filter));
+      setItems(await listVerifications(filter));
     } catch (err) {
       setError(
         getApiErrorMessage(err, 'Não foi possível carregar os pedidos.'),
@@ -58,7 +56,7 @@ export default function AdminVerifications() {
     } finally {
       setLoading(false);
     }
-  }, [filter]);
+  }, [filter, listVerifications]);
 
   useEffect(() => {
     void load();
@@ -158,6 +156,7 @@ function ReviewSheet({
   onDone: () => void;
 }) {
   const colors = useColors();
+  const { reviewVerification } = useAdminStore();
   const styles = createStyles(colors);
   const [reason, setReason] = useState('');
   const [rejecting, setRejecting] = useState(false);
@@ -172,7 +171,7 @@ function ReviewSheet({
     setBusy(true);
     setError(null);
     try {
-      await reviewAdminVerification(item.id, decision, reason.trim());
+      await reviewVerification(item.id, decision, reason.trim());
       onDone();
     } catch (err) {
       setError(

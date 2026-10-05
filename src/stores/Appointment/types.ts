@@ -164,4 +164,80 @@ export interface AppointmentStore {
   completeAppointment: (appointmentId: number) => Promise<boolean>;
 
   fetchInvoice: (appointmentId: string | number) => Promise<InvoiceData | null>;
+
+  /** Quanto seria retido/devolvido se o usuario cancelasse agora. */
+  previewCancellation: (id: AppointmentId) => Promise<CancellationOutcome>;
+  cancelAppointment: (
+    id: AppointmentId,
+    reason?: string,
+  ) => Promise<CancelResult>;
+  /** Profissional registra que o cliente nao compareceu. */
+  markNoShow: (id: AppointmentId) => Promise<void>;
+  /** Horarios livres (HH:mm) do profissional em um dia (AAAA-MM-DD). */
+  getRescheduleSlots: (id: AppointmentId, date: string) => Promise<string[]>;
+  /** Pede um novo horario (ISO); a outra parte precisa aceitar. */
+  requestReschedule: (id: AppointmentId, startTime: string) => Promise<void>;
+  respondToReschedule: (id: AppointmentId, accept: boolean) => Promise<void>;
+  openDispute: (
+    id: AppointmentId,
+    input: { reason: DisputeReason; description: string },
+  ) => Promise<Dispute>;
+  getDispute: (id: AppointmentId) => Promise<Dispute | null>;
+}
+
+// --- Cancelamento, reagendamento e disputas ---
+
+/** Identificador publico do agendamento (o backend expoe o short_id). */
+export type AppointmentId = string | number;
+
+export type CancellationTier =
+  'unconfirmed' | 'free' | 'mid' | 'late' | 'full_refund';
+
+export interface CancellationOutcome {
+  tier: CancellationTier;
+  retentionPercent: number;
+  retainedCents: number;
+  refundCents: number;
+}
+
+export interface CancelResult {
+  tier: CancellationTier;
+  retainedCents: number;
+  refundedCents: number;
+}
+
+export type DisputeReason =
+  | 'service_not_done'
+  | 'poor_quality'
+  | 'wrong_charge'
+  | 'wrong_no_show'
+  | 'professional_absent'
+  | 'other';
+
+export type DisputeResolution = 'refund_full' | 'refund_partial' | 'rejected';
+
+export interface Dispute {
+  id: number;
+  appointment_id: number;
+  reason: DisputeReason;
+  description: string;
+  status: 'open' | 'resolved';
+  resolution?: DisputeResolution | null;
+  refund_cents?: number | null;
+  resolution_note?: string | null;
+  createdAt: string;
+  resolved_at?: string | null;
+}
+
+/** Disputa com os dados do agendamento, como o painel admin recebe. */
+export interface AdminDispute extends Dispute {
+  Appointment?: {
+    short_id: string;
+    status: string;
+    retained_cents?: number | null;
+    refunded_cents?: number | null;
+    Service?: { title: string; price?: string };
+    Client?: { User?: { name: string; email: string } };
+    Professional?: { User?: { name: string; email: string } };
+  };
 }

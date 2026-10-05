@@ -10,6 +10,7 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { FontAwesome } from '@expo/vector-icons';
 import { useUserStore } from '@stores/User';
+import type { MfaChallenge } from '@stores/User/types';
 import { useColors } from '@theme/ThemeProvider';
 import CustomTextInput from '@components/ui/CustomTextInput';
 import PasswordInput from '@components/ui/PasswordInput';
@@ -20,7 +21,6 @@ import AuthLayout, {
 import { leaveAuthFlow } from '@lib/auth/leaveAuthFlow';
 import { checkForNewNotifications } from '@utils/usePushNotifications';
 import CodeEntry from '@components/ui/CodeEntry';
-import { resendMfaLogin, type MfaChallenge } from '@api/mfa';
 import { getApiErrorMessage } from '@api/errors';
 
 import { errorMessage } from '@utils/errors';
@@ -100,7 +100,7 @@ function LoginScreen() {
     if (!challenge) return;
     setError(null);
     try {
-      await resendMfaLogin(challenge.mfaToken);
+      await useUserStore.getState().resendMfaCode(challenge.mfaToken);
       setCode('');
       setNotice('Enviamos um novo código.');
     } catch (err) {

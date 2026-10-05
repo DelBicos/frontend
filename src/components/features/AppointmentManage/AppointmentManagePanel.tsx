@@ -2,12 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import InlineAlert from '@components/ui/InlineAlert';
 import { getApiErrorMessage } from '@api/errors';
-import {
-  Dispute,
-  getDispute,
-  markNoShow,
-  respondToReschedule,
-} from '@api/appointments';
+import { useAppointmentStore } from '@stores/Appointment';
+import type { Dispute } from '@stores/Appointment/types';
 import {
   AgendaRole,
   canCancel,
@@ -62,6 +58,7 @@ export function AppointmentManagePanel({
   onChanged,
 }: Props) {
   const colors = useColors();
+  const { getDispute, markNoShow, respondToReschedule } = useAppointmentStore();
   const styles = createStyles(colors);
   const [sheet, setSheet] = useState<Sheet>(null);
   const [busy, setBusy] = useState<Busy>(null);
@@ -83,7 +80,7 @@ export function AppointmentManagePanel({
     return () => {
       cancelled = true;
     };
-  }, [a.id, a.status, a.payment_intent_id]);
+  }, [a.id, a.status, a.payment_intent_id, getDispute]);
 
   const done = (message: string) => {
     setError(null);

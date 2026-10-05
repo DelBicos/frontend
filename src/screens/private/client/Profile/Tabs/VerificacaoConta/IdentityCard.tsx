@@ -7,13 +7,12 @@ import Chip from '@components/ui/Chip';
 import InlineAlert from '@components/ui/InlineAlert';
 import VerifiedBadge from '@components/ui/VerifiedBadge';
 import { useColors } from '@theme/ThemeProvider';
-import {
-  submitIdentity,
-  uploadIdentityFile,
-  type DocumentType,
-  type IdentityFile,
-  type VerificationStatus,
-} from '@api/verification';
+import { useVerificationStore } from '@stores/Verification';
+import type {
+  DocumentType,
+  IdentityFile,
+  VerificationStatus,
+} from '@stores/Verification/types';
 import { getApiErrorMessage } from '@api/errors';
 import { ProfileCard } from '../../components/ProfilePage';
 import { createStyles } from './styles';
@@ -46,6 +45,7 @@ interface Props {
 /** Envio de documento e selfie para o selo de profissional verificado. */
 function IdentityCard({ status, onChanged }: Props) {
   const colors = useColors();
+  const { submitIdentity, uploadIdentityFile } = useVerificationStore();
   const styles = createStyles(colors);
   const [documentType, setDocumentType] = useState<DocumentType>('cnh');
   const [picked, setPicked] = useState<Picked>({});

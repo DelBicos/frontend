@@ -3,7 +3,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import Chip, { ChipGroup } from '@components/ui/Chip';
 import InlineAlert from '@components/ui/InlineAlert';
 import { getApiErrorMessage } from '@api/errors';
-import { getRescheduleSlots, requestReschedule } from '@api/appointments';
+import { useAppointmentStore } from '@stores/Appointment';
 import {
   formatLongDate,
   formatShortDay,
@@ -35,6 +35,7 @@ export function RescheduleSheet({
   onDone,
 }: RescheduleSheetProps) {
   const colors = useColors();
+  const { getRescheduleSlots, requestReschedule } = useAppointmentStore();
   const styles = createStyles(colors);
   const days = useMemo(
     () => (visible ? nextDays(minBookingDate(), DAYS_AHEAD) : []),
@@ -77,7 +78,7 @@ export function RescheduleSheet({
     return () => {
       cancelled = true;
     };
-  }, [visible, day, appointment.id]);
+  }, [visible, day, appointment.id, getRescheduleSlots]);
 
   const submit = async () => {
     if (!day || !time) return;

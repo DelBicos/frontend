@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { BarChart, LineChart } from 'react-native-chart-kit';
 import Chip, { ChipGroup } from '@components/ui/Chip';
@@ -6,7 +6,7 @@ import InlineAlert from '@components/ui/InlineAlert';
 import { useColors } from '@theme/ThemeProvider';
 import AdminShell from '../components/AdminShell';
 import ChartCard from '../components/ChartCard';
-import { useAdminStats } from '../components/useAdminStats';
+import { useAdminStore } from '@stores/Admin';
 import {
   formatCount,
   formatMoney,
@@ -21,7 +21,11 @@ const AdminAnalytics: React.FC = () => {
   const colors = useColors();
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
-  const { stats, loading, error } = useAdminStats(year);
+  const { stats, loading, error, fetchStats } = useAdminStore();
+
+  useEffect(() => {
+    void fetchStats(year);
+  }, [fetchStats, year]);
 
   const chartConfig = useMemo(
     () => ({
@@ -54,7 +58,7 @@ const AdminAnalytics: React.FC = () => {
       </ChipGroup>
 
       {error ? <InlineAlert type="error">{error}</InlineAlert> : null}
-      {loading ? (
+      {loading || (!stats && !error) ? (
         <ActivityIndicator size="large" color={colors.primaryOrange} />
       ) : null}
 

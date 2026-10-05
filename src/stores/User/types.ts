@@ -1,4 +1,8 @@
-import type { MfaChallenge } from '@api/mfa';
+/** Segunda etapa do login: o codigo foi enviado ao e-mail da conta. */
+export interface MfaChallenge {
+  mfaToken: string;
+  emailHint: string;
+}
 
 export type User = {
   id: number;
@@ -82,6 +86,8 @@ export type UserStore = {
     password: string,
   ) => Promise<MfaChallenge | null>;
   completeMfaSignIn: (mfaToken: string, code: string) => Promise<void>;
+  /** Novo codigo para um login que aguarda a segunda etapa. */
+  resendMfaCode: (mfaToken: string) => Promise<void>;
   changePassword: (
     currentPassword: string,
     newPassword: string,

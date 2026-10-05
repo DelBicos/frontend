@@ -8,11 +8,8 @@ import {
 } from 'react-native';
 import InlineAlert from '@components/ui/InlineAlert';
 import { getApiErrorMessage } from '@api/errors';
-import {
-  cancelAppointment,
-  CancellationOutcome,
-  previewCancellation,
-} from '@api/appointments';
+import { useAppointmentStore } from '@stores/Appointment';
+import type { CancellationOutcome } from '@stores/Appointment/types';
 import { AgendaRole, centsToCurrency } from '@lib/appointments';
 import { Appointment } from '@stores/Appointment/types';
 import { useColors } from '@theme/ThemeProvider';
@@ -65,6 +62,7 @@ export function CancelSheet({
   onDone,
 }: CancelSheetProps) {
   const colors = useColors();
+  const { previewCancellation, cancelAppointment } = useAppointmentStore();
   const styles = createStyles(colors);
   const [outcome, setOutcome] = useState<CancellationOutcome | null>(null);
   const [reason, setReason] = useState('');
@@ -92,7 +90,7 @@ export function CancelSheet({
     return () => {
       cancelled = true;
     };
-  }, [visible, appointment.id]);
+  }, [visible, appointment.id, previewCancellation]);
 
   const confirm = async () => {
     setBusy(true);

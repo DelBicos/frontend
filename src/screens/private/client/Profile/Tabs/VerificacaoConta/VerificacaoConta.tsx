@@ -1,15 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import InlineAlert from '@components/ui/InlineAlert';
 import VerifiedBadge from '@components/ui/VerifiedBadge';
 import { useColors } from '@theme/ThemeProvider';
 import { useUserStore } from '@stores/User';
-import {
-  getVerificationStatus,
-  type VerificationStatus,
-} from '@api/verification';
-import { getApiErrorMessage } from '@api/errors';
+import { useVerificationStore } from '@stores/Verification';
 import ProfilePage, { ProfileCard } from '../../components/ProfilePage';
 import IdentityCard from './IdentityCard';
 import MfaCard from './MfaCard';
@@ -44,21 +40,11 @@ function Step({
 
 /** Verificacao de conta: e-mail, duas etapas e (profissionais) identidade. */
 const VerificacaoConta: React.FC = () => {
-  const [status, setStatus] = useState<VerificationStatus | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { status, error, fetchStatus: load } = useVerificationStore();
   const fetchCurrentUser = useUserStore((s) => s.fetchCurrentUser);
 
-  const load = useCallback(async () => {
-    try {
-      setStatus(await getVerificationStatus());
-      setError(null);
-    } catch (err) {
-      setError(getApiErrorMessage(err, 'Não foi possível carregar.'));
-    }
-  }, []);
-
   useEffect(() => {
-    load();
+    void load();
   }, [load]);
 
   const changed = useCallback(() => {

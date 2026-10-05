@@ -14,12 +14,11 @@ import {
   SheetButton,
 } from '@components/features/AppointmentManage/Sheet';
 import { DISPUTE_REASON_LABELS } from '@components/features/AppointmentManage/DisputeSheet';
-import {
+import { useAdminStore } from '@stores/Admin';
+import type {
   AdminDispute,
   DisputeResolution,
-  listAdminDisputes,
-  resolveAdminDispute,
-} from '@api/appointments';
+} from '@stores/Appointment/types';
 import { getApiErrorMessage } from '@api/errors';
 import { centsToCurrency } from '@lib/appointments';
 import { useColors } from '@theme/ThemeProvider';
@@ -42,6 +41,7 @@ export function reaisToCents(input: string): number | null {
 
 export default function AdminDisputes() {
   const colors = useColors();
+  const { listDisputes } = useAdminStore();
   const styles = createStyles(colors);
   const [filter, setFilter] = useState<Filter>('open');
   const [items, setItems] = useState<AdminDispute[]>([]);
@@ -53,7 +53,7 @@ export default function AdminDisputes() {
     setLoading(true);
     setError(null);
     try {
-      setItems(await listAdminDisputes(filter));
+      setItems(await listDisputes(filter));
     } catch (err) {
       setError(
         getApiErrorMessage(err, 'Não foi possível carregar as disputas.'),
@@ -61,7 +61,7 @@ export default function AdminDisputes() {
     } finally {
       setLoading(false);
     }
-  }, [filter]);
+  }, [filter, listDisputes]);
 
   useEffect(() => {
     void load();
@@ -171,6 +171,7 @@ function ResolveSheet({
   onDone: () => void;
 }) {
   const colors = useColors();
+  const { resolveDispute } = useAdminStore();
   const styles = createStyles(colors);
   const [resolution, setResolution] =
     useState<DisputeResolution>('refund_full');
@@ -195,7 +196,7 @@ function ResolveSheet({
     setBusy(true);
     setError(null);
     try {
-      await resolveAdminDispute(dispute.id, {
+      await resolveDispute(dispute.id, {
         resolution,
         refundCents,
         note: note.trim() || undefined,

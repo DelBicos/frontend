@@ -3,7 +3,8 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 import Chip, { ChipGroup } from '@components/ui/Chip';
 import InlineAlert from '@components/ui/InlineAlert';
 import { getApiErrorMessage } from '@api/errors';
-import { DisputeReason, openDispute } from '@api/appointments';
+import { useAppointmentStore } from '@stores/Appointment';
+import type { DisputeReason } from '@stores/Appointment/types';
 import { Appointment, AppointmentStatus } from '@stores/Appointment/types';
 import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
@@ -47,6 +48,7 @@ export function DisputeSheet({
   onDone,
 }: DisputeSheetProps) {
   const colors = useColors();
+  const { openDispute } = useAppointmentStore();
   const styles = createStyles(colors);
   const reasons = reasonsFor(appointment.status);
   const [reason, setReason] = useState<DisputeReason>(reasons[0]);

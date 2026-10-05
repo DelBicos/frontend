@@ -5,8 +5,7 @@ import { UserStore, Address, User, UpdateUserData } from './types';
 import { AxiosError } from 'axios';
 import { backendHttpClient } from '@lib/helpers/httpClient';
 import { uploadToStorage } from '@lib/uploadFile';
-import { login as loginRequest } from '@api/auth';
-import { verifyMfaLogin } from '@api/mfa';
+import { login as loginRequest, mapAuthResponse } from '@api/auth';
 import { getApiErrorMessage, getApiErrorStatus } from '@api/errors';
 import { useChatBotStore } from '@stores/ChatBot';
 
@@ -117,7 +116,11 @@ export const useUserStore = create<UserStore>()(
       completeMfaSignIn: async (mfaToken: string, code: string) => {
         let session;
         try {
-          session = await verifyMfaLogin(mfaToken, code);
+          const { data } = await backendHttpClient.post('/auth/mfa/verify', {
+            mfa_token: mfaToken,
+            code,
+          });
+          session = mapAuthResponse(data);
         } catch (error) {
           throw new Error(
             getApiErrorMessage(error, 'Código incorreto ou expirado.'),
@@ -125,6 +128,12 @@ export const useUserStore = create<UserStore>()(
         }
         get().setLoggedInUser(session);
         set({ avatarBase64: session.user.avatar_uri || null });
+      },
+
+      resendMfaCode: async (mfaToken: string) => {
+        await backendHttpClient.post('/auth/mfa/resend', {
+          mfa_token: mfaToken,
+        });
       },
 
       changePassword: async (currentPassword: string, newPassword: string) => {

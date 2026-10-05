@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import {
   Appointment,
+  CancelResult,
+  CancellationOutcome,
+  Dispute,
   AppointmentSheetRow,
   AppointmentStatus,
   AppointmentStore,
@@ -163,5 +166,61 @@ export const useAppointmentStore = create<AppointmentStore>()((set) => ({
       logger.error('Failed to update appointment status:', error);
       return false;
     }
+  },
+
+  // Os horarios e valores de cada acao sao decididos pelo servidor; as regras
+  // espelhadas no app (src/lib/appointments.ts) servem so para a interface.
+  previewCancellation: async (id) => {
+    const { data } = await backendHttpClient.get<CancellationOutcome>(
+      `/api/appointments/${id}/cancellation-preview`,
+    );
+    return data;
+  },
+
+  cancelAppointment: async (id, reason) => {
+    const { data } = await backendHttpClient.post<CancelResult>(
+      `/api/appointments/${id}/cancel`,
+      { reason: reason?.trim() || undefined },
+    );
+    return data;
+  },
+
+  markNoShow: async (id) => {
+    await backendHttpClient.post(`/api/appointments/${id}/no-show`);
+  },
+
+  getRescheduleSlots: async (id, date) => {
+    const { data } = await backendHttpClient.get<{
+      date: string;
+      slots: string[];
+    }>(`/api/appointments/${id}/reschedule-slots`, { params: { date } });
+    return data.slots;
+  },
+
+  requestReschedule: async (id, startTime) => {
+    await backendHttpClient.post(`/api/appointments/${id}/reschedule`, {
+      start_time: startTime,
+    });
+  },
+
+  respondToReschedule: async (id, accept) => {
+    await backendHttpClient.post(`/api/appointments/${id}/reschedule/respond`, {
+      accept,
+    });
+  },
+
+  openDispute: async (id, input) => {
+    const { data } = await backendHttpClient.post<Dispute>(
+      `/api/appointments/${id}/dispute`,
+      input,
+    );
+    return data;
+  },
+
+  getDispute: async (id) => {
+    const { data } = await backendHttpClient.get<Dispute | null>(
+      `/api/appointments/${id}/dispute`,
+    );
+    return data ?? null;
   },
 }));

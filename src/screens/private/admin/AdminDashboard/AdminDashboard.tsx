@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import InlineAlert from '@components/ui/InlineAlert';
@@ -6,7 +6,7 @@ import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
 import AdminShell from '../components/AdminShell';
 import StatCard from '../components/StatCard';
-import { useAdminStats } from '../components/useAdminStats';
+import { useAdminStore } from '@stores/Admin';
 import { formatCount, formatMoney, STATUS_LABELS } from '../components/format';
 
 import { useNavigation } from '@react-navigation/native';
@@ -16,7 +16,11 @@ export default function AdminDashboard() {
   const navigation = useNavigation<AppNavigation>();
   const colors = useColors();
   const styles = createStyles(colors);
-  const { stats, loading, error } = useAdminStats();
+  const { stats, loading, error, fetchStats } = useAdminStore();
+
+  useEffect(() => {
+    void fetchStats();
+  }, [fetchStats]);
 
   const queues = stats?.queues;
   const kpis = stats?.kpis;
@@ -26,7 +30,7 @@ export default function AdminDashboard() {
       title="Painel administrativo"
       subtitle="O que precisa da sua decisão e um resumo do DelBicos.">
       {error ? <InlineAlert type="error">{error}</InlineAlert> : null}
-      {loading ? (
+      {loading || (!stats && !error) ? (
         <ActivityIndicator size="large" color={colors.primaryOrange} />
       ) : null}
 
