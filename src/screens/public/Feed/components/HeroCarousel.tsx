@@ -13,7 +13,7 @@ import {
 import { FontAwesome } from '@expo/vector-icons';
 import { HighlightCard, HighlightItem } from '@components/ui/HighlightCard';
 
-import { webStyle } from '@lib/types/web';
+import { webStyle } from '@utils/webStyle';
 import type { StyleProp, ViewStyle } from 'react-native';
 const AUTOPLAY_INTERVAL_MS = 6000;
 

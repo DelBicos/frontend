@@ -25,7 +25,7 @@ import SearchField from '@components/ui/SearchField';
 import Chip, { ChipGroup } from '@components/ui/Chip';
 import { createStyles } from './styles';
 
-import type { WebPressableState } from '@lib/types/web';
+import type { WebPressableState } from '@utils/webStyle';
 type Status = 'loading' | 'ready' | 'error';
 
 /**

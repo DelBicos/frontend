@@ -9,7 +9,7 @@ import {
 import { backendHttpClient } from '@lib/helpers/httpClient';
 
 import { logger } from '@lib/logger';
-import { errorMessage } from '@lib/utils/errors';
+import { errorMessage } from '@utils/errors';
 export const useFavoriteStore = create<FavoriteState>()(
   persist(
     (set, get) => ({

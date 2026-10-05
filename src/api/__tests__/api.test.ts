@@ -23,7 +23,7 @@ import {
 jest.mock('@lib/helpers/httpClient', () => ({
   backendHttpClient: { post: jest.fn(), get: jest.fn() },
 }));
-jest.mock('@lib/utils/uploadFile', () => ({ uploadToStorage: jest.fn() }));
+jest.mock('@lib/uploadFile', () => ({ uploadToStorage: jest.fn() }));
 
 const post = backendHttpClient.post as jest.Mock;
 
@@ -150,7 +150,7 @@ describe('verificacao de conta', () => {
   });
 
   it('envia o arquivo direto ao armazenamento privado e devolve a chave', async () => {
-    const { uploadToStorage } = jest.requireMock('@lib/utils/uploadFile');
+    const { uploadToStorage } = jest.requireMock('@lib/uploadFile');
     post.mockResolvedValue({
       data: {
         key: 'identity/20/front-a.jpg',

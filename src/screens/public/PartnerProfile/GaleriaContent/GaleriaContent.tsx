@@ -13,7 +13,7 @@ import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
 import { useBreakpoint } from '@lib/hooks/useBreakpoint';
 
-import { webStyle, WebPressableState } from '@lib/types/web';
+import { webStyle, WebPressableState } from '@utils/webStyle';
 type Imagem = {
   id: string;
   url: string;

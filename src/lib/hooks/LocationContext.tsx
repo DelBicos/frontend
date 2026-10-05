@@ -9,7 +9,7 @@ import React, {
 import { useUserStore } from '@stores/User';
 import { AddressData } from './types';
 
-import { errorMessage } from '@lib/utils/errors';
+import { errorMessage } from '@utils/errors';
 import { logger } from '@lib/logger';
 const LOCATIONIQ_API_KEY = process.env.EXPO_PUBLIC_LOCATIONIQ_API_KEY || '';
 

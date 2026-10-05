@@ -1,7 +1,7 @@
 import { Platform, StyleSheet } from 'react-native';
 import { ColorsType } from '@theme/types';
 
-import { webStyle } from '@lib/types/web';
+import { webStyle } from '@utils/webStyle';
 const GAP = 12;
 
 export const createStyles = (colors: ColorsType, isCompact: boolean) =>

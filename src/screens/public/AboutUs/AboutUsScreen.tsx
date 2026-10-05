@@ -8,8 +8,8 @@ import SectionHeader from '@components/ui/SectionHeader';
 import { Developer, developers } from './aboutUsData';
 import { createStyles } from './styles';
 
-import type { WebPressableState } from '@lib/types/web';
-import type { FontAwesomeName } from '@lib/types/icons';
+import type { WebPressableState } from '@utils/webStyle';
+import type { FontAwesomeName } from '@utils/iconNames';
 const teamPhoto = require('@assets/aboutus/TeamDelbicos-profile.png');
 // Proporcao da imagem original (631 x 520).
 const TEAM_PHOTO_RATIO = 631 / 520;

@@ -13,8 +13,9 @@ import { isValidCPF } from '@utils/validators';
 import ProfilePage, { ProfileCard } from '../../components/ProfilePage';
 import { createStyles } from './styles';
 
-import { useAppNavigation } from '@screens/useAppNavigation';
-import { errorMessage } from '@lib/utils/errors';
+import { errorMessage } from '@utils/errors';
+import { useNavigation } from '@react-navigation/native';
+import type { AppNavigation } from '@screens/types';
 const MAX_DESCRIPTION = 1500;
 const MIN_DESCRIPTION = 30;
 /** 0 = sem limite de distancia. */
@@ -42,7 +43,7 @@ const maskCnpj = (text: string) =>
 const TornarParceiroForm: React.FC = () => {
   const colors = useColors();
   const styles = createStyles(colors);
-  const navigation = useAppNavigation();
+  const navigation = useNavigation<AppNavigation>();
   const { user, becomeProfessional } = useUserStore();
   const accountCpf = user?.cpf ?? '';
 

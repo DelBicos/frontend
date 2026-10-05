@@ -1,5 +1,5 @@
 import { backendHttpClient } from '@lib/helpers/httpClient';
-import { uploadToStorage, type UploadTarget } from '@lib/utils/uploadFile';
+import { uploadToStorage, type UploadTarget } from '@lib/uploadFile';
 
 export type DocumentType = 'rg' | 'cnh';
 export type IdentityFile = 'front' | 'back' | 'selfie';

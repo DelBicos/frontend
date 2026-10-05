@@ -12,7 +12,8 @@ import CheckoutView from './CheckoutView';
 import { useCheckout } from './useCheckout';
 import { createStyles } from './styles';
 
-import { useAppNavigation } from '@screens/useAppNavigation';
+import { useNavigation } from '@react-navigation/native';
+import type { AppNavigation } from '@screens/types';
 /** App: o pagamento abre na tela segura do Stripe (PaymentSheet). */
 function NativePayment({
   clientSecret,
@@ -24,7 +25,7 @@ function NativePayment({
   const colors = useColors();
   const { isCompact } = useBreakpoint();
   const styles = createStyles(colors, isCompact);
-  const navigation = useAppNavigation();
+  const navigation = useNavigation<AppNavigation>();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const [isReady, setIsReady] = useState(false);
   const [isPaying, setIsPaying] = useState(false);

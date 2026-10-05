@@ -8,8 +8,9 @@ import { initials, slotDate } from '@lib/booking';
 import VerifiedBadge from '@components/ui/VerifiedBadge';
 import { createStyles } from './styles';
 
-import { useAppNavigation } from '@screens/useAppNavigation';
-import type { WebPressableState } from '@lib/types/web';
+import type { WebPressableState } from '@utils/webStyle';
+import { useNavigation } from '@react-navigation/native';
+import type { AppNavigation } from '@screens/types';
 export interface ProfessionalResult {
   id: number;
   name: string;
@@ -50,7 +51,7 @@ const ProfessionalResultCard: React.FC<ProfessionalResultCardProps> = ({
 }) => {
   const colors = useColors();
   const styles = createStyles(colors);
-  const navigation = useAppNavigation();
+  const navigation = useNavigation<AppNavigation>();
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [showAllTimes, setShowAllTimes] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);

@@ -7,12 +7,13 @@ import { ColorsType } from '@theme/types';
 import { useBreakpoint } from '@lib/hooks/useBreakpoint';
 import { ProfileExtras } from '../ProfileWrapper/ProfileMobileHome';
 
-import { useAppNavigation } from '@screens/useAppNavigation';
+import { useNavigation } from '@react-navigation/native';
+import type { AppNavigation } from '@screens/types';
 /** Aba Perfil sem login: convite para entrar + tema e ajuda. */
 export const UnauthenticatedProfileView: React.FC = () => {
   const colors = useColors();
   const styles = createStyles(colors);
-  const navigation = useAppNavigation();
+  const navigation = useNavigation<AppNavigation>();
   const { gutter } = useBreakpoint();
 
   return (

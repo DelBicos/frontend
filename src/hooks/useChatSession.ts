@@ -41,7 +41,7 @@ import {
   CHANNEL,
   ConversationResponseOptions,
   localId,
-} from './chatSession.shared';
+} from '@utils/chatSession';
 
 /**
  * Hook principal do chatbot de agendamentos.

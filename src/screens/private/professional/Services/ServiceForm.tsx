@@ -19,13 +19,13 @@ import { useServicesStore, ServiceItem } from '@stores/Services/Services';
 import { useSubCategoryStore } from '@stores/SubCategory';
 import { useCategoryStore } from '@stores/Category';
 import { backendHttpClient } from '@lib/helpers/httpClient';
-import { uploadToStorage } from '@lib/utils/uploadFile';
+import { uploadToStorage } from '@lib/uploadFile';
 import { useColors } from '@theme/ThemeProvider';
 import AvailabilityManager, {
   type AvailabilityItem,
 } from '@components/features/ServiceAvailability/AvailabilityManager';
 
-import { errorMessage } from '@lib/utils/errors';
+import { errorMessage } from '@utils/errors';
 import { getApiErrorMessage } from '@api/errors';
 import { logger } from '@lib/logger';
 import { createStyles } from './serviceFormStyles';

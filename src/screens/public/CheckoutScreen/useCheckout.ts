@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRoute, RouteProp } from '@react-navigation/native';
-import { NavigationParams } from '@screens/types';
+import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
+import { NavigationParams, AppNavigation } from '@screens/types';
 import { createPaymentIntent } from '@api/payments';
 import { getApiErrorMessage } from '@api/errors';
 import { useUserStore } from '@stores/User';
@@ -8,7 +8,6 @@ import { useAddressStore } from '@stores/Address';
 import { Address } from '@stores/Address/types';
 import { useProfessionalStore } from '@stores/Professional';
 
-import { useAppNavigation } from '@screens/useAppNavigation';
 type CheckoutRouteParams = NavigationParams['Checkout'];
 
 export type CheckoutStatus = 'loading' | 'not-found' | 'ready';
@@ -19,7 +18,7 @@ export type CheckoutStatus = 'loading' | 'not-found' | 'ready';
  * (o servidor valida horario, endereco e raio de atendimento).
  */
 export function useCheckout() {
-  const navigation = useAppNavigation();
+  const navigation = useNavigation<AppNavigation>();
   const route =
     useRoute<RouteProp<{ params: CheckoutRouteParams }, 'params'>>();
   const { professionalId, selectedTime, imageUrl, serviceId, appointmentId } =

@@ -13,13 +13,14 @@ import AuthLayout, {
 } from '@components/layout/AuthLayout';
 import { leaveAuthFlow } from '@lib/auth/leaveAuthFlow';
 
-import { useAppNavigation } from '@screens/useAppNavigation';
+import { useNavigation } from '@react-navigation/native';
+import type { AppNavigation } from '@screens/types';
 const COOLDOWN_SECONDS = 60;
 const CODE_LENGTH = 6;
 
 /** Confirma o e-mail do cadastro com o codigo de 6 numeros. */
 function VerificationScreen() {
-  const navigation = useAppNavigation();
+  const navigation = useNavigation<AppNavigation>();
   const colors = useColors();
   const styles = createAuthStyles(colors);
   const {

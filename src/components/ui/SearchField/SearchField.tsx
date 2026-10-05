@@ -4,7 +4,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
 
-import { webStyle } from '@lib/types/web';
+import { webStyle } from '@utils/webStyle';
 interface SearchFieldProps {
   value: string;
   onChangeText: (text: string) => void;

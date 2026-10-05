@@ -1,9 +1,9 @@
 import React from 'react';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import PageContainer, { PageHeader } from '@components/layout/PageContainer';
 import Chip, { ChipGroup } from '@components/ui/Chip';
 
-import { useAppNavigation } from '@screens/useAppNavigation';
+import type { AppNavigation } from '@screens/types';
 const SECTIONS = [
   { route: 'AdminDashboard', label: 'Painel' },
   { route: 'AdminAnalytics', label: 'Analytics' },
@@ -19,7 +19,7 @@ interface AdminShellProps {
 
 /** Moldura das telas de administrador: mesmo cabecalho e margens do site + navegacao entre secoes. */
 function AdminShell({ title, subtitle, children }: AdminShellProps) {
-  const navigation = useAppNavigation();
+  const navigation = useNavigation<AppNavigation>();
   const route = useRoute();
 
   return (

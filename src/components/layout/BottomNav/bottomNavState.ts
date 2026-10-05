@@ -1,6 +1,6 @@
 import type { NavigationState, PartialState } from '@react-navigation/native';
 
-import type { FontAwesomeName } from '@lib/types/icons';
+import type { FontAwesomeName } from '@utils/iconNames';
 type AnyState = NavigationState | PartialState<NavigationState>;
 
 export type BottomNavMode = 'client' | 'professional';

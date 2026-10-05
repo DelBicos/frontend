@@ -26,7 +26,7 @@ import {
   VoiceCommandAttempt,
   VoiceSubmissionStatus,
   localId,
-} from './chatSession.shared';
+} from '@utils/chatSession';
 
 interface UseChatVoiceOptions {
   applyConversationResponse: (

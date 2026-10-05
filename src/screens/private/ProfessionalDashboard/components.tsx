@@ -12,7 +12,7 @@ import {
 } from './dashboardData';
 import { DashboardStyles } from './styles';
 
-import type { WebPressableState } from '@lib/types/web';
+import type { WebPressableState } from '@utils/webStyle';
 type IconName = React.ComponentProps<typeof FontAwesome>['name'];
 
 // --- Indicador ---

@@ -4,7 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
 
-import type { WebPressableState } from '@lib/types/web';
+import type { WebPressableState } from '@utils/webStyle';
 type IconName = React.ComponentProps<typeof MaterialIcons>['name'];
 
 /** Grupo de opcoes com titulo (lista de configuracoes do app). */

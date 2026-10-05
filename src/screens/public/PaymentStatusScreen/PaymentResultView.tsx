@@ -19,7 +19,8 @@ import PageContainer from '@components/layout/PageContainer';
 import BookingSteps from '@components/features/BookingSteps';
 import { createStyles } from './styles';
 
-import { useAppNavigation } from '@screens/useAppNavigation';
+import { useNavigation } from '@react-navigation/native';
+import type { AppNavigation } from '@screens/types';
 export type PaymentResultStatus =
   'loading' | 'success' | 'processing' | 'error';
 
@@ -64,7 +65,7 @@ function PaymentResultView({
   const colors = useColors();
   const { isCompact } = useBreakpoint();
   const styles = createStyles(colors, isCompact);
-  const navigation = useAppNavigation();
+  const navigation = useNavigation<AppNavigation>();
   const [receiptState, setReceiptState] = useState<
     'idle' | 'busy' | 'saved' | 'failed'
   >('idle');

@@ -23,7 +23,8 @@ import { register } from '@api/auth';
 import { getApiErrorMessage } from '@api/errors';
 import { createStyles } from './styles';
 
-import { useAppNavigation } from '@screens/useAppNavigation';
+import { useNavigation } from '@react-navigation/native';
+import type { AppNavigation } from '@screens/types';
 type RegisterFormData = {
   name: string;
   surname: string;
@@ -39,7 +40,7 @@ const MIN_PASSWORD = 6;
 
 /** Criar conta: dados, acesso e endereco; depois confirma o e-mail. */
 function RegisterScreen() {
-  const navigation = useAppNavigation();
+  const navigation = useNavigation<AppNavigation>();
   const colors = useColors();
   const { isCompact } = useBreakpoint();
   const auth = createAuthStyles(colors);

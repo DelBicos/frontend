@@ -23,7 +23,7 @@ import {
   needsPayment,
 } from '@lib/appointments';
 
-import { webStyle, WebPressableState } from '@lib/types/web';
+import { webStyle, WebPressableState } from '@utils/webStyle';
 type Busy = 'accept' | 'decline' | 'complete' | null;
 
 interface AgendaCardProps {

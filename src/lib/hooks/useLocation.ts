@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import * as Location from 'expo-location';
 
-import { errorMessage } from '@lib/utils/errors';
+import { errorMessage } from '@utils/errors';
 export type Coords = {
   latitude: number;
   longitude: number;

@@ -9,10 +9,11 @@ import StatCard from '../components/StatCard';
 import { useAdminStats } from '../components/useAdminStats';
 import { formatCount, formatMoney, STATUS_LABELS } from '../components/format';
 
-import { useAppNavigation } from '@screens/useAppNavigation';
+import { useNavigation } from '@react-navigation/native';
+import type { AppNavigation } from '@screens/types';
 /** Visao geral: o que precisa de atencao agora e os numeros do ano. */
 export default function AdminDashboard() {
-  const navigation = useAppNavigation();
+  const navigation = useNavigation<AppNavigation>();
   const colors = useColors();
   const styles = createStyles(colors);
   const { stats, loading, error } = useAdminStats();

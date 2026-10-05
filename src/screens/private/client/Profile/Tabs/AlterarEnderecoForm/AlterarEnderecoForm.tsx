@@ -27,7 +27,7 @@ import { confirmAction } from '@lib/utils/confirmAction';
 import ProfilePage from '../../components/ProfilePage';
 import { createStyles } from './styles';
 
-import { errorMessage } from '@lib/utils/errors';
+import { errorMessage } from '@utils/errors';
 const EMPTY_FORM: AddressFormData = {
   cep: '',
   street: '',

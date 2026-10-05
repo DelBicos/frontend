@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { FontAwesome, FontAwesome5 } from '@expo/vector-icons';
 import { useSubCategoryStore } from '@stores/SubCategory';
@@ -18,8 +18,8 @@ import { SectionHeader } from '@components/ui/SectionHeader/SectionHeader';
 import BookingSteps from '@components/features/BookingSteps';
 import { createStyles } from './styles';
 
-import { useAppNavigation } from '@screens/useAppNavigation';
-import type { WebPressableState } from '@lib/types/web';
+import type { WebPressableState } from '@utils/webStyle';
+import type { AppNavigation } from '@screens/types';
 type SubCategoryRouteParams = {
   categoryId: number;
   categoryTitle?: string;
@@ -75,7 +75,7 @@ LocaleConfig.defaultLocale = 'pt-br';
 
 /** Etapa 1 do agendamento: escolher o servico (subcategoria) e o dia. */
 function SubCategoryScreen() {
-  const navigation = useAppNavigation();
+  const navigation = useNavigation<AppNavigation>();
   const route = useRoute();
   const {
     categoryId,

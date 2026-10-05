@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
 
-import type { FontAwesomeName } from '@lib/types/icons';
+import type { FontAwesomeName } from '@utils/iconNames';
 type AlertType = 'error' | 'success' | 'info';
 
 /** Mensagem de erro/sucesso/aviso no proprio conteudo (anunciada a leitores de tela). */

@@ -1,7 +1,7 @@
 import { StyleSheet, Platform } from 'react-native';
 import { ColorsType } from '@theme/types';
 
-import { webStyle } from '@lib/types/web';
+import { webStyle } from '@utils/webStyle';
 const pointer = Platform.select({ web: { cursor: 'pointer' } as object });
 
 export const createStyles = (colors: ColorsType) =>

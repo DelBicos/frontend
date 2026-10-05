@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 import type { ColorsType } from '@theme/types';
-import { webStyle } from '@lib/types/web';
+import { webStyle } from '@utils/webStyle';
 
 export const createStyles = (colors: ColorsType) =>
   StyleSheet.create({

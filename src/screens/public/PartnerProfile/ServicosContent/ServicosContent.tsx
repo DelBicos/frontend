@@ -8,8 +8,9 @@ import { Service } from '@stores/Professional/types';
 import { formatBRL } from '@lib/helpers/formatCurrency';
 import { useBreakpoint } from '@lib/hooks/useBreakpoint';
 
-import { useAppNavigation } from '@screens/useAppNavigation';
-import { webStyle } from '@lib/types/web';
+import { webStyle } from '@utils/webStyle';
+import { useNavigation } from '@react-navigation/native';
+import type { AppNavigation } from '@screens/types';
 type ServicosContentProps = {
   servicos: Service[];
   professionalId: number;
@@ -34,7 +35,7 @@ export function ServicosContent({
   const colors = useColors();
   const { isCompact } = useBreakpoint();
   const styles = createStyles(colors, isCompact);
-  const navigation = useAppNavigation();
+  const navigation = useNavigation<AppNavigation>();
 
   const active = servicos.filter((s) => s.active);
 

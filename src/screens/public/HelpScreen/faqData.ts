@@ -10,7 +10,7 @@ import {
   RESCHEDULE_MIN_HOURS,
 } from '@lib/appointments';
 
-import type { FontAwesomeName } from '@lib/types/icons';
+import type { FontAwesomeName } from '@utils/iconNames';
 export interface FaqQuestion {
   id: string;
   q: string;

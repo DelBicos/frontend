@@ -17,13 +17,14 @@ import EmptyState from '@components/ui/EmptyState';
 import ProfilePage from '../../components/ProfilePage';
 import { createStyles } from './styles';
 
-import { useAppNavigation } from '@screens/useAppNavigation';
-import type { WebPressableState } from '@lib/types/web';
+import type { WebPressableState } from '@utils/webStyle';
+import { useNavigation } from '@react-navigation/native';
+import type { AppNavigation } from '@screens/types';
 /** Profissionais favoritos, com atalho para o perfil e desfazer remocao. */
 const FavoritosTab: React.FC = () => {
   const colors = useColors();
   const styles = createStyles(colors);
-  const navigation = useAppNavigation();
+  const navigation = useNavigation<AppNavigation>();
   const { width } = useWindowDimensions();
   const columns = width >= 1100 ? 2 : 1;
   const { favorites, loading, removeFavorite, addFavorite, syncWithServer } =

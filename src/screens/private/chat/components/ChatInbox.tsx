@@ -9,7 +9,8 @@ import { useBreakpoint } from '@lib/hooks/useBreakpoint';
 import ChatRoomListPanel from './ChatRoomListPanel';
 import ChatThreadPanel from './ChatThreadPanel';
 
-import { useAppNavigation } from '@screens/useAppNavigation';
+import { useNavigation } from '@react-navigation/native';
+import type { AppNavigation } from '@screens/types';
 /** Largura a partir da qual lista e conversa ficam lado a lado. */
 const SPLIT_MIN_WIDTH = 768;
 
@@ -21,7 +22,7 @@ const SPLIT_MIN_WIDTH = 768;
 function ChatInbox() {
   const colors = useColors();
   const styles = createStyles(colors);
-  const navigation = useAppNavigation();
+  const navigation = useNavigation<AppNavigation>();
   const { width } = useBreakpoint();
   const isSplit = width >= SPLIT_MIN_WIDTH;
   const [selected, setSelected] = useState<Conversation | null>(null);

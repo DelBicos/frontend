@@ -5,16 +5,16 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
-import { ClientProfileSubRoutes } from '@screens/types';
+import { ClientProfileSubRoutes, AppNavigation } from '@screens/types';
 import Avatar from '@components/ui/Avatar';
 import { ThemeToggle } from '@components/ui/ThemeToggle';
 import { SettingsRow, SettingsSection } from '@components/ui/SettingsList';
 import { useProfileMenu } from '../MenuNavegacao/useProfileMenu';
 
-import { useAppNavigation } from '@screens/useAppNavigation';
+import { useNavigation } from '@react-navigation/native';
 /** Preferencias e ajuda: iguais para quem esta ou nao logado. */
 export function ProfileExtras() {
-  const navigation = useAppNavigation();
+  const navigation = useNavigation<AppNavigation>();
   return (
     <>
       <SettingsSection title="Preferências">

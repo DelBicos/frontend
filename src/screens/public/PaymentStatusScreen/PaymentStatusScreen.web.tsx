@@ -9,7 +9,7 @@ import { useAppointmentStore, InvoiceData } from '@stores/Appointment';
 import { NavigationParams } from '@screens/types';
 import PaymentResultView, { PaymentResultStatus } from './PaymentResultView';
 
-import { errorMessage } from '@lib/utils/errors';
+import { errorMessage } from '@utils/errors';
 type PaymentStatusRouteParams = NavigationParams['PaymentStatus'];
 
 /**

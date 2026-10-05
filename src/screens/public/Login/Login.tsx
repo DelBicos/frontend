@@ -23,8 +23,9 @@ import CodeEntry from '@components/ui/CodeEntry';
 import { resendMfaLogin, type MfaChallenge } from '@api/mfa';
 import { getApiErrorMessage } from '@api/errors';
 
-import { useAppNavigation } from '@screens/useAppNavigation';
-import { errorMessage } from '@lib/utils/errors';
+import { errorMessage } from '@utils/errors';
+import { useNavigation } from '@react-navigation/native';
+import type { AppNavigation } from '@screens/types';
 type FormData = {
   email: string;
   password: string;
@@ -35,7 +36,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Entrar com e-mail e senha. Clientes e profissionais usam a mesma conta. */
 function LoginScreen() {
-  const navigation = useAppNavigation();
+  const navigation = useNavigation<AppNavigation>();
   const colors = useColors();
   const styles = createAuthStyles(colors);
   const { signInPassword } = useUserStore();

@@ -1,12 +1,15 @@
 import { useCallback } from 'react';
 import { Platform, useWindowDimensions } from 'react-native';
-import { CommonActions, useRoute } from '@react-navigation/native';
+import {
+  CommonActions,
+  useRoute,
+  useNavigation,
+} from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useUserStore } from '@stores/User';
-import { ClientProfileSubRoutes } from '@screens/types';
+import { ClientProfileSubRoutes, AppNavigation } from '@screens/types';
 import { confirmAction } from '@lib/utils/confirmAction';
 
-import { useAppNavigation } from '@screens/useAppNavigation';
 type IconName = React.ComponentProps<typeof MaterialIcons>['name'];
 
 export interface ProfileMenuItem {
@@ -42,7 +45,7 @@ export const SUBROUTE_TITLES: Partial<Record<string, string>> = {
  * barra lateral do web, para as duas terem as mesmas opcoes.
  */
 export function useProfileMenu() {
-  const navigation = useAppNavigation();
+  const navigation = useNavigation<AppNavigation>();
   const route = useRoute();
   const { width } = useWindowDimensions();
   const { user, signOut } = useUserStore();

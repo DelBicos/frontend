@@ -1,7 +1,7 @@
 import { Platform, StyleSheet } from 'react-native';
 import { ColorsType } from '@theme/types';
 
-import { webStyle } from '@lib/types/web';
+import { webStyle } from '@utils/webStyle';
 const cardShadow = Platform.select({
   web: webStyle({ boxShadow: '0px 4px 14px rgba(0, 0, 0, 0.08)' }),
   default: {

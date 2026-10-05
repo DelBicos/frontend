@@ -12,7 +12,7 @@ import { formatDayLabel, isSameDay } from '@lib/appointments';
 import ProfilePage from '../../components/ProfilePage';
 import { createStyles } from './styles';
 
-import type { WebPressableState } from '@lib/types/web';
+import type { WebPressableState } from '@utils/webStyle';
 const TYPE_ICON: Record<
   string,
   React.ComponentProps<typeof FontAwesome>['name']

@@ -7,7 +7,7 @@ import { ColorsType } from '@theme/types';
 import { CONTENT_MAX_WIDTH, useBreakpoint } from '@lib/hooks/useBreakpoint';
 import { PROFESSIONAL_ITEMS } from '../BottomNav/bottomNavState';
 
-import { webStyle, WebPressableState } from '@lib/types/web';
+import { webStyle, WebPressableState } from '@utils/webStyle';
 /**
  * Navegacao entre as secoes do painel do colaborador no web (no app isso e
  * feito pela barra inferior). Fica logo abaixo do cabecalho do site.

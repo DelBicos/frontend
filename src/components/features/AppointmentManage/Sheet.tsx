@@ -12,7 +12,7 @@ import {
 import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
 
-import { webStyle } from '@lib/types/web';
+import { webStyle } from '@utils/webStyle';
 interface SheetProps {
   visible: boolean;
   title: string;

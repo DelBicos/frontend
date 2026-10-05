@@ -9,7 +9,7 @@ import { useCategoryStore } from '@stores/Category';
 import { isServiceAvailableNow } from '@lib/utils/availability';
 import { formatBRLFromCents } from '@lib/helpers/formatCurrency';
 
-import type { WebPressableState } from '@lib/types/web';
+import type { WebPressableState } from '@utils/webStyle';
 const DAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
 /** Resumo legivel dos horarios: "Seg 08:00–12:00 • Ter …". */

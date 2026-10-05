@@ -16,8 +16,9 @@ import { UserProfileProps } from '../../types';
 import ProfilePage, { ProfileCard } from '../../components/ProfilePage';
 import { createStyles } from './styles';
 
-import { useAppNavigation } from '@screens/useAppNavigation';
-import { errorMessage } from '@lib/utils/errors';
+import { errorMessage } from '@utils/errors';
+import { useNavigation } from '@react-navigation/native';
+import type { AppNavigation } from '@screens/types';
 interface DadosContaFormProps {
   user?: UserProfileProps;
 }
@@ -44,7 +45,7 @@ export default function DadosContaForm({
 }: DadosContaFormProps) {
   const colors = useColors();
   const styles = createStyles(colors);
-  const navigation = useAppNavigation();
+  const navigation = useNavigation<AppNavigation>();
   const { width } = useWindowDimensions();
   const isNarrow = width < 600;
   const { user, avatarBase64, updateUserProfile, uploadAvatar, removeAvatar } =

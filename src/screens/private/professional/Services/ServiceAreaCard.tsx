@@ -13,7 +13,7 @@ import { ColorsType } from '@theme/types';
 import { useProfessionalStore } from '@stores/Professional';
 import Chip, { ChipGroup } from '@components/ui/Chip';
 
-import { webStyle } from '@lib/types/web';
+import { webStyle } from '@utils/webStyle';
 /** 0 = sem limite (o backend nao aplica a regra de raio). */
 const PRESETS = [5, 10, 20, 50, 0];
 

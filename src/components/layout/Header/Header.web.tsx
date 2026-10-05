@@ -6,9 +6,9 @@ import { FontAwesome } from '@expo/vector-icons';
 import { useLocation } from '@lib/hooks/LocationContext';
 import { useBreakpoint } from '@lib/hooks/useBreakpoint';
 import { Region } from '@lib/hooks/types';
-import { CommonActions } from '@react-navigation/native';
+import { CommonActions, useNavigation } from '@react-navigation/native';
 import { NativeStackHeaderProps } from '@react-navigation/native-stack';
-import { NavigationParams } from '@screens/types';
+import { NavigationParams, AppNavigation } from '@screens/types';
 import { useThemeStore } from '@stores/Theme';
 import { ThemeMode } from '@stores/Theme/types';
 import { useUserStore } from '@stores/User';
@@ -33,8 +33,7 @@ import {
 import DelBicosLogoDark from '../../../../assets/DelBicos_git.png';
 import { createStyles } from './styles';
 
-import { useAppNavigation } from '@screens/useAppNavigation';
-import type { WebPressableState } from '@lib/types/web';
+import type { WebPressableState } from '@utils/webStyle';
 // Logo, links, tema e conta so cabem lado a lado a partir daqui.
 const HEADER_FULL_MIN_WIDTH = 1200;
 
@@ -69,7 +68,7 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = ({ route }) => {
     loading: isLocationLoading,
   } = useLocation();
 
-  const navigation = useAppNavigation();
+  const navigation = useNavigation<AppNavigation>();
   const { width, isCompact, sideInset } = useBreakpoint();
   // Abaixo do desktop, links e acoes ficam em um menu recolhivel.
   const isCollapsed = width < HEADER_FULL_MIN_WIDTH;

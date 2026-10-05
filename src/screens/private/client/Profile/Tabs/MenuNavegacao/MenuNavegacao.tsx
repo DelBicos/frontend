@@ -7,7 +7,7 @@ import { useColors } from '@theme/ThemeProvider';
 import { useProfileMenu } from './useProfileMenu';
 import { createStyles } from './styles';
 
-import type { WebPressableState } from '@lib/types/web';
+import type { WebPressableState } from '@utils/webStyle';
 /** Barra lateral do perfil no web (telas largas). */
 const MenuNavegacao = () => {
   const route = useRoute();

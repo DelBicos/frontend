@@ -9,13 +9,13 @@ import {
   Text,
   BackHandler,
 } from 'react-native';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { FontAwesome } from '@expo/vector-icons';
 
 import { useColors } from '@theme/ThemeProvider';
 import { useThemeStore } from '@stores/Theme';
 import { ThemeMode } from '@stores/Theme/types';
-import { ClientProfileSubRoutes } from '@screens/types';
+import { ClientProfileSubRoutes, AppNavigation } from '@screens/types';
 import { UserProfileProps } from '../../types';
 import { createStyles } from './styles';
 import DadosContaForm from '@screens/private/client/Profile/Tabs/DadosContaForm';
@@ -33,14 +33,13 @@ import ConversasTab from '@screens/private/client/Profile/Tabs/ConversasTab/Conv
 import { SUBROUTE_TITLES } from '../MenuNavegacao/useProfileMenu';
 import ProfileMobileHome from './ProfileMobileHome';
 
-import { useAppNavigation } from '@screens/useAppNavigation';
 type ClientProfileRouteParams = {
   subroute?: ClientProfileSubRoutes;
 };
 
 const ProfileWrapper: React.FC<{ user: UserProfileProps }> = ({ user }) => {
   const route = useRoute();
-  const navigation = useAppNavigation();
+  const navigation = useNavigation<AppNavigation>();
   const { width } = useWindowDimensions();
   const isMobile = width < 900;
   // Mesmo contêiner e margens das demais paginas.

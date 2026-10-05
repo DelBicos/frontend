@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserStore, Address, User, UpdateUserData } from './types';
 import { AxiosError } from 'axios';
 import { backendHttpClient } from '@lib/helpers/httpClient';
-import { uploadToStorage } from '@lib/utils/uploadFile';
+import { uploadToStorage } from '@lib/uploadFile';
 import { login as loginRequest } from '@api/auth';
 import { verifyMfaLogin } from '@api/mfa';
 import { getApiErrorMessage, getApiErrorStatus } from '@api/errors';

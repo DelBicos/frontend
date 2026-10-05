@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { useProfessionalStore } from '@stores/Professional';
 import { useFavoriteStore } from '@stores/Favorite';
 import { useUserStore } from '@stores/User';
@@ -25,8 +25,8 @@ import { AvaliacoesContent } from './AvaliacoesContent';
 import Stars from '@components/ui/Stars';
 import { createStyles } from './styles';
 
-import { useAppNavigation } from '@screens/useAppNavigation';
-import type { WebPressableState } from '@lib/types/web';
+import type { WebPressableState } from '@utils/webStyle';
+import type { AppNavigation } from '@screens/types';
 type TabType = 'sobre' | 'servicos' | 'galeria' | 'avaliacoes';
 
 const TAB_LABELS: Record<TabType, string> = {
@@ -37,7 +37,7 @@ const TAB_LABELS: Record<TabType, string> = {
 };
 
 function PartnerProfileScreen() {
-  const navigation = useAppNavigation();
+  const navigation = useNavigation<AppNavigation>();
   const route = useRoute();
   const id = Number((route.params as { id: number | string }).id);
 

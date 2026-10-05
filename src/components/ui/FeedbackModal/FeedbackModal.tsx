@@ -4,7 +4,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { createStyles } from './styles';
 import { useColors } from '@theme/ThemeProvider';
 
-import type { FontAwesomeName } from '@lib/types/icons';
+import type { FontAwesomeName } from '@utils/iconNames';
 type FeedbackType = 'success' | 'error' | 'info' | 'warning';
 
 interface FeedbackModalProps {

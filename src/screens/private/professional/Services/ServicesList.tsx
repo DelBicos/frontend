@@ -25,7 +25,7 @@ import { formatAvailabilitySummary } from '@components/features/ListServices/Ser
 import ServiceForm from './ServiceForm';
 import ServiceAreaCard from './ServiceAreaCard';
 
-import { webStyle } from '@lib/types/web';
+import { webStyle } from '@utils/webStyle';
 const formatDuration = (minutes?: number) => {
   if (!minutes) return null;
   const h = Math.floor(minutes / 60);

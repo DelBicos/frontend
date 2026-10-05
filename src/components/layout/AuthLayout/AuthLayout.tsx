@@ -19,7 +19,8 @@ import LogoV3 from '@assets/LogoV3.png';
 import LogoLight from '@assets/DelBicos_LogoH.png';
 import LogoDark from '../../../../assets/DelBicos_git.png';
 
-import { useAppNavigation } from '@screens/useAppNavigation';
+import { useNavigation } from '@react-navigation/native';
+import type { AppNavigation } from '@screens/types';
 interface AuthLayoutProps {
   title: string;
   subtitle?: React.ReactNode;
@@ -52,7 +53,7 @@ function AuthLayout({
 }: AuthLayoutProps) {
   const colors = useColors();
   const theme = useThemeStore((s) => s.theme);
-  const navigation = useAppNavigation();
+  const navigation = useNavigation<AppNavigation>();
   const { isExpanded, isCompact, gutter } = useBreakpoint();
   const styles = createStyles(colors, isCompact);
 

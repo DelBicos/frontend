@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { useIsFocused } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import AgendaCard from '@components/features/AgendaCard';
 import { AppointmentDetailsModal } from '@components/features/AppointmentDetailsModal';
 import { RateServiceModal } from '@components/features/RateServiceModal';
@@ -22,7 +22,7 @@ import { useUserStore } from '@stores/User';
 import { useColors } from '@theme/ThemeProvider';
 import { createStyles } from './styles';
 
-import { useAppNavigation } from '@screens/useAppNavigation';
+import type { AppNavigation } from '@screens/types';
 const POLLING_MS = 30000;
 
 const TAB_LABELS: Record<AgendaTab, string> = {
@@ -63,7 +63,7 @@ function MeusAgendamentos({ role = 'client' }: MeusAgendamentosProps) {
   const user = useUserStore((s) => s.user);
   const colors = useColors();
   const styles = createStyles(colors);
-  const navigation = useAppNavigation();
+  const navigation = useNavigation<AppNavigation>();
   const isPro = role === 'professional';
 
   const [tab, setTab] = useState<AgendaTab>('upcoming');

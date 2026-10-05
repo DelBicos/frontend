@@ -13,15 +13,16 @@ import ProfilePage, { ProfileCard } from '../../components/ProfilePage';
 import { passwordStrength, MIN_PASSWORD_LENGTH } from './passwordStrength';
 import { createStyles } from './styles';
 
-import { useAppNavigation } from '@screens/useAppNavigation';
-import { errorMessage } from '@lib/utils/errors';
+import { errorMessage } from '@utils/errors';
+import { useNavigation } from '@react-navigation/native';
+import type { AppNavigation } from '@screens/types';
 type FormData = { current: string; next: string; confirm: string };
 
 /** Trocar a senha (com a atual) ou ir para "esqueci minha senha". */
 const TrocarSenhaForm: React.FC = () => {
   const colors = useColors();
   const styles = createStyles(colors);
-  const navigation = useAppNavigation();
+  const navigation = useNavigation<AppNavigation>();
   const { width } = useWindowDimensions();
   const isNarrow = width < 600;
   const { changePassword, user } = useUserStore();

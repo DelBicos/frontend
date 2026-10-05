@@ -14,7 +14,7 @@ import { useThemeStore, ThemeMode } from '@stores/Theme';
 import { CONTENT_MAX_WIDTH, useBreakpoint } from '@lib/hooks/useBreakpoint';
 import { ColorsType } from '@theme/types';
 
-import { webStyle } from '@lib/types/web';
+import { webStyle } from '@utils/webStyle';
 /**
  * Web: com o conteudo centralizado (janela maior que 1200px + margens),
  * reserva o espaco da barra de rolagem dos dois lados para ele ficar na

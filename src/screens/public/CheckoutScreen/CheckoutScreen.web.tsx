@@ -18,13 +18,14 @@ import CheckoutView from './CheckoutView';
 import { useCheckout } from './useCheckout';
 import { createStyles } from './styles';
 
-import { useAppNavigation } from '@screens/useAppNavigation';
+import { useNavigation } from '@react-navigation/native';
+import type { AppNavigation } from '@screens/types';
 /** Web: formulario do Stripe na propria pagina. */
 function WebPaymentForm({ amountLabel }: { amountLabel: string }) {
   const colors = useColors();
   const { isCompact } = useBreakpoint();
   const styles = createStyles(colors, isCompact);
-  const navigation = useAppNavigation();
+  const navigation = useNavigation<AppNavigation>();
   const stripe = useStripe();
   const elements = useElements();
   const [isReady, setIsReady] = useState(false);
