@@ -1,12 +1,12 @@
 name: Deploy do site no Azure Static Web Apps
 
-# Mesmo gatilho do backend: publica quando um PR e mesclado na stag-facul.
+# Mesmo gatilho do backend: publica quando um PR e mesclado na stag.
 # Tambem pode ser disparado a mao pela aba Actions.
 on:
   pull_request:
     types: [closed]
     branches:
-      - stag-facul
+      - stag
   workflow_dispatch:
 
 jobs:
