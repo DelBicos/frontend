@@ -5,9 +5,12 @@ import React from 'react';
 import TestRenderer, { act } from 'react-test-renderer';
 import { useChatVoice } from './useChatVoice';
 import { useChatBotStore } from '@stores/ChatBot';
-import * as ChatBotApi from '@api/chatbot';
+import { backendHttpClient } from '@lib/helpers/httpClient';
 
-jest.mock('@api/chatbot', () => ({ sendVoiceCommand: jest.fn() }));
+jest.mock('@lib/helpers/httpClient', () => ({
+  backendHttpClient: { post: jest.fn() },
+}));
+const sendVoiceAudio = backendHttpClient.post as jest.Mock;
 jest.mock('react-native-uuid', () => ({ v4: () => 'uuid-fixo' }));
 
 type Voice = ReturnType<typeof useChatVoice>;
@@ -56,16 +59,18 @@ describe('useChatVoice', () => {
     expect(status).toBe('discarded');
     expect(rec.release).toHaveBeenCalled();
     expect(useChatBotStore.getState().error).toMatch(/muito curta/);
-    expect(ChatBotApi.sendVoiceCommand).not.toHaveBeenCalled();
+    expect(sendVoiceAudio).not.toHaveBeenCalled();
   });
 
   it('envia o audio, mostra a transcricao e aplica a resposta', async () => {
-    (ChatBotApi.sendVoiceCommand as jest.Mock).mockResolvedValue({
-      transcript: 'quero agendar',
-      message: 'Qual serviço?',
-      session_id: 7,
-      state: 'COLETANDO_SERVICO',
-      context: {},
+    sendVoiceAudio.mockResolvedValue({
+      data: {
+        transcript: 'quero agendar',
+        message: 'Qual serviço?',
+        session_id: 7,
+        state: 'COLETANDO_SERVICO',
+        context: {},
+      },
     });
     const { ref, applyConversationResponse } = setup();
     const rec = recording();
@@ -84,14 +89,16 @@ describe('useChatVoice', () => {
   });
 
   it('em falha de rede permite reenviar exatamente o mesmo audio', async () => {
-    (ChatBotApi.sendVoiceCommand as jest.Mock)
+    sendVoiceAudio
       .mockRejectedValueOnce({ response: { status: 500, headers: {} } })
       .mockResolvedValueOnce({
-        transcript: 'oi',
-        message: 'Olá',
-        session_id: 1,
-        state: 'INICIO',
-        context: {},
+        data: {
+          transcript: 'oi',
+          message: 'Olá',
+          session_id: 1,
+          state: 'INICIO',
+          context: {},
+        },
       });
     const { ref } = setup();
     const rec = recording();
@@ -107,13 +114,15 @@ describe('useChatVoice', () => {
     await act(async () => {
       await ref.current!.retryLastVoiceCommand();
     });
-    const calls = (ChatBotApi.sendVoiceCommand as jest.Mock).mock.calls;
-    expect(calls[0][0].idempotencyKey).toBe(calls[1][0].idempotencyKey);
+    const calls = sendVoiceAudio.mock.calls;
+    expect(calls[0][2].headers['Idempotency-Key']).toBe(
+      calls[1][2].headers['Idempotency-Key'],
+    );
     expect(ref.current!.hasRetryableVoiceCommand).toBe(false);
   });
 
   it('nao reenvia quando o servidor recusa o audio (415)', async () => {
-    (ChatBotApi.sendVoiceCommand as jest.Mock).mockRejectedValue({
+    sendVoiceAudio.mockRejectedValue({
       response: { status: 415, headers: {} },
     });
     const { ref } = setup();
@@ -128,7 +137,7 @@ describe('useChatVoice', () => {
   });
 
   it('descartar a gravacao pendente libera o audio', async () => {
-    (ChatBotApi.sendVoiceCommand as jest.Mock).mockRejectedValue({
+    sendVoiceAudio.mockRejectedValue({
       response: { status: 500, headers: {} },
     });
     const { ref } = setup();

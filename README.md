@@ -169,22 +169,23 @@ O protótipo do DelBicos no Figma serve como uma demonstração visual interativ
 ```
 DelBicosV2
 ├── src
-│  ├── api             # Chamadas HTTP tipadas (auth, agendamentos, pagamentos, verificação, admin)
+│  ├── api             # Legado (auth, chatbot, pagamentos). Chamadas novas vão para as stores
 │  ├── assets          # Imagens e fontes
 │  ├── components
 │  │  ├── features     # Componentes com regra de negócio (agenda, gestão do agendamento...)
 │  │  ├── layout       # Cabeçalho, navegação inferior, container de página
 │  │  └── ui           # Peças reutilizáveis (botão, campos, selo de verificado...)
 │  ├── config          # Variáveis de ambiente do app
-│  ├── hooks           # Hooks de sessão (chatbot, voz, sockets)
-│  ├── lib             # Helpers, regras puras (agendamento, cancelamento), logger, tipos
+│  ├── hooks           # Hooks reutilizáveis (voz, sockets, sessão do chatbot)
+│  ├── lib             # Integrações de plataforma (HTTP, Stripe, upload, logger) e regras espelhadas do servidor
+│  ├── utils           # Funções puras (erros, formatação, estilos só-web, nomes de ícones)
 │  ├── screens         # Telas e navegação (public / private / admin)
-│  ├── stores          # Estado global (Zustand)
+│  ├── stores          # Estado global (Zustand) e único lugar que fala com a API
 │  └── theme           # Cores e temas (claro, escuro, alto contraste)
 ├── patches            # Correções de dependências aplicadas no npm install (patch-package)
 ├── docs               # Guias e relatórios
 ├── app.json           # Configuração do Expo (plugins, permissões)
-└── eslint.config.js   # Regras: sem `any` e sem `console` (use src/lib/logger.ts)
+└── .agents/rules      # Regras de arquitetura do projeto (fonte do CLAUDE.md e AGENTS.md)
 ```
 
 > As pastas `ios/` e `android/` são **geradas** (`expo prebuild`) e não são versionadas.

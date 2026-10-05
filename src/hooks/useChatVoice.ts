@@ -8,7 +8,6 @@ import type {
   ChatBotMessage,
   SendMessageResponse,
 } from '@stores/ChatBot/types';
-import * as ChatBotApi from '@api/chatbot';
 import { hasChatBotMessage, resolveSelectedTimeIso } from '@lib/chatbot/derive';
 import {
   EMPTY_CHATBOT_RESPONSE_ERROR,
@@ -50,6 +49,7 @@ export function useChatVoice({
     setLastSentText,
     setRateLimitResetAt,
     resetSession,
+    submitVoiceAudio,
   } = useChatBotStore();
   const lastVoiceCommandRef = useRef<VoiceCommandAttempt | null>(null);
   const [hasRetryableVoiceCommand, setHasRetryableVoiceCommand] =
@@ -86,7 +86,7 @@ export function useChatVoice({
           currentConversation.conversationState,
           currentConversation.conversationContext,
         );
-        const data = await ChatBotApi.sendVoiceCommand(
+        const data = await submitVoiceAudio(
           {
             audio,
             mimeType: attempt.recording.mimeType,
@@ -168,6 +168,7 @@ export function useChatVoice({
       addMessage,
       applyConversationResponse,
       resetSession,
+      submitVoiceAudio,
       setError,
       setLastSentText,
       setLoading,
