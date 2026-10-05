@@ -1,0 +1,51 @@
+name: Deploy do site no Azure Static Web Apps
+
+# Mesmo gatilho do backend: publica quando um PR e mesclado na stag.
+# Tambem pode ser disparado a mao pela aba Actions.
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - stag
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build (expo export) e deploy no swa-delbicos
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
+    env:
+      EXPO_PUBLIC_ENVIRONMENT: production
+      EXPO_PUBLIC_DOMAIN_WEB: ${{ vars.BACKEND_DOMAIN || 'delbicos-backend-edu.azurewebsites.net' }}
+      EXPO_PUBLIC_HTTP_PROTOCOL: https
+      EXPO_PUBLIC_WS_PROTOCOL: wss
+      EXPO_PUBLIC_PORT: ""
+      # Chaves publicas (vao para o navegador de qualquer forma); ficam em Variables do repositorio.
+      EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ vars.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+      EXPO_PUBLIC_GOOGLE_MAPS_API_KEY: ${{ vars.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY }}
+      EXPO_PUBLIC_LOCATIONIQ_API_KEY: ${{ vars.EXPO_PUBLIC_LOCATIONIQ_API_KEY }}
+      EXPO_PUBLIC_UNSPLASH_API_KEY: ${{ vars.EXPO_PUBLIC_UNSPLASH_API_KEY }}
+      EXPO_PUBLIC_GOOGLE_ANALYTICS_ID: ${{ vars.EXPO_PUBLIC_GOOGLE_ANALYTICS_ID }}
+      EXPO_PUBLIC_CLARITY_ID: ${{ vars.EXPO_PUBLIC_CLARITY_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Gerar o site (web)
+        run: npx expo export --platform web
+
+      - name: Publicar no Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: upload
+          app_location: dist
+          skip_app_build: true
+          skip_api_build: true

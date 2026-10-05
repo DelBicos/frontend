@@ -49,4 +49,3 @@ export function isValidChatBotStoredMessage(msg: unknown): boolean {
     typeof m.createdAt === 'string'
   );
 }
-

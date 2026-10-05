@@ -21,10 +21,16 @@ if (
 type AccordionItemProps = {
   title: string;
   children: React.ReactNode;
+  /** Comeca aberto (ex.: resultado de busca). */
+  defaultOpen?: boolean;
 };
 
-const AccordionItem: React.FC<AccordionItemProps> = ({ title, children }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const AccordionItem: React.FC<AccordionItemProps> = ({
+  title,
+  children,
+  defaultOpen = false,
+}) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const colors = useColors();
   const styles = createStyles(colors);
 
@@ -40,12 +46,14 @@ const AccordionItem: React.FC<AccordionItemProps> = ({ title, children }) => {
         style={styles.header}
         activeOpacity={0.7}
         accessibilityRole="button"
+        accessibilityLabel={title}
         accessibilityState={{ expanded: isOpen }}>
         <Text style={styles.title}>{title}</Text>
         <FontAwesome
           name={isOpen ? 'chevron-up' : 'chevron-down'}
           size={16}
-          color={colors.primaryOrange}
+          // Cor do texto: o laranja nao tem contraste suficiente no fundo claro.
+          color={colors.primaryBlack}
           style={styles.icon}
         />
       </TouchableOpacity>

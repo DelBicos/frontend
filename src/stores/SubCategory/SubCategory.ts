@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { SubCategory, SubCategoryStore } from './types';
 import { backendHttpClient } from '@lib/helpers/httpClient';
 
+import { logger } from '@lib/logger';
 export const useSubCategoryStore = create<SubCategoryStore>()((set) => ({
   fetchAllSubCategories: async () => {
     try {
@@ -11,7 +12,7 @@ export const useSubCategoryStore = create<SubCategoryStore>()((set) => ({
         : response.data.subCategories || [];
       set({ subCategories: data });
     } catch (error) {
-      console.error('[SubCategoryStore] fetchAllSubCategories:', error);
+      logger.error('[SubCategoryStore] fetchAllSubCategories:', error);
       set({ subCategories: [] });
     }
   },
@@ -19,7 +20,7 @@ export const useSubCategoryStore = create<SubCategoryStore>()((set) => ({
 
   fetchSubCategoriesByCategoryId: async (categoryId: number) => {
     if (!categoryId) {
-      console.warn(
+      logger.warn(
         '[SubCategoryStore] fetchSubCategoriesByCategoryId chamado sem categoryId.',
       );
       return;
@@ -38,7 +39,7 @@ export const useSubCategoryStore = create<SubCategoryStore>()((set) => ({
 
       set({ subCategories: data });
     } catch (error) {
-      console.error(
+      logger.error(
         `Falha ao buscar subcategorias para categoryId ${categoryId}:`,
         error,
       );

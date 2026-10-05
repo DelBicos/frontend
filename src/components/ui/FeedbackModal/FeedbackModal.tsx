@@ -4,6 +4,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { createStyles } from './styles';
 import { useColors } from '@theme/ThemeProvider';
 
+import type { FontAwesomeName } from '@utils/iconNames';
 type FeedbackType = 'success' | 'error' | 'info' | 'warning';
 
 interface FeedbackModalProps {
@@ -26,7 +27,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
   const colors = useColors();
   const styles = createStyles(colors);
 
-  const config = useMemo(() => {
+  const config = useMemo((): { icon: FontAwesomeName; color: string } => {
     switch (type) {
       case 'success':
         return {
@@ -62,11 +63,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
         <View style={styles.modalContainer} accessibilityViewIsModal>
           {/* Ícone no topo */}
           <View style={styles.iconContainer}>
-            <FontAwesome
-              name={config.icon as any}
-              size={64}
-              color={config.color}
-            />
+            <FontAwesome name={config.icon} size={64} color={config.color} />
           </View>
 
           <Text style={styles.title} accessibilityRole="header">

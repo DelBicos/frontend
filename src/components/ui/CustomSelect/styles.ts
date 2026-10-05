@@ -1,6 +1,7 @@
 import { StyleSheet, Platform } from 'react-native';
 import { ColorsType } from '@theme/types';
 
+import { webStyle } from '@utils/webStyle';
 export const createStyles = (colors: ColorsType) =>
   StyleSheet.create({
     container: {
@@ -103,8 +104,6 @@ export const createStyles = (colors: ColorsType) =>
       width: '100%',
       height: '100%',
       zIndex: 2,
-      ...Platform.select({
-        web: { cursor: 'pointer' } as any,
-      }),
+      ...webStyle({ cursor: 'pointer' }),
     },
   });

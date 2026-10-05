@@ -10,7 +10,7 @@ export const createStyles = (colors: ColorsType) =>
       width: '100%',
       maxWidth: 450,
       alignSelf: 'center',
-      marginBottom: 24,
+      marginBottom: 16,
       gap: 8,
     },
     codeInput: {
@@ -40,7 +40,8 @@ export const createStyles = (colors: ColorsType) =>
       transform: [{ scale: 1.05 }],
     },
     codeInputFilled: {
-      borderColor: colors.primaryBlue,
-      backgroundColor: '#F0F7FF',
+      // Tokens do tema: legivel tambem no modo escuro.
+      borderColor: colors.primaryBlack,
+      backgroundColor: colors.cardBackground,
     },
   });

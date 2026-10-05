@@ -1,6 +1,7 @@
 import { UNSPLASH_API_KEY } from '@config/varEnvs';
 import { create } from 'zustand';
 
+import { logger } from '@lib/logger';
 interface UnsplashStore {
   fetchRandomPhoto: (query: string) => Promise<string | null>;
 }
@@ -13,7 +14,7 @@ export const useUnsplashStore = create<UnsplashStore>()((set) => ({
       );
 
       if (!response.ok) {
-        console.error(
+        logger.error(
           'Failed to fetch image from Unsplash:',
           response.statusText,
         );
@@ -23,7 +24,7 @@ export const useUnsplashStore = create<UnsplashStore>()((set) => ({
       const data = await response.json();
       return data.urls.small as string;
     } catch (error) {
-      console.error('Error fetching image from Unsplash:', error);
+      logger.error('Error fetching image from Unsplash:', error);
       return null;
     }
   },

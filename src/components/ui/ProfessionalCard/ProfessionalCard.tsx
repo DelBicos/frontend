@@ -5,6 +5,7 @@ import { useColors } from '@theme/ThemeProvider';
 import { createStyles } from './styles';
 import { useNavigation } from '@react-navigation/native';
 import { FontAwesome } from '@expo/vector-icons';
+import VerifiedBadge from '@components/ui/VerifiedBadge';
 
 interface ProfessionalCardProps {
   professional: ListedProfessional;
@@ -66,6 +67,7 @@ function ProfessionalCard({ professional }: ProfessionalCardProps) {
           numberOfLines={1}>
           {professional.name}
         </Text>
+        {professional.verified ? <VerifiedBadge showLabel /> : null}
 
         <Text
           style={[styles.services, { color: colorProps.textColor }]}

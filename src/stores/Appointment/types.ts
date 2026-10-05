@@ -3,6 +3,7 @@ export enum AppointmentStatus {
   CONFIRMED = 'confirmed',
   COMPLETED = 'completed',
   CANCELED = 'canceled',
+  NO_SHOW = 'no_show',
 }
 
 export interface Service {
@@ -81,8 +82,6 @@ export interface Address {
  */
 export interface Appointment {
   id: number;
-  /** Identificador numérico real (PK) usado no fluxo de pagamento; `id` acima é o short_id de exibição. */
-  numeric_id: number;
   professional_id: number;
   client_id: number;
   service_id: number;
@@ -100,6 +99,14 @@ export interface Appointment {
   Client: Client;
   payment_intent_id?: string | null;
   payment_method?: string;
+  canceled_by?: 'client' | 'professional' | 'system' | null;
+  canceled_at?: string | null;
+  cancellation_reason?: string | null;
+  /** Centavos retidos pelo profissional / devolvidos ao cliente. */
+  retained_cents?: number | null;
+  refunded_cents?: number | null;
+  reschedule_requested_start?: string | null;
+  reschedule_requested_by?: 'client' | 'professional' | null;
   Professional: Professional;
   Address?: Address | null;
 }
@@ -153,7 +160,84 @@ export interface AppointmentStore {
     appointmentId: number,
     status: AppointmentStatus,
   ) => Promise<boolean>;
-  cancelAppointment: (appointmentId: number) => Promise<boolean>;
+  /** Profissional marca um atendimento confirmado como concluido. */
+  completeAppointment: (appointmentId: number) => Promise<boolean>;
 
-  fetchInvoice: (appointmentId: number) => Promise<InvoiceData | null>;
+  fetchInvoice: (appointmentId: string | number) => Promise<InvoiceData | null>;
+
+  /** Quanto seria retido/devolvido se o usuario cancelasse agora. */
+  previewCancellation: (id: AppointmentId) => Promise<CancellationOutcome>;
+  cancelAppointment: (
+    id: AppointmentId,
+    reason?: string,
+  ) => Promise<CancelResult>;
+  /** Profissional registra que o cliente nao compareceu. */
+  markNoShow: (id: AppointmentId) => Promise<void>;
+  /** Horarios livres (HH:mm) do profissional em um dia (AAAA-MM-DD). */
+  getRescheduleSlots: (id: AppointmentId, date: string) => Promise<string[]>;
+  /** Pede um novo horario (ISO); a outra parte precisa aceitar. */
+  requestReschedule: (id: AppointmentId, startTime: string) => Promise<void>;
+  respondToReschedule: (id: AppointmentId, accept: boolean) => Promise<void>;
+  openDispute: (
+    id: AppointmentId,
+    input: { reason: DisputeReason; description: string },
+  ) => Promise<Dispute>;
+  getDispute: (id: AppointmentId) => Promise<Dispute | null>;
+}
+
+// --- Cancelamento, reagendamento e disputas ---
+
+/** Identificador publico do agendamento (o backend expoe o short_id). */
+export type AppointmentId = string | number;
+
+export type CancellationTier =
+  'unconfirmed' | 'free' | 'mid' | 'late' | 'full_refund';
+
+export interface CancellationOutcome {
+  tier: CancellationTier;
+  retentionPercent: number;
+  retainedCents: number;
+  refundCents: number;
+}
+
+export interface CancelResult {
+  tier: CancellationTier;
+  retainedCents: number;
+  refundedCents: number;
+}
+
+export type DisputeReason =
+  | 'service_not_done'
+  | 'poor_quality'
+  | 'wrong_charge'
+  | 'wrong_no_show'
+  | 'professional_absent'
+  | 'other';
+
+export type DisputeResolution = 'refund_full' | 'refund_partial' | 'rejected';
+
+export interface Dispute {
+  id: number;
+  appointment_id: number;
+  reason: DisputeReason;
+  description: string;
+  status: 'open' | 'resolved';
+  resolution?: DisputeResolution | null;
+  refund_cents?: number | null;
+  resolution_note?: string | null;
+  createdAt: string;
+  resolved_at?: string | null;
+}
+
+/** Disputa com os dados do agendamento, como o painel admin recebe. */
+export interface AdminDispute extends Dispute {
+  Appointment?: {
+    short_id: string;
+    status: string;
+    retained_cents?: number | null;
+    refunded_cents?: number | null;
+    Service?: { title: string; price?: string };
+    Client?: { User?: { name: string; email: string } };
+    Professional?: { User?: { name: string; email: string } };
+  };
 }

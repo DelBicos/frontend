@@ -1,89 +1,86 @@
 import { StyleSheet, Platform } from 'react-native';
 import { ColorsType } from '@theme/types';
 
+import { webStyle } from '@utils/webStyle';
 export const createStyles = (colors: ColorsType) =>
   StyleSheet.create({
-    container: {
-      width: '100%',
-      alignItems: 'center',
-      marginVertical: 10,
-    },
-    sliderWrapper: {
-      width: '100%',
-    },
-    listContent: {
-      paddingHorizontal: 16,
-      paddingVertical: 16,
-      flexGrow: 1,
-      gap: 16, // gap between items (supported in React Native 0.71+)
-    },
-    // --- GRID STYLE (MOBILE) ---
-    gridContainer: {
+    grid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      justifyContent: 'center',
-      paddingHorizontal: 16,
-      gap: 20, // gap for react native 0.71+
-    },
-    // --- BUBBLE STYLE (MOBILE) ---
-    bubbleCard: {
-      alignItems: 'center',
-      width: 80,
-    },
-    bubble: {
-      width: 64,
-      height: 64,
-      borderRadius: 32,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: 8,
-      // Usando a nova propriedade boxShadow do React Native (0.74+) que funciona no Android
-      // para criar sombras com direção (offset) real, ignorando a limitação do elevation.
-      boxShadow: '-4px 4px 10px rgba(204, 104, 0, 0.3)',
-    },
-    bubbleTitle: {
-      fontSize: 12,
-      fontFamily: 'Afacad-SemiBold',
-      textAlign: 'center',
-      color: colors.primaryBlack,
-      lineHeight: 14,
     },
 
-    // --- IMAGE CARD STYLE (WEB) ---
-    webCard: {
-      width: 220,
-      height: 140,
+    // --- Card de categoria ---
+    card: {
+      aspectRatio: 16 / 10,
       borderRadius: 16,
       overflow: 'hidden',
       backgroundColor: colors.cardBackground,
       ...Platform.select({
-        web: {
-          boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.12)',
+        web: webStyle({
+          boxShadow: '0px 6px 18px rgba(0, 0, 0, 0.12)',
           cursor: 'pointer',
-          transition: 'transform 0.2s ease',
-        } as any,
+          transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+        }),
+        default: { elevation: 3 },
       }),
     },
-    webCardHovered: {
-      transform: [{ scale: 1.03 }],
+    cardHovered: {
+      transform: [{ translateY: -3 }],
+      ...webStyle({ boxShadow: '0px 12px 24px rgba(0, 0, 0, 0.2)' }),
     },
-    webCardImage: {
-      width: '100%',
-      height: '100%',
+    cardImage: {
+      flex: 1,
       justifyContent: 'flex-end',
     },
-    webCardGradient: {
-      height: '50%',
-      justifyContent: 'flex-end',
-      padding: 16,
+    cardIcon: {
+      position: 'absolute',
+      top: 16,
+      left: 16,
+      width: 52,
+      height: 52,
+      borderRadius: 26,
+      backgroundColor: 'rgba(255,255,255,0.18)',
+      alignItems: 'center',
+      justifyContent: 'center',
     },
-    webCardTitle: {
+    cardGradient: {
+      paddingHorizontal: 14,
+      paddingTop: 28,
+      paddingBottom: 14,
+    },
+    cardTitle: {
       fontSize: 18,
+      lineHeight: 22,
       fontFamily: 'Afacad-Bold',
       color: '#FFFFFF',
-      textShadowColor: 'rgba(0, 0, 0, 0.75)',
+      textShadowColor: 'rgba(0, 0, 0, 0.6)',
       textShadowOffset: { width: 0, height: 1 },
       textShadowRadius: 3,
+    },
+
+    // --- Variante compacta (celular) ---
+    cardCompact: {
+      aspectRatio: 3 / 2,
+      borderRadius: 12,
+    },
+    cardPressed: {
+      opacity: 0.85,
+    },
+    cardIconCompact: {
+      top: 10,
+      left: 10,
+      width: 38,
+      height: 38,
+      borderRadius: 19,
+    },
+    cardGradientCompact: {
+      paddingHorizontal: 10,
+      paddingTop: 20,
+      paddingBottom: 10,
+    },
+    cardTitleCompact: {
+      fontSize: 16,
+      lineHeight: 19,
     },
 
     loadingContainer: {

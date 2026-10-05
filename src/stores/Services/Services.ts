@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { backendHttpClient } from '@lib/helpers/httpClient';
 
+import { logger } from '@lib/logger';
 export type ServiceItem = {
   id: number;
   title: string;
@@ -29,10 +30,41 @@ export type SemanticServiceSearchResult = {
 };
 
 /** Normaliza os formatos históricos e o retorno da busca semântica do backend. */
-function normalizeService(raw: any): ServiceItem {
+/** Servico como a API devolve: formatos historicos + associacoes opcionais. */
+export interface RawService {
+  id: number;
+  title?: string;
+  description?: string;
+  date?: string;
+  price?: number | string | null;
+  price_cents?: number;
+  duration?: number;
+  subcategory_id?: number;
+  banner_uri?: string | null;
+  bannerUrl?: string | null;
+  active?: boolean;
+  category_id?: number;
+  Subcategory?: { category_id?: number };
+  subcategory?: { category_id?: number };
+  category?: { id?: number };
+  relevance_score?: unknown;
+  availabilities?: { day: number; start: string; end: string }[];
+  Availabilities?: {
+    day_of_week?: number;
+    day?: number;
+    start_time?: string;
+    start?: string;
+    end_time?: string;
+    end?: string;
+  }[];
+}
+
+type QueryParams = Record<string, string | number>;
+
+export function normalizeService(raw: RawService): ServiceItem {
   return {
     id: raw.id,
-    title: raw.title,
+    title: raw.title ?? '',
     description: raw.description,
     date: raw.date,
     price_cents:
@@ -50,16 +82,16 @@ function normalizeService(raw: any): ServiceItem {
     relevanceScore:
       typeof raw.relevance_score === 'number' ? raw.relevance_score : undefined,
     availabilities: Array.isArray(raw.availabilities)
-      ? raw.availabilities.map((availability: any) => ({
+      ? raw.availabilities.map((availability) => ({
           day: availability.day,
           start: availability.start,
           end: availability.end,
         }))
       : Array.isArray(raw.Availabilities)
-        ? raw.Availabilities.map((availability: any) => ({
-            day: availability.day_of_week ?? availability.day,
-            start: availability.start_time ?? availability.start,
-            end: availability.end_time ?? availability.end,
+        ? raw.Availabilities.map((availability) => ({
+            day: (availability.day_of_week ?? availability.day) as number,
+            start: (availability.start_time ?? availability.start) as string,
+            end: (availability.end_time ?? availability.end) as string,
           }))
         : undefined,
   };
@@ -112,7 +144,7 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
     set({ loading: true });
     try {
       set({ lastQuery: opts });
-      const params: any = {};
+      const params: QueryParams = {};
       if (opts?.day !== undefined) params.day = opts.day;
       if (opts?.category_id !== undefined)
         params.category_id = opts.category_id;
@@ -123,11 +155,11 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
       const raw = Array.isArray(res.data)
         ? res.data
         : res.data.data || res.data.services || [];
-      const data: ServiceItem[] = (raw as any[]).map(normalizeService);
+      const data: ServiceItem[] = (raw as RawService[]).map(normalizeService);
       set({ services: data, loading: false });
       return data;
     } catch (e) {
-      console.error('[Services] fetchServices', e);
+      logger.error('[Services] fetchServices', e);
       set({ loading: false });
       return [];
     }
@@ -136,18 +168,18 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
   fetchMyServices: async (opts?: { page?: number; limit?: number }) => {
     set({ myServices: [], loading: true });
     try {
-      const params: any = {};
+      const params: QueryParams = {};
       if (opts?.page !== undefined) params.page = opts.page;
       if (opts?.limit !== undefined) params.limit = opts.limit;
       const res = await backendHttpClient.get('/api/services/my', { params });
       const raw = Array.isArray(res.data)
         ? res.data
         : res.data.data || res.data.services || [];
-      const data: ServiceItem[] = (raw as any[]).map(normalizeService);
+      const data: ServiceItem[] = (raw as RawService[]).map(normalizeService);
       set({ myServices: data, loading: false });
       return data;
     } catch (e) {
-      console.error('[Services] fetchMyServices', e);
+      logger.error('[Services] fetchMyServices', e);
       set({ myServices: [], loading: false });
       return [];
     }
@@ -168,12 +200,12 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
         : (res.data?.data ?? res.data?.services ?? []);
 
       return {
-        services: (raw as any[]).map(normalizeService),
+        services: (raw as RawService[]).map(normalizeService),
         total: Number(res.data?.total ?? raw.length),
         resultsLimited: res.data?.results_limited === true,
       };
     } catch (error) {
-      console.error('[Services] searchServicesSemantically', error);
+      logger.error('[Services] searchServicesSemantically', error);
       throw error;
     }
   },
@@ -195,7 +227,7 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
       set({ myServices: [...(get().myServices || []), created] });
       return created;
     } catch (e) {
-      console.error('[Services] createService', e);
+      logger.error('[Services] createService', e);
       throw e;
     }
   },
@@ -212,7 +244,7 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
       });
       return updated;
     } catch (e) {
-      console.error('[Services] updateService', e);
+      logger.error('[Services] updateService', e);
       throw e;
     }
   },
@@ -223,7 +255,7 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
       set({ myServices: (get().myServices || []).filter((s) => s.id !== id) });
       return true;
     } catch (e) {
-      console.error('[Services] deleteService', e);
+      logger.error('[Services] deleteService', e);
       return false;
     }
   },
