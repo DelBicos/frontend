@@ -16,7 +16,7 @@ import { RESCHEDULE_MIN_HOURS } from '@lib/appointments';
 import { Appointment } from '@stores/Appointment/types';
 import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
-import { Sheet, SheetButton } from './Sheet';
+import { Sheet, SheetButton } from '@components/ui/Sheet';
 
 /** Quantos dias a frente o cliente pode escolher. */
 const DAYS_AHEAD = 14;

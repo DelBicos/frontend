@@ -4,10 +4,10 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import InlineAlert from '@components/ui/InlineAlert';
 import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
-import AdminShell from '../components/AdminShell';
-import StatCard from '../components/StatCard';
-import { useAdminStore } from '@stores/Admin';
-import { formatCount, formatMoney, STATUS_LABELS } from '../components/format';
+import AdminShell from '@components/layout/AdminShell';
+import StatCard from '@components/ui/StatCard';
+import { useAdminStore, STATUS_LABELS } from '@stores/Admin';
+import { formatBRLFromUnits } from '@lib/helpers/formatCurrency';
 
 import { useNavigation } from '@react-navigation/native';
 import type { AppNavigation } from '@screens/types';
@@ -42,7 +42,7 @@ export default function AdminDashboard() {
           <View style={styles.row}>
             <StatCard
               label="Disputas abertas"
-              value={formatCount(queues.openDisputes)}
+              value={queues.openDisputes.toLocaleString('pt-BR')}
               hint={
                 queues.openDisputes ? 'Decida o reembolso' : 'Nenhuma pendente'
               }
@@ -51,7 +51,7 @@ export default function AdminDashboard() {
             />
             <StatCard
               label="Verificações em análise"
-              value={formatCount(queues.pendingVerifications)}
+              value={queues.pendingVerifications.toLocaleString('pt-BR')}
               hint={
                 queues.pendingVerifications
                   ? 'Confira documento e selfie'
@@ -68,13 +68,13 @@ export default function AdminDashboard() {
           <View style={styles.row}>
             <StatCard
               label="Valor movimentado"
-              value={formatMoney(kpis.revenue)}
+              value={formatBRLFromUnits(kpis.revenue)}
               hint="Serviços concluídos e valores retidos"
             />
             <StatCard
               label="Agendamentos"
-              value={formatCount(kpis.appointments)}
-              hint={`${formatCount(kpis.completed)} concluídos`}
+              value={kpis.appointments.toLocaleString('pt-BR')}
+              hint={`${kpis.completed.toLocaleString('pt-BR')} concluídos`}
             />
             <StatCard
               label="Avaliação média"
@@ -83,19 +83,19 @@ export default function AdminDashboard() {
                   ? '—'
                   : kpis.averageRating.toFixed(1).replace('.', ',')
               }
-              hint={`${formatCount(kpis.ratingsCount)} avaliações`}
+              hint={`${kpis.ratingsCount.toLocaleString('pt-BR')} avaliações`}
             />
           </View>
           <View style={[styles.row, styles.gap]}>
             <StatCard
               label="Usuários"
-              value={formatCount(kpis.totalUsers)}
+              value={kpis.totalUsers.toLocaleString('pt-BR')}
               hint="Cadastrados na plataforma"
             />
             <StatCard
               label="Profissionais"
-              value={formatCount(kpis.totalProfessionals)}
-              hint={`${formatCount(kpis.verifiedProfessionals)} verificados`}
+              value={kpis.totalProfessionals.toLocaleString('pt-BR')}
+              hint={`${kpis.verifiedProfessionals.toLocaleString('pt-BR')} verificados`}
             />
           </View>
 
@@ -108,7 +108,7 @@ export default function AdminDashboard() {
                 <View key={key} style={styles.statusRow}>
                   <Text style={styles.statusLabel}>{STATUS_LABELS[key]}</Text>
                   <Text style={styles.statusValue}>
-                    {formatCount(stats.statusTotals[key])}
+                    {stats.statusTotals[key].toLocaleString('pt-BR')}
                   </Text>
                 </View>
               ),

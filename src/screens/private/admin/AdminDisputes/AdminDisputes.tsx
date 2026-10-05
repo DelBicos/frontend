@@ -6,13 +6,10 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import AdminShell from '../components/AdminShell';
+import AdminShell from '@components/layout/AdminShell';
 import Chip, { ChipGroup } from '@components/ui/Chip';
 import InlineAlert from '@components/ui/InlineAlert';
-import {
-  Sheet,
-  SheetButton,
-} from '@components/features/AppointmentManage/Sheet';
+import { Sheet, SheetButton } from '@components/ui/Sheet';
 import { DISPUTE_REASON_LABELS } from '@components/features/AppointmentManage/DisputeSheet';
 import { useAdminStore } from '@stores/Admin';
 import type {

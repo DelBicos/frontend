@@ -4,6 +4,30 @@ import { getApiErrorMessage } from '@api/errors';
 import type { Dispute, AdminDispute } from '@stores/Appointment/types';
 import type { AdminStats, AdminStore, AdminVerification } from './types';
 
+/** Rotulos de apresentacao dos indicadores. */
+export const MONTH_LABELS = [
+  'Jan',
+  'Fev',
+  'Mar',
+  'Abr',
+  'Mai',
+  'Jun',
+  'Jul',
+  'Ago',
+  'Set',
+  'Out',
+  'Nov',
+  'Dez',
+];
+
+export const STATUS_LABELS = {
+  pending: 'Pendentes',
+  confirmed: 'Confirmados',
+  completed: 'Concluídos',
+  canceled: 'Cancelados',
+  no_show: 'Não compareceu',
+} as const;
+
 export const useAdminStore = create<AdminStore>()((set) => ({
   stats: null,
   loading: false,

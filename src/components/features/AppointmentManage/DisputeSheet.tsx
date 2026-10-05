@@ -8,7 +8,7 @@ import type { DisputeReason } from '@stores/Appointment/types';
 import { Appointment, AppointmentStatus } from '@stores/Appointment/types';
 import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
-import { Sheet, SheetButton } from './Sheet';
+import { Sheet, SheetButton } from '@components/ui/Sheet';
 
 const MIN_DESCRIPTION = 10;
 const MAX_DESCRIPTION = 1000;

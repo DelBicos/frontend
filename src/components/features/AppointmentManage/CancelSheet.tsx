@@ -14,7 +14,7 @@ import { AgendaRole, centsToCurrency } from '@lib/appointments';
 import { Appointment } from '@stores/Appointment/types';
 import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
-import { Sheet, SheetButton } from './Sheet';
+import { Sheet, SheetButton } from '@components/ui/Sheet';
 
 const MAX_REASON = 500;
 

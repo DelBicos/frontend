@@ -4,15 +4,10 @@ import { BarChart, LineChart } from 'react-native-chart-kit';
 import Chip, { ChipGroup } from '@components/ui/Chip';
 import InlineAlert from '@components/ui/InlineAlert';
 import { useColors } from '@theme/ThemeProvider';
-import AdminShell from '../components/AdminShell';
-import ChartCard from '../components/ChartCard';
-import { useAdminStore } from '@stores/Admin';
-import {
-  formatCount,
-  formatMoney,
-  MONTH_LABELS,
-  STATUS_LABELS,
-} from '../components/format';
+import AdminShell from '@components/layout/AdminShell';
+import ChartCard from '@components/ui/ChartCard';
+import { useAdminStore, MONTH_LABELS, STATUS_LABELS } from '@stores/Admin';
+import { formatBRLFromUnits } from '@lib/helpers/formatCurrency';
 
 const sum = (values: number[]) => values.reduce((a, b) => a + b, 0);
 
@@ -66,7 +61,7 @@ const AdminAnalytics: React.FC = () => {
         <View style={styles.grid}>
           <ChartCard
             title="Valor movimentado por mês"
-            summary={`Total no ano: ${formatMoney(stats.kpis.revenue)}`}>
+            summary={`Total no ano: ${formatBRLFromUnits(stats.kpis.revenue)}`}>
             {(width) => (
               <BarChart
                 data={{
@@ -94,7 +89,7 @@ const AdminAnalytics: React.FC = () => {
             )
               .map(
                 (k) =>
-                  `${STATUS_LABELS[k]}: ${formatCount(stats.statusTotals[k])}`,
+                  `${STATUS_LABELS[k]}: ${stats.statusTotals[k].toLocaleString('pt-BR')}`,
               )
               .join('. ')}
             legend={[
@@ -133,7 +128,7 @@ const AdminAnalytics: React.FC = () => {
 
           <ChartCard
             title="Novos usuários"
-            summary={`${formatCount(sum(stats.usersByMonth))} no ano`}>
+            summary={`${sum(stats.usersByMonth).toLocaleString('pt-BR')} no ano`}>
             {(width) => (
               <BarChart
                 data={{
@@ -156,7 +151,7 @@ const AdminAnalytics: React.FC = () => {
 
           <ChartCard
             title="Novos profissionais"
-            summary={`${formatCount(sum(stats.professionalsByMonth))} no ano`}>
+            summary={`${sum(stats.professionalsByMonth).toLocaleString('pt-BR')} no ano`}>
             {(width) => (
               <BarChart
                 data={{
