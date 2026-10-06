@@ -377,22 +377,22 @@ function resolveVoiceError(status: number | undefined): string {
     return 'Sua sessão expirou. Faça login novamente para enviar comandos de voz.';
   }
   if (status === 413) {
-    return 'O áudio está muito longo. Grave um comando mais curto e tente novamente.';
+    return 'O áudio está muito longo. Grave um comando mais curto ou continue digitando por texto.';
   }
   if (status === 415) {
-    return 'Este formato de áudio não é compatível. Tente gravar novamente.';
+    return 'Este formato de áudio não é compatível. Tente gravar novamente ou continue por texto.';
   }
   if (status === 422) {
-    return 'Não foi possível entender o áudio. Fale mais perto do microfone e tente novamente.';
+    return 'Não foi possível entender o áudio. Fale mais perto do microfone ou continue digitando por texto.';
   }
   if (status === 429) {
-    return 'Limite de uso da API de voz atingido. Aguarde a contagem para tentar novamente.';
+    return 'Limite de uso da API de voz atingido. Você pode continuar a conversa digitando por texto.';
   }
   if (status === 502) {
-    return 'O serviço de transcrição não respondeu. Tente enviar o áudio novamente.';
+    return 'O serviço de transcrição não respondeu. Tente enviar novamente ou continue digitando por texto.';
   }
   if (status === 503) {
-    return 'A transcrição de voz está temporariamente indisponível. Tente novamente em instantes.';
+    return 'A transcrição de voz está temporariamente indisponível. Você pode continuar digitando por texto.';
   }
   return resolveGenericError(status);
 }
@@ -778,7 +778,9 @@ export function useChatSession() {
           if (status === 404) resetSession();
           setError(resolveVoiceError(status));
         } else {
-          setError('Não foi possível enviar o áudio. Tente novamente.');
+          setError(
+            'Não foi possível enviar o áudio. Você pode continuar a conversa digitando por texto.',
+          );
         }
 
         const isRetryable =
