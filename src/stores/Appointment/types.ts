@@ -132,6 +132,22 @@ export interface AppointmentSheetRow {
 }
 
 export interface AppointmentStore {
+  error: string | null;
+  requestCancellationCode: (appointmentId: number) => Promise<{
+    challengeId: string;
+    email: string;
+    expiresAt: string;
+    resendAfterSeconds: number;
+  }>;
+  confirmCancellationCode: (
+    appointmentId: number,
+    challengeId: string,
+    code: string,
+  ) => Promise<void>;
+  abandonCancellationCode: (
+    appointmentId: number,
+    challengeId: string,
+  ) => Promise<void>;
   appointments: Appointment[];
   appointmentsByStatus: { [key in AppointmentStatus]?: Appointment[] };
   loading: boolean;
