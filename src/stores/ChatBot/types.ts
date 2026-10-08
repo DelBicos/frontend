@@ -92,6 +92,7 @@ export interface ChatBotContext {
   };
   intent?: string;
   pendingAction?: 'CREATE' | 'CANCEL' | 'RESCHEDULE' | string;
+  cancellationChallengeId?: string;
   timeZone?: string;
   serviceId?: number;
   serviceName?: string;
