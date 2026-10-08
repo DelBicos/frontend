@@ -358,7 +358,15 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
       {hasQuickReplies && !loading && (
         <QuickReplies
-          quickReplies={lastBotMessage?.quickReplies}
+          quickReplies={
+            conversationContext?.pendingAction === 'CANCEL' &&
+            conversationContext.cancellationChallengeId
+              ? [
+                  { label: 'Reenviar código', value: 'reenviar código' },
+                  { label: 'Voltar sem cancelar', value: 'voltar' },
+                ]
+              : lastBotMessage?.quickReplies
+          }
           suggestedTimes={lastBotMessage?.suggestedTimes}
           onSelect={handleQuickReply}
           disabled={loading || isRecording || isVoicePreparing}
