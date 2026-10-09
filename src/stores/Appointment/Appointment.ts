@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { isAxiosError } from 'axios';
 import {
   Appointment,
   AppointmentSheetRow,
@@ -10,6 +11,47 @@ import { useUserStore } from '@stores/User';
 import { backendHttpClient } from '@lib/helpers/httpClient';
 
 export const useAppointmentStore = create<AppointmentStore>()((set) => ({
+  error: null,
+  requestCancellationCode: async (appointmentId) => {
+    try {
+      const { data } = await backendHttpClient.post<{
+        challengeId: string;
+        email: string;
+        expiresAt: string;
+        resendAfterSeconds: number;
+      }>(`api/appointments/${appointmentId}/cancel/request`);
+      return data;
+    } catch (error: unknown) {
+      throw new Error(
+        isAxiosError<{ error: string }>(error)
+          ? (error.response?.data?.error ?? 'Não foi possível enviar o código.')
+          : 'Não foi possível enviar o código.',
+      );
+    }
+  },
+  confirmCancellationCode: async (appointmentId, challengeId, code) => {
+    try {
+      await backendHttpClient.post(`api/appointments/${appointmentId}/cancel`, {
+        challengeId,
+        code,
+      });
+    } catch (error: unknown) {
+      throw new Error(
+        isAxiosError<{ error: string }>(error)
+          ? (error.response?.data?.error ??
+              'Não foi possível confirmar o cancelamento.')
+          : 'Não foi possível confirmar o cancelamento.',
+      );
+    }
+    const store = useAppointmentStore.getState();
+    await store.fetchAppointments(store.activeRole);
+  },
+  abandonCancellationCode: async (appointmentId, challengeId) => {
+    await backendHttpClient.post(
+      `api/appointments/${appointmentId}/cancel/abandon`,
+      { challengeId },
+    );
+  },
   appointments: [],
   appointmentsByStatus: {},
   loading: false,
@@ -48,7 +90,12 @@ export const useAppointmentStore = create<AppointmentStore>()((set) => ({
 
       set({ appointments: sortedData, appointmentsByStatus, loading: false });
     } catch (error) {
-      console.error('Failed to fetch appointments:', error);
+      set({
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Não foi possível concluir a operação.',
+      });
       set({ appointments: [], loading: false });
     }
   },
@@ -80,7 +127,12 @@ export const useAppointmentStore = create<AppointmentStore>()((set) => ({
 
       return sheetData;
     } catch (error) {
-      console.error('Failed to fetch appointments as sheet:', error);
+      set({
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Não foi possível concluir a operação.',
+      });
       return [];
     }
   },
@@ -93,7 +145,12 @@ export const useAppointmentStore = create<AppointmentStore>()((set) => ({
       );
       return response.status === 200;
     } catch (error) {
-      console.error('Failed to submit review:', error);
+      set({
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Não foi possível concluir a operação.',
+      });
       return false;
     }
   },
@@ -113,7 +170,12 @@ export const useAppointmentStore = create<AppointmentStore>()((set) => ({
       });
       return response.data as InvoiceData;
     } catch (error) {
-      console.error('Failed to fetch invoice:', error);
+      set({
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Não foi possível concluir a operação.',
+      });
       return null;
     }
   },
@@ -131,7 +193,12 @@ export const useAppointmentStore = create<AppointmentStore>()((set) => ({
       }
       return false;
     } catch (error) {
-      console.error('Failed to update appointment status:', error);
+      set({
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Não foi possível concluir a operação.',
+      });
       return false;
     }
   },
@@ -142,7 +209,12 @@ export const useAppointmentStore = create<AppointmentStore>()((set) => ({
       await store.fetchAppointments(store.activeRole);
       return true;
     } catch (error) {
-      console.error('Failed to cancel appointment:', error);
+      set({
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Não foi possível concluir a operação.',
+      });
       return false;
     }
   },
