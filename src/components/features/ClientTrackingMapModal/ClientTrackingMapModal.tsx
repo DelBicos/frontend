@@ -283,17 +283,18 @@ export const ClientTrackingMapModal: React.FC<ClientTrackingMapModalProps> = ({
             </Text>
           </View>
 
-          {/* Caixa do Código de Segurança de 4 dígitos */}
+          {/* Caixa do Código de Confirmação */}
           {appointment.verification_code || liveStatus === 'arrived' ? (
             <View style={styles.pinBox}>
               <Text style={styles.pinBoxTitle}>
-                CÓDIGO DE INÍCIO DO SERVIÇO 🔑
+                CÓDIGO DE CONFIRMAÇÃO DO SERVIÇO 🔑
               </Text>
               <Text style={styles.pinBoxCode}>
                 {appointment.verification_code || '----'}
               </Text>
               <Text style={styles.pinBoxSub}>
-                Informe este código ao profissional ao recebê-lo em casa
+                Informe este código ao profissional para validação do
+                atendimento
               </Text>
             </View>
           ) : null}

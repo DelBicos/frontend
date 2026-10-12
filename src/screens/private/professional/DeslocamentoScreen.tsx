@@ -33,6 +33,7 @@ export interface DeslocamentoParams {
   address: string;
   startTime: string;
   status?: string;
+  verificationCode?: string;
 }
 
 export const DeslocamentoScreen: React.FC = () => {
@@ -112,12 +113,16 @@ export const DeslocamentoScreen: React.FC = () => {
                 });
               }
             }
+            if (appt.verification_code) {
+              setVerificationCode(appt.verification_code);
+            }
             if (appt.status === 'in_transit') {
               setInTransit(true);
               startGpsTracking();
             } else if (appt.status === 'arrived') {
               setInTransit(true);
               setArrived(true);
+              setOtpMode('checkin');
               setShowOtpModal(true);
             } else if (appt.status === 'in_progress') {
               setInTransit(true);
@@ -134,6 +139,10 @@ export const DeslocamentoScreen: React.FC = () => {
 
   // OTP Code Modal State
   const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otpMode, setOtpMode] = useState<'checkin' | 'checkout'>('checkin');
+  const [verificationCode, setVerificationCode] = useState(
+    params.verificationCode || '',
+  );
   const [otp, setOtp] = useState<string[]>(['', '', '', '']);
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpError, setOtpError] = useState('');
@@ -265,12 +274,16 @@ export const DeslocamentoScreen: React.FC = () => {
         );
         if (response.data && response.data.success) {
           stopGpsTracking();
+          if (response.data.verification_code) {
+            setVerificationCode(response.data.verification_code);
+          }
           const targetApptId =
             numericAppointmentId || Number(params.appointmentId);
           if (targetApptId && !isNaN(targetApptId)) {
             sendLocationArrived({ appointment_id: targetApptId });
           }
           setArrived(true);
+          setOtpMode('checkin');
           setShowOtpModal(true);
         }
       } else {
@@ -288,7 +301,7 @@ export const DeslocamentoScreen: React.FC = () => {
   };
 
   const handleOtpChange = (text: string, index: number) => {
-    const cleanText = text.replace(/[^0-9]/g, '');
+    const cleanText = text.toUpperCase().replace(/[^A-Z0-9]/g, '');
     const newOtp = [...otp];
     newOtp[index] = cleanText;
     setOtp(newOtp);
@@ -306,41 +319,73 @@ export const DeslocamentoScreen: React.FC = () => {
   };
 
   const handleConfirmOtp = async () => {
-    const code = otp.join('');
-    if (code.length !== 4) {
-      setOtpError('O código deve conter 4 números.');
+    const rawCode = otp.join('').toUpperCase();
+    if (rawCode.length !== 4) {
+      setOtpError('O código deve conter 4 caracteres (ex: AB-12).');
       return;
     }
+    const code = `${rawCode.slice(0, 2)}-${rawCode.slice(2)}`;
 
     setOtpLoading(true);
     setOtpError('');
 
     try {
       if (params.appointmentId) {
-        const res = await backendHttpClient.post(
-          `/api/appointments/${params.appointmentId}/start-service`,
-          { code },
-        );
-        if (res.data && res.data.success) {
+        if (otpMode === 'checkout') {
+          const res = await backendHttpClient.post(
+            `/api/appointments/${params.appointmentId}/complete-service`,
+            { code },
+          );
+          if (res.data && res.data.success) {
+            setInProgress(false);
+            setShowOtpModal(false);
+            Alert.alert(
+              'Serviço Concluído! 🎉',
+              'Check-out realizado com sucesso! Atendimento concluído.',
+              [
+                {
+                  text: 'OK',
+                  onPress: () => navigation.goBack(),
+                },
+              ],
+            );
+          }
+        } else {
+          const res = await backendHttpClient.post(
+            `/api/appointments/${params.appointmentId}/start-service`,
+            { code },
+          );
+          if (res.data && res.data.success) {
+            setInProgress(true);
+            setShowOtpModal(false);
+            Alert.alert(
+              'Serviço Iniciado! 🚀',
+              'Check-in realizado com sucesso! Atendimento iniciado.',
+            );
+          }
+        }
+      } else {
+        if (otpMode === 'checkout') {
+          setInProgress(false);
+          setShowOtpModal(false);
+          Alert.alert(
+            'Serviço Concluído! 🎉',
+            'Check-out realizado com sucesso! Atendimento concluído.',
+            [{ text: 'OK', onPress: () => navigation.goBack() }],
+          );
+        } else {
           setInProgress(true);
           setShowOtpModal(false);
           Alert.alert(
             'Serviço Iniciado! 🚀',
-            'Atendimento iniciado com sucesso.',
+            'Check-in realizado com sucesso! Atendimento iniciado.',
           );
         }
-      } else {
-        setInProgress(true);
-        setShowOtpModal(false);
-        Alert.alert(
-          'Serviço Iniciado! 🚀',
-          'Atendimento iniciado com sucesso.',
-        );
       }
     } catch (error: any) {
       const msg =
         error?.response?.data?.error ||
-        'Código incorreto. Peça o código de 4 dígitos ao cliente.';
+        'Código incorreto. Peça o código de confirmação ao cliente.';
       setOtpError(msg);
     } finally {
       setOtpLoading(false);
@@ -479,8 +524,8 @@ export const DeslocamentoScreen: React.FC = () => {
                   Chegada Confirmada 🎯
                 </Text>
                 <Text style={[stylesDark.tipSub, { color: '#EA580C' }]}>
-                  Solicite o código de 4 dígitos enviado ao cliente para iniciar
-                  o atendimento.
+                  Solicite o código de confirmação ao cliente para iniciar o
+                  atendimento.
                 </Text>
               </View>
             </View>
@@ -504,6 +549,60 @@ export const DeslocamentoScreen: React.FC = () => {
             </View>
           )}
 
+          {/* Card com Código de Confirmação (CHK-02) */}
+          {verificationCode ? (
+            <View
+              style={{
+                backgroundColor: '#FFF7ED',
+                borderColor: '#FF6B00',
+                borderWidth: 1.5,
+                borderRadius: 14,
+                padding: 14,
+                marginBottom: 16,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}>
+              <View style={{ flex: 1, marginRight: 8 }}>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    fontWeight: '800',
+                    color: '#EA580C',
+                    letterSpacing: 0.5,
+                  }}>
+                  CÓDIGO DE CONFIRMAÇÃO 🔑
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: '#C2410C',
+                    marginTop: 2,
+                    lineHeight: 16,
+                  }}>
+                  Confirme este código com o cliente para validação:
+                </Text>
+              </View>
+              <View
+                style={{
+                  backgroundColor: '#FF6B00',
+                  paddingHorizontal: 14,
+                  paddingVertical: 8,
+                  borderRadius: 10,
+                }}>
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontWeight: '900',
+                    color: '#FFFFFF',
+                    letterSpacing: 3,
+                  }}>
+                  {verificationCode}
+                </Text>
+              </View>
+            </View>
+          ) : null}
+
           {/* Banner com o Nome do Serviço */}
           <View style={stylesDark.codeCard}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -523,28 +622,40 @@ export const DeslocamentoScreen: React.FC = () => {
         {/* Botão de Ação Inferior */}
         <View style={stylesDark.bottomBar}>
           {inProgress ? (
-            <View
+            <TouchableOpacity
               style={[
                 stylesDark.bottomActionBtn,
                 { backgroundColor: '#10B981' },
-              ]}>
+              ]}
+              onPress={() => {
+                setOtp(['', '', '', '']);
+                setOtpError('');
+                setOtpMode('checkout');
+                setShowOtpModal(true);
+              }}
+              activeOpacity={0.85}>
               <Ionicons
-                name="time-outline"
+                name="checkmark-done-circle-outline"
                 size={22}
                 color="#FFFFFF"
                 style={{ marginRight: 8 }}
               />
               <Text style={stylesDark.bottomActionBtnText}>
-                Serviço em Andamento ⏱️
+                Finalizar Atendimento (Check-out) 🏁
               </Text>
-            </View>
+            </TouchableOpacity>
           ) : arrived ? (
             <TouchableOpacity
               style={[
                 stylesDark.bottomActionBtn,
                 { backgroundColor: '#FF6B00' },
               ]}
-              onPress={() => setShowOtpModal(true)}
+              onPress={() => {
+                setOtp(['', '', '', '']);
+                setOtpError('');
+                setOtpMode('checkin');
+                setShowOtpModal(true);
+              }}
               activeOpacity={0.85}>
               <Ionicons
                 name="key-outline"
@@ -581,7 +692,7 @@ export const DeslocamentoScreen: React.FC = () => {
           )}
         </View>
 
-        {/* MODAL CÓDIGO DE 4 DÍGITOS (ESTILO IFOOD / OTP) */}
+        {/* MODAL CÓDIGO DE CONFIRMAÇÃO (ESTILO IFOOD / OTP COM AB-12) */}
         <Modal visible={showOtpModal} transparent animationType="slide">
           <View style={stylesDark.modalBackdrop}>
             <View style={stylesDark.otpCard}>
@@ -589,36 +700,57 @@ export const DeslocamentoScreen: React.FC = () => {
                 <TouchableOpacity onPress={() => setShowOtpModal(false)}>
                   <Ionicons name="chevron-back" size={24} color="#0F172A" />
                 </TouchableOpacity>
-                <Text style={stylesDark.otpHeaderTitle}>CÓDIGO DE INÍCIO</Text>
+                <Text style={stylesDark.otpHeaderTitle}>
+                  {otpMode === 'checkout'
+                    ? 'CHECK-OUT DO SERVIÇO'
+                    : 'CHECK-IN DO SERVIÇO'}
+                </Text>
                 <View style={{ width: 24 }} />
               </View>
 
               <Text style={stylesDark.otpTitle}>
-                Digite o código do cliente
+                {otpMode === 'checkout'
+                  ? 'Finalizar Atendimento'
+                  : 'Digite o código do cliente'}
               </Text>
               <Text style={stylesDark.otpSub}>
-                O cliente recebeu um código de 4 números. Peça este código para
-                iniciar o serviço.
+                {otpMode === 'checkout'
+                  ? 'Digite o código de confirmação no formato AB-12 para concluir o serviço.'
+                  : 'O cliente possui o código de confirmação no formato AB-12. Peça o código para iniciar o serviço.'}
               </Text>
 
-              {/* 4 BOXES DE INPUT */}
+              {/* 4 BOXES DE INPUT COM SEPARADOR */}
               <View style={stylesDark.otpBoxesRow}>
                 {otp.map((digit, idx) => (
-                  <TextInput
-                    key={idx}
-                    ref={inputRefs[idx]}
-                    style={[
-                      stylesDark.otpInputBox,
-                      digit ? stylesDark.otpInputBoxFilled : null,
-                    ]}
-                    value={digit}
-                    onChangeText={(text) => handleOtpChange(text, idx)}
-                    onKeyPress={(e) => handleOtpKeyPress(e, idx)}
-                    keyboardType="number-pad"
-                    maxLength={1}
-                    selectTextOnFocus
-                    autoFocus={idx === 0}
-                  />
+                  <React.Fragment key={idx}>
+                    {idx === 2 && (
+                      <Text
+                        style={{
+                          fontSize: 24,
+                          fontWeight: '800',
+                          color: '#64748B',
+                          marginHorizontal: 4,
+                          alignSelf: 'center',
+                        }}>
+                        -
+                      </Text>
+                    )}
+                    <TextInput
+                      key={idx}
+                      ref={inputRefs[idx]}
+                      style={[
+                        stylesDark.otpInputBox,
+                        digit ? stylesDark.otpInputBoxFilled : null,
+                      ]}
+                      value={digit}
+                      onChangeText={(text) => handleOtpChange(text, idx)}
+                      onKeyPress={(e) => handleOtpKeyPress(e, idx)}
+                      autoCapitalize="characters"
+                      maxLength={1}
+                      selectTextOnFocus
+                      autoFocus={idx === 0}
+                    />
+                  </React.Fragment>
                 ))}
               </View>
 
@@ -633,7 +765,7 @@ export const DeslocamentoScreen: React.FC = () => {
                   color="#10B981"
                 />
                 <Text style={stylesDark.otpReqText}>
-                  Código de 4 números fornecido pelo cliente
+                  Código de 4 caracteres no formato AB-12
                 </Text>
               </View>
 
@@ -649,7 +781,9 @@ export const DeslocamentoScreen: React.FC = () => {
                   <ActivityIndicator color="#FFFFFF" size="small" />
                 ) : (
                   <Text style={stylesDark.otpConfirmBtnText}>
-                    Confirmar e Iniciar Serviço
+                    {otpMode === 'checkout'
+                      ? 'Confirmar e Finalizar Serviço'
+                      : 'Confirmar e Iniciar Serviço'}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -1291,7 +1425,7 @@ const stylesDark = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // ESTILOS MODAL OTP (CÓDIGO DE 4 DÍGITOS ESTILO IFOOD)
+  // ESTILOS MODAL OTP (CÓDIGO DE CONFIRMAÇÃO ESTILO AB-12)
   otpCard: {
     width: '100%',
     maxWidth: 400,

@@ -183,8 +183,10 @@ export function AppointmentDetailsModal({
               </View>
             </View>
 
-            {/* Banner de Código de Segurança para o Cliente */}
-            {appointment.verification_code || appointment.status === 'arrived' ? (
+            {/* Banner do código de confirmação: só durante o atendimento (check-in e check-out) */}
+            {['in_transit', 'arrived', 'in_progress'].includes(
+              appointment.status,
+            ) ? (
               <View
                 style={{
                   backgroundColor: '#FFF7ED',
@@ -196,14 +198,41 @@ export function AppointmentDetailsModal({
                   marginBottom: 16,
                   alignItems: 'center',
                 }}>
-                <Text style={{ fontSize: 13, color: '#EA580C', fontWeight: '800', marginBottom: 4, letterSpacing: 1 }}>
-                  CÓDIGO DE INÍCIO DO SERVIÇO 🔑
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color: '#EA580C',
+                    fontWeight: '800',
+                    marginBottom: 4,
+                    letterSpacing: 1,
+                  }}>
+                  CÓDIGO DE CONFIRMAÇÃO DO SERVIÇO 🔑
                 </Text>
-                <Text style={{ fontSize: 13, color: '#C2410C', textAlign: 'center', marginBottom: 12, lineHeight: 18 }}>
-                  Passe este código de 4 dígitos ao profissional para ele iniciar o atendimento:
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color: '#C2410C',
+                    textAlign: 'center',
+                    marginBottom: 12,
+                    lineHeight: 18,
+                  }}>
+                  Passe este código de confirmação ao profissional para
+                  validação do atendimento:
                 </Text>
-                <View style={{ backgroundColor: '#FF6B00', paddingHorizontal: 28, paddingVertical: 10, borderRadius: 14 }}>
-                  <Text style={{ fontSize: 32, fontWeight: '900', color: '#FFFFFF', letterSpacing: 8 }}>
+                <View
+                  style={{
+                    backgroundColor: '#FF6B00',
+                    paddingHorizontal: 28,
+                    paddingVertical: 10,
+                    borderRadius: 14,
+                  }}>
+                  <Text
+                    style={{
+                      fontSize: 32,
+                      fontWeight: '900',
+                      color: '#FFFFFF',
+                      letterSpacing: 6,
+                    }}>
                     {appointment.verification_code || '----'}
                   </Text>
                 </View>
@@ -211,7 +240,8 @@ export function AppointmentDetailsModal({
             ) : null}
 
             {/* Botão de Rastreamento no Mapa em Tempo Real */}
-            {appointment.status === 'in_transit' || appointment.status === 'arrived' ? (
+            {appointment.status === 'in_transit' ||
+            appointment.status === 'arrived' ? (
               <TouchableOpacity
                 style={{
                   backgroundColor: '#2563EB',
@@ -227,7 +257,8 @@ export function AppointmentDetailsModal({
                 }}
                 onPress={() => setShowTrackingModal(true)}
                 activeOpacity={0.8}>
-                <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 15 }}>
+                <Text
+                  style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 15 }}>
                   Acompanhar Prestador no Mapa 🗺️
                 </Text>
               </TouchableOpacity>
