@@ -16,13 +16,14 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { openGoogleMaps, openWaze } from '@utils/mapsHelper';
-import { backendHttpClient } from '@lib/helpers/httpClient';
 import {
   useLocationSocket,
   sendLocationUpdate,
   sendLocationArrived,
 } from '@hooks/useLocationSocket';
 import { useUserStore } from '@stores/User';
+import { useAppointmentStore } from '@stores/Appointment';
+import { useColors } from '@theme/ThemeProvider';
 import { LgpdConsentModal } from '@components/features/LgpdConsentModal';
 
 export interface DeslocamentoParams {
@@ -40,6 +41,15 @@ export const DeslocamentoScreen: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const params = (route.params || {}) as DeslocamentoParams;
+
+  const colors = useColors();
+  const {
+    getAppointmentById,
+    markInTransit,
+    markArrived,
+    startService,
+    completeService,
+  } = useAppointmentStore();
 
   const rawId = params.appointmentId;
   const initialNumId =
@@ -87,10 +97,8 @@ export const DeslocamentoScreen: React.FC = () => {
 
   useEffect(() => {
     if (params.appointmentId) {
-      backendHttpClient
-        .get(`/api/appointments/${params.appointmentId}`)
-        .then((res) => {
-          const appt = res.data;
+      getAppointmentById(params.appointmentId)
+        .then((appt) => {
           if (appt) {
             const numId = appt.numeric_id || appt.id;
             if (
@@ -135,7 +143,7 @@ export const DeslocamentoScreen: React.FC = () => {
           // Silenciosamente mantém os dados iniciais
         });
     }
-  }, [params.appointmentId]);
+  }, [params.appointmentId, getAppointmentById]);
 
   // OTP Code Modal State
   const [showOtpModal, setShowOtpModal] = useState(false);
@@ -215,9 +223,11 @@ export const DeslocamentoScreen: React.FC = () => {
     setLoading(true);
     try {
       if (params.appointmentId) {
-        await backendHttpClient.post(
-          `/api/appointments/${params.appointmentId}/in-transit`,
-        );
+        const res = await markInTransit(params.appointmentId);
+        if (!res.success && res.error) {
+          Alert.alert('Erro', res.error);
+          return;
+        }
       }
       setInTransit(true);
       await startGpsTracking();
@@ -225,11 +235,8 @@ export const DeslocamentoScreen: React.FC = () => {
         'A Caminho! 🚗',
         'Você informou que está a caminho do local. Sua localização está sendo transmitida em tempo real para o cliente a cada 5 segundos.',
       );
-    } catch (error: any) {
-      const errorMessage =
-        error?.response?.data?.error ||
-        'Erro ao atualizar status para em deslocamento.';
-      Alert.alert('Erro', errorMessage);
+    } catch {
+      Alert.alert('Erro', 'Erro ao atualizar status para em deslocamento.');
     } finally {
       setLoading(false);
     }
@@ -268,14 +275,11 @@ export const DeslocamentoScreen: React.FC = () => {
 
     try {
       if (params.appointmentId) {
-        const response = await backendHttpClient.post(
-          `/api/appointments/${params.appointmentId}/arrived`,
-          coords,
-        );
-        if (response.data && response.data.success) {
+        const response = await markArrived(params.appointmentId, coords);
+        if (response.success) {
           stopGpsTracking();
-          if (response.data.verification_code) {
-            setVerificationCode(response.data.verification_code);
+          if (response.verification_code) {
+            setVerificationCode(response.verification_code);
           }
           const targetApptId =
             numericAppointmentId || Number(params.appointmentId);
@@ -285,23 +289,31 @@ export const DeslocamentoScreen: React.FC = () => {
           setArrived(true);
           setOtpMode('checkin');
           setShowOtpModal(true);
+        } else {
+          Alert.alert(
+            'Atenção',
+            response.error || 'Erro ao confirmar chegada.',
+          );
         }
       } else {
         stopGpsTracking();
         setArrived(true);
         setShowOtpModal(true);
       }
-    } catch (error: any) {
-      const errorMessage =
-        error?.response?.data?.error || 'Erro ao confirmar chegada.';
-      Alert.alert('Atenção', errorMessage);
+    } catch {
+      Alert.alert('Atenção', 'Erro ao confirmar chegada.');
     } finally {
       setArrivedLoading(false);
     }
   };
 
   const handleOtpChange = (text: string, index: number) => {
-    const cleanText = text.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    let cleanText = text.toUpperCase();
+    if (index === 0 || index === 1) {
+      cleanText = cleanText.replace(/[^A-Z]/g, '');
+    } else {
+      cleanText = cleanText.replace(/[^0-9]/g, '');
+    }
     const newOtp = [...otp];
     newOtp[index] = cleanText;
     setOtp(newOtp);
@@ -312,11 +324,19 @@ export const DeslocamentoScreen: React.FC = () => {
     }
   };
 
-  const handleOtpKeyPress = (e: any, index: number) => {
+  const handleOtpKeyPress = (
+    e: { nativeEvent: { key: string } },
+    index: number,
+  ) => {
     if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
       inputRefs[index - 1].current?.focus();
     }
   };
+
+  const isOtpComplete =
+    otp.length === 4 &&
+    /^[A-Z]{2}$/.test(otp[0] + otp[1]) &&
+    /^[0-9]{2}$/.test(otp[2] + otp[3]);
 
   const handleConfirmOtp = async () => {
     const rawCode = otp.join('').toUpperCase();
@@ -332,11 +352,8 @@ export const DeslocamentoScreen: React.FC = () => {
     try {
       if (params.appointmentId) {
         if (otpMode === 'checkout') {
-          const res = await backendHttpClient.post(
-            `/api/appointments/${params.appointmentId}/complete-service`,
-            { code },
-          );
-          if (res.data && res.data.success) {
+          const res = await completeService(params.appointmentId, code);
+          if (res.success) {
             setInProgress(false);
             setShowOtpModal(false);
             Alert.alert(
@@ -349,19 +366,20 @@ export const DeslocamentoScreen: React.FC = () => {
                 },
               ],
             );
+          } else {
+            setOtpError(res.error || 'Código incorreto.');
           }
         } else {
-          const res = await backendHttpClient.post(
-            `/api/appointments/${params.appointmentId}/start-service`,
-            { code },
-          );
-          if (res.data && res.data.success) {
+          const res = await startService(params.appointmentId, code);
+          if (res.success) {
             setInProgress(true);
             setShowOtpModal(false);
             Alert.alert(
               'Serviço Iniciado! 🚀',
               'Check-in realizado com sucesso! Atendimento iniciado.',
             );
+          } else {
+            setOtpError(res.error || 'Código incorreto.');
           }
         }
       } else {
@@ -382,11 +400,8 @@ export const DeslocamentoScreen: React.FC = () => {
           );
         }
       }
-    } catch (error: any) {
-      const msg =
-        error?.response?.data?.error ||
-        'Código incorreto. Peça o código de confirmação ao cliente.';
-      setOtpError(msg);
+    } catch {
+      setOtpError('Código incorreto. Peça o código de confirmação ao cliente.');
     } finally {
       setOtpLoading(false);
     }
@@ -553,8 +568,8 @@ export const DeslocamentoScreen: React.FC = () => {
           {verificationCode ? (
             <View
               style={{
-                backgroundColor: '#FFF7ED',
-                borderColor: '#FF6B00',
+                backgroundColor: colors.warningBackground || '#FFF7ED',
+                borderColor: colors.primaryOrange,
                 borderWidth: 1.5,
                 borderRadius: 14,
                 padding: 14,
@@ -568,7 +583,7 @@ export const DeslocamentoScreen: React.FC = () => {
                   style={{
                     fontSize: 12,
                     fontWeight: '800',
-                    color: '#EA580C',
+                    color: colors.warningText || colors.primaryOrange,
                     letterSpacing: 0.5,
                   }}>
                   CÓDIGO DE CONFIRMAÇÃO 🔑
@@ -576,7 +591,7 @@ export const DeslocamentoScreen: React.FC = () => {
                 <Text
                   style={{
                     fontSize: 12,
-                    color: '#C2410C',
+                    color: colors.textSecondary,
                     marginTop: 2,
                     lineHeight: 16,
                   }}>
@@ -585,7 +600,7 @@ export const DeslocamentoScreen: React.FC = () => {
               </View>
               <View
                 style={{
-                  backgroundColor: '#FF6B00',
+                  backgroundColor: colors.primaryOrange,
                   paddingHorizontal: 14,
                   paddingVertical: 8,
                   borderRadius: 10,
@@ -594,7 +609,7 @@ export const DeslocamentoScreen: React.FC = () => {
                   style={{
                     fontSize: 20,
                     fontWeight: '900',
-                    color: '#FFFFFF',
+                    color: colors.primaryWhite,
                     letterSpacing: 3,
                   }}>
                   {verificationCode}
@@ -728,7 +743,7 @@ export const DeslocamentoScreen: React.FC = () => {
                         style={{
                           fontSize: 24,
                           fontWeight: '800',
-                          color: '#64748B',
+                          color: colors.textSecondary,
                           marginHorizontal: 4,
                           alignSelf: 'center',
                         }}>
@@ -740,11 +755,19 @@ export const DeslocamentoScreen: React.FC = () => {
                       ref={inputRefs[idx]}
                       style={[
                         stylesDark.otpInputBox,
+                        {
+                          backgroundColor: colors.inputBackground,
+                          borderColor: digit
+                            ? colors.primaryOrange
+                            : colors.borderColor,
+                          color: colors.primaryBlack,
+                        },
                         digit ? stylesDark.otpInputBoxFilled : null,
                       ]}
                       value={digit}
                       onChangeText={(text) => handleOtpChange(text, idx)}
                       onKeyPress={(e) => handleOtpKeyPress(e, idx)}
+                      keyboardType={idx < 2 ? 'default' : 'number-pad'}
                       autoCapitalize="characters"
                       maxLength={1}
                       selectTextOnFocus
@@ -755,16 +778,26 @@ export const DeslocamentoScreen: React.FC = () => {
               </View>
 
               {otpError ? (
-                <Text style={stylesDark.otpErrorText}>{otpError}</Text>
+                <Text
+                  style={[
+                    stylesDark.otpErrorText,
+                    { color: colors.errorText || '#EF4444' },
+                  ]}>
+                  {otpError}
+                </Text>
               ) : null}
 
               <View style={stylesDark.otpRequirements}>
                 <Ionicons
                   name="checkmark-circle-outline"
                   size={16}
-                  color="#10B981"
+                  color={colors.primaryGreen}
                 />
-                <Text style={stylesDark.otpReqText}>
+                <Text
+                  style={[
+                    stylesDark.otpReqText,
+                    { color: colors.textSecondary },
+                  ]}>
                   Código de 4 caracteres no formato AB-12
                 </Text>
               </View>
@@ -772,15 +805,22 @@ export const DeslocamentoScreen: React.FC = () => {
               <TouchableOpacity
                 style={[
                   stylesDark.otpConfirmBtn,
-                  otpLoading && { opacity: 0.7 },
+                  {
+                    backgroundColor: colors.primaryOrange,
+                    opacity: isOtpComplete && !otpLoading ? 1 : 0.6,
+                  },
                 ]}
                 onPress={handleConfirmOtp}
-                disabled={otpLoading}
+                disabled={!isOtpComplete || otpLoading}
                 activeOpacity={0.85}>
                 {otpLoading ? (
-                  <ActivityIndicator color="#FFFFFF" size="small" />
+                  <ActivityIndicator color={colors.primaryWhite} size="small" />
                 ) : (
-                  <Text style={stylesDark.otpConfirmBtnText}>
+                  <Text
+                    style={[
+                      stylesDark.otpConfirmBtnText,
+                      { color: colors.primaryWhite },
+                    ]}>
                     {otpMode === 'checkout'
                       ? 'Confirmar e Finalizar Serviço'
                       : 'Confirmar e Iniciar Serviço'}

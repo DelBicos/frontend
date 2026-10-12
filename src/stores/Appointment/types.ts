@@ -157,7 +157,33 @@ export interface AppointmentStore {
     appointmentId: number,
     status: AppointmentStatus,
   ) => Promise<boolean>;
-  cancelAppointment: (appointmentId: number) => Promise<boolean>;
-
+  cancelAppointment: (appointmentId: number | string) => Promise<boolean>;
   fetchInvoice: (appointmentId: number) => Promise<InvoiceData | null>;
+
+  getAppointmentById: (
+    appointmentId: number | string,
+  ) => Promise<Appointment | null>;
+
+  markInTransit: (
+    appointmentId: number | string,
+  ) => Promise<{ success: boolean; error?: string }>;
+
+  markArrived: (
+    appointmentId: number | string,
+    coords?: { latitude?: number; longitude?: number },
+  ) => Promise<{
+    success: boolean;
+    verification_code?: string;
+    error?: string;
+  }>;
+
+  startService: (
+    appointmentId: number | string,
+    code: string,
+  ) => Promise<{ success: boolean; error?: string }>;
+
+  completeService: (
+    appointmentId: number | string,
+    code: string,
+  ) => Promise<{ success: boolean; error?: string }>;
 }

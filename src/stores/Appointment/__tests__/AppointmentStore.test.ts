@@ -58,7 +58,9 @@ describe('AppointmentStore', () => {
     await useAppointmentStore.getState().fetchAppointments('client');
 
     const state = useAppointmentStore.getState();
-    expect(backendHttpClient.get).toHaveBeenCalledWith('api/appointments/user/1?role=client');
+    expect(backendHttpClient.get).toHaveBeenCalledWith(
+      'api/appointments/user/1?role=client',
+    );
     expect(state.appointments).toHaveLength(3);
     expect(state.appointmentsByStatus['pending']).toHaveLength(1);
     expect(state.appointmentsByStatus['confirmed']).toHaveLength(1);
@@ -80,5 +82,63 @@ describe('AppointmentStore', () => {
     expect(backendHttpClient.put).toHaveBeenCalledWith('api/appointments/1', {
       status: 'confirmed',
     });
+  });
+
+  it('deve confirmar chegada e retornar verification_code com sucesso', async () => {
+    (backendHttpClient.post as jest.Mock).mockResolvedValue({
+      data: { success: true, verification_code: 'AB-12' },
+    });
+
+    const res = await useAppointmentStore
+      .getState()
+      .markArrived(100, { latitude: -23.55, longitude: -46.63 });
+
+    expect(res.success).toBe(true);
+    expect(res.verification_code).toBe('AB-12');
+    expect(backendHttpClient.post).toHaveBeenCalledWith(
+      'api/appointments/100/arrived',
+      { latitude: -23.55, longitude: -46.63 },
+    );
+  });
+
+  it('deve iniciar o serviço (check-in) com código com sucesso', async () => {
+    (backendHttpClient.post as jest.Mock).mockResolvedValue({
+      data: { success: true },
+    });
+
+    const res = await useAppointmentStore.getState().startService(100, 'AB-12');
+
+    expect(res.success).toBe(true);
+    expect(backendHttpClient.post).toHaveBeenCalledWith(
+      'api/appointments/100/start-service',
+      { code: 'AB-12' },
+    );
+  });
+
+  it('deve finalizar o serviço (check-out) com código com sucesso', async () => {
+    (backendHttpClient.post as jest.Mock).mockResolvedValue({
+      data: { success: true },
+    });
+
+    const res = await useAppointmentStore
+      .getState()
+      .completeService(100, 'AB-12');
+
+    expect(res.success).toBe(true);
+    expect(backendHttpClient.post).toHaveBeenCalledWith(
+      'api/appointments/100/complete-service',
+      { code: 'AB-12' },
+    );
+  });
+
+  it('deve retornar mensagem de erro quando o código for incorreto', async () => {
+    (backendHttpClient.post as jest.Mock).mockRejectedValue({
+      response: { data: { error: 'Código de confirmação incorreto.' } },
+    });
+
+    const res = await useAppointmentStore.getState().startService(100, 'XX-99');
+
+    expect(res.success).toBe(false);
+    expect(res.error).toBe('Código de confirmação incorreto.');
   });
 });
