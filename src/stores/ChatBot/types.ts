@@ -9,6 +9,7 @@ export type ChatBotState =
   | 'COLETANDO_SERVICO'
   | 'COLETANDO_DATA'
   | 'COLETANDO_HORARIO'
+  | 'COLETANDO_ENDERECO'
   | 'VERIFICANDO_DISPONIBILIDADE'
   | 'SELECIONANDO_PROFISSIONAL'
   | 'CONFIRMACAO'
@@ -84,8 +85,14 @@ export interface ChatBotSuggestedSlotData {
  * Reflete o que o bot já coletou até o momento.
  */
 export interface ChatBotContext {
+  appointmentQuery?: {
+    statuses: ('pending' | 'confirmed' | 'completed' | 'canceled')[];
+    offset: number;
+    hasMore: boolean;
+  };
   intent?: string;
   pendingAction?: 'CREATE' | 'CANCEL' | 'RESCHEDULE' | string;
+  cancellationChallengeId?: string;
   timeZone?: string;
   serviceId?: number;
   serviceName?: string;
@@ -135,6 +142,10 @@ export interface ChatBotContext {
   appointmentId?: number;
   appointmentStatus?: 'pending' | 'confirmed' | 'completed' | 'canceled';
   appointmentPaid?: boolean;
+  bookingDetailsStep?: 'ADDRESS' | 'REVIEW';
+  addressId?: number;
+  addressLabel?: string;
+  addressOptions?: { id: number; label: string }[];
   pendingService?: ChatBotServiceOption | null;
   matchedServiceIds?: number[];
 }
