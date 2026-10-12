@@ -88,7 +88,9 @@ it.each(['COLETANDO_DATA', 'COLETANDO_HORARIO', 'CONFIRMACAO'])(
     act(() => {
       tree = create(<ChatWindow />);
     });
-    expect(mockPolling.mock.calls.at(-1)?.[0]).toBeUndefined();
+    expect(
+      mockPolling.mock.calls[mockPolling.mock.calls.length - 1]?.[0],
+    ).toBeUndefined();
     expect(tree.root.findAllByType(AppointmentStatusBanner)).toHaveLength(0);
   },
 );
@@ -98,9 +100,9 @@ it('ignora evento atrasado quando o usuário já começou a remarcar', () => {
   act(() => {
     tree = create(<ChatWindow />);
   });
-  const onStatus = mockPolling.mock.calls.at(-1)?.[3] as (
-    event: AppointmentStatusEvent,
-  ) => void;
+  const onStatus = mockPolling.mock.calls[
+    mockPolling.mock.calls.length - 1
+  ]?.[3] as (event: AppointmentStatusEvent) => void;
   mockSession.conversationState = 'COLETANDO_DATA';
   onStatus({
     appointment_id: 92,
@@ -115,11 +117,13 @@ it('acompanha o agendamento depois da confirmação da remarcação', () => {
   act(() => {
     tree = create(<ChatWindow />);
   });
-  expect(mockPolling.mock.calls.at(-1)?.[0]).toBe(92);
+  expect(mockPolling.mock.calls[mockPolling.mock.calls.length - 1]?.[0]).toBe(
+    92,
+  );
   expect(tree.root.findAllByType(AppointmentStatusBanner)).toHaveLength(1);
-  const onStatus = mockPolling.mock.calls.at(-1)?.[3] as (
-    event: AppointmentStatusEvent,
-  ) => void;
+  const onStatus = mockPolling.mock.calls[
+    mockPolling.mock.calls.length - 1
+  ]?.[3] as (event: AppointmentStatusEvent) => void;
   const event = {
     appointment_id: 92,
     status: 'pending',
