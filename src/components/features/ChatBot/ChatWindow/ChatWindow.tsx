@@ -21,8 +21,11 @@ import {
   useVoiceRecorder,
 } from '@hooks/useVoiceRecorder';
 import { ChatBotMessage, ChatBotAction } from '@stores/ChatBot/types';
+import { useChatBotStore } from '@stores/ChatBot';
+import type { AppointmentStatusEvent } from '@hooks/useAppointmentStatusSocket';
 import { TypingIndicator } from '../TypingIndicator';
 import { QuickReplies } from '../QuickReplies';
+import { AppointmentQueryReplies } from './AppointmentQueryReplies';
 import ConfirmationModal from '@components/ui/ConfirmationModal';
 import { MessageBubble } from './MessageBubble';
 import { ChatHeader } from './ChatHeader';
@@ -95,11 +98,32 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
   // ── Hooks dedicados ───────────────────────────────────────────────────────
   const appointmentId = conversationContext?.appointmentId;
+  // Durante a edição, o status pertence ao horário antigo e não deve encerrar
+  // a conversa nem anunciar novamente o pagamento dessa reserva.
+  const trackingAppointment =
+    conversationContext?.pendingAction !== 'CANCEL' &&
+    (conversationState === 'AGUARDANDO_CONFIRMACAO' ||
+      conversationState === 'INICIO');
+  const handleTrackedStatus = useCallback(
+    (event: AppointmentStatusEvent) => {
+      // Confere o estado atual também para respostas HTTP/socket atrasadas.
+      const { conversationState: state, conversationContext: context } =
+        useChatBotStore.getState();
+      if (
+        context?.pendingAction === 'CANCEL' ||
+        (state !== 'AGUARDANDO_CONFIRMACAO' && state !== 'INICIO')
+      ) {
+        return;
+      }
+      receiveAppointmentStatus(event);
+    },
+    [receiveAppointmentStatus],
+  );
   const { appointmentStatus, appointmentPaid } = useAppointmentPolling(
-    appointmentId,
+    trackingAppointment ? appointmentId : undefined,
     conversationContext?.appointmentStatus ?? null,
     conversationContext?.appointmentPaid ?? false,
-    receiveAppointmentStatus,
+    handleTrackedStatus,
   );
   const rateLimitCountdown = useRateLimitCountdown(
     rateLimitResetAt,
@@ -357,14 +381,32 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
       {hasQuickReplies && !loading && (
         <QuickReplies
-          quickReplies={lastBotMessage?.quickReplies}
+          quickReplies={
+            conversationContext?.pendingAction === 'CANCEL' &&
+            conversationContext.cancellationChallengeId
+              ? [
+                  { label: 'Reenviar código', value: 'reenviar código' },
+                  { label: 'Voltar sem cancelar', value: 'voltar' },
+                ]
+              : lastBotMessage?.quickReplies
+          }
           suggestedTimes={lastBotMessage?.suggestedTimes}
           onSelect={handleQuickReply}
           disabled={loading || isRecording || isVoicePreparing}
         />
       )}
 
-      {appointmentId && (
+      {conversationState === 'INICIO' &&
+        conversationContext?.appointmentQuery &&
+        !loading && (
+          <AppointmentQueryReplies
+            query={conversationContext.appointmentQuery}
+            onSelect={handleQuickReply}
+            disabled={loading || isRecording || isVoicePreparing}
+          />
+        )}
+
+      {trackingAppointment && appointmentId && (
         <AppointmentStatusBanner
           appointmentId={appointmentId}
           appointmentStatus={appointmentStatus}
