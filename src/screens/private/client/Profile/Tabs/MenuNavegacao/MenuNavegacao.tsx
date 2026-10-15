@@ -63,6 +63,12 @@ const menuOptions = [
     activeIcon: 'star',
   },
   {
+    id: ClientProfileSubRoutes.Ajuda,
+    label: 'Central de Ajuda',
+    icon: 'help-outline',
+    activeIcon: 'help',
+  },
+  {
     id: ClientProfileSubRoutes.Historico,
     label: 'Histórico',
     icon: 'history',
@@ -148,6 +154,10 @@ const MenuNavegacao = () => {
       }
       // @ts-ignore — mobile: telas dedicadas no root stack
       navigation.navigate('ChatList');
+      return;
+    }
+    if (subroute === ClientProfileSubRoutes.Ajuda) {
+      navigation.navigate('TicketsList');
       return;
     }
     if (subroute === 'SairConta') {
