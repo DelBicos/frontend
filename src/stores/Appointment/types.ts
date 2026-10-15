@@ -143,6 +143,10 @@ export interface AppointmentStore {
 
   fetchAppointments: (role?: 'client' | 'professional') => Promise<void>;
 
+  fetchUserAppointments: (
+    role?: 'client' | 'professional',
+  ) => Promise<Appointment[]>;
+
   fetchAppointmentsAsSheet: (
     role?: 'client' | 'professional',
   ) => Promise<AppointmentSheetRow[]>;

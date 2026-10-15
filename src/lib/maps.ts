@@ -29,7 +29,7 @@ export async function openGoogleMaps(address: string): Promise<void> {
     } else {
       await Linking.openURL(webUrl);
     }
-  } catch (error) {
+  } catch {
     await Linking.openURL(webUrl);
   }
 }
@@ -40,7 +40,7 @@ export async function openWaze(address: string): Promise<void> {
 
   try {
     await Linking.openURL(url);
-  } catch (error) {
+  } catch {
     Alert.alert('Erro', 'Não foi possível abrir o aplicativo Waze.');
   }
 }

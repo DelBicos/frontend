@@ -141,4 +141,21 @@ describe('AppointmentStore', () => {
     expect(res.success).toBe(false);
     expect(res.error).toBe('Código de confirmação incorreto.');
   });
+
+  it('deve buscar agendamentos do usuário via fetchUserAppointments', async () => {
+    (useUserStore.getState as jest.Mock).mockReturnValue({
+      user: { id: 42, name: 'Prestador' },
+    });
+    const mockList = [{ id: 10, status: 'confirmed' }];
+    (backendHttpClient.get as jest.Mock).mockResolvedValue({ data: mockList });
+
+    const result = await useAppointmentStore
+      .getState()
+      .fetchUserAppointments('professional');
+
+    expect(backendHttpClient.get).toHaveBeenCalledWith(
+      'api/appointments/user/42?role=professional',
+    );
+    expect(result).toEqual(mockList);
+  });
 });

@@ -16,12 +16,13 @@ import { useColors } from '@theme/ThemeProvider';
 import { useThemeStore, ThemeMode } from '@stores/Theme';
 import { createStyles } from './styles';
 import { useNavigation } from '@react-navigation/native';
-import { backendHttpClient } from '@lib/helpers/httpClient';
+import { useAppointmentStore } from '@stores/Appointment';
 
 const ProfessionalDashboard: React.FC = () => {
   const { kpis, loading, error, fetchKpis, fetchEarnings, fetchCategories } =
     useDashboardStore();
   const { user } = useUserStore();
+  const { fetchUserAppointments } = useAppointmentStore();
   const navigation = useNavigation<any>();
 
   const colors = useColors();
@@ -34,14 +35,9 @@ const ProfessionalDashboard: React.FC = () => {
 
   useEffect(() => {
     if (user?.id) {
-      backendHttpClient
-        .get(`/api/appointments/user/${user.id}?role=professional`)
-        .then((res) => {
-          const appointments = res.data || [];
-          const now = new Date();
-          const todayStr = now.toISOString().slice(0, 10);
-
-          const activeOrUpcoming = appointments.find((apt: any) => {
+      fetchUserAppointments('professional')
+        .then((appointments) => {
+          const activeOrUpcoming = appointments.find((apt) => {
             if (['in_transit', 'arrived', 'in_progress'].includes(apt.status)) {
               return true;
             }
@@ -56,11 +52,9 @@ const ProfessionalDashboard: React.FC = () => {
 
           setTodayAppointment(activeOrUpcoming || null);
         })
-        .catch((err) => {
-          console.log('Erro ao carregar agendamentos do prestador:', err);
-        });
+        .catch(() => {});
     }
-  }, [user?.id]);
+  }, [user?.id, fetchUserAppointments]);
 
   const QuickAction: React.FC<{
     title: string;
@@ -153,9 +147,12 @@ const ProfessionalDashboard: React.FC = () => {
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <TouchableOpacity
             style={{ marginRight: 12, padding: 4 }}
-            onPress={() => navigation.navigate('Home' as never)}
-          >
-            <FontAwesome name="arrow-left" size={20} color={colors.primaryOrange} />
+            onPress={() => navigation.navigate('Home' as never)}>
+            <FontAwesome
+              name="arrow-left"
+              size={20}
+              color={colors.primaryOrange}
+            />
           </TouchableOpacity>
           <View style={styles.avatarContainer}>
             <Image
@@ -317,17 +314,30 @@ const ProfessionalDashboard: React.FC = () => {
         {/* Card do Serviço do Dia com Deslocamento (Apenas quando houver agendamento no dia a 30min do horário ou ativo) */}
         {todayAppointment ? (
           <TouchableOpacity
-            style={[styles.scheduleCard, { backgroundColor: '#EFF6FF', borderColor: '#3B82F6', borderWidth: 1 }]}
+            style={[
+              styles.scheduleCard,
+              {
+                backgroundColor: '#EFF6FF',
+                borderColor: '#3B82F6',
+                borderWidth: 1,
+              },
+            ]}
             onPress={() => {
               const clientUser = todayAppointment.Client?.User;
               const addr = todayAppointment.Address
                 ? `${todayAppointment.Address.street}, ${todayAppointment.Address.number} - ${todayAppointment.Address.neighborhood}, ${todayAppointment.Address.city} - ${todayAppointment.Address.state}`
                 : '';
-              const startTimeFormatted = new Date(todayAppointment.start_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+              const startTimeFormatted = new Date(
+                todayAppointment.start_time,
+              ).toLocaleTimeString('pt-BR', {
+                hour: '2-digit',
+                minute: '2-digit',
+              });
 
               navigation.navigate('DeslocamentoScreen', {
                 appointmentId: todayAppointment.id,
-                serviceTitle: todayAppointment.Service?.title || 'Serviço Agendado',
+                serviceTitle:
+                  todayAppointment.Service?.title || 'Serviço Agendado',
                 clientName: clientUser?.name || 'Cliente',
                 clientPhone: clientUser?.phone || '',
                 address: addr,
@@ -336,31 +346,57 @@ const ProfessionalDashboard: React.FC = () => {
               });
             }}
             activeOpacity={0.8}>
-            <View style={[styles.scheduleIconContainer, { backgroundColor: '#3B82F6' }]}>
+            <View
+              style={[
+                styles.scheduleIconContainer,
+                { backgroundColor: '#3B82F6' },
+              ]}>
               <FontAwesome name="car" size={20} color="#FFFFFF" />
             </View>
             <View style={styles.scheduleCardContent}>
-              <Text style={[styles.scheduleCardTitle, { color: '#1E40AF', fontWeight: '700' }]}>
+              <Text
+                style={[
+                  styles.scheduleCardTitle,
+                  { color: '#1E40AF', fontWeight: '700' },
+                ]}>
                 {todayAppointment.Client?.User?.name || 'Cliente'}
               </Text>
-              <Text style={[styles.scheduleCardSubtitle, { color: '#2563EB', fontWeight: '600' }]}>
+              <Text
+                style={[
+                  styles.scheduleCardSubtitle,
+                  { color: '#2563EB', fontWeight: '600' },
+                ]}>
                 Serviço: {todayAppointment.Service?.title || 'Atendimento'}
               </Text>
               {todayAppointment.Address ? (
-                <Text style={{ fontSize: 12, color: '#64748B', marginTop: 2 }} numberOfLines={1}>
+                <Text
+                  style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}
+                  numberOfLines={1}>
                   {`${todayAppointment.Address.street}, ${todayAppointment.Address.number} - ${todayAppointment.Address.neighborhood}, ${todayAppointment.Address.city} - ${todayAppointment.Address.state}`}
                 </Text>
               ) : null}
             </View>
-            <View style={{ backgroundColor: todayAppointment.status === 'arrived' ? '#16A34A' : todayAppointment.status === 'in_progress' ? '#059669' : '#2563EB', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 }}>
-              <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 13 }}>
+            <View
+              style={{
+                backgroundColor:
+                  todayAppointment.status === 'arrived'
+                    ? '#16A34A'
+                    : todayAppointment.status === 'in_progress'
+                      ? '#059669'
+                      : '#2563EB',
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 16,
+              }}>
+              <Text
+                style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 13 }}>
                 {todayAppointment.status === 'arrived'
                   ? 'Digitar Código 🔐'
                   : todayAppointment.status === 'in_progress'
-                  ? 'Serviço em Andamento ⚡'
-                  : todayAppointment.status === 'in_transit'
-                  ? 'A Caminho 🚘'
-                  : 'Vamos! 🚗'}
+                    ? 'Serviço em Andamento ⚡'
+                    : todayAppointment.status === 'in_transit'
+                      ? 'A Caminho 🚘'
+                      : 'Vamos! 🚗'}
               </Text>
             </View>
           </TouchableOpacity>

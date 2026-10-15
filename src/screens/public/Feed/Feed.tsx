@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import {
   Text,
   ScrollView,
@@ -23,7 +23,7 @@ import { useServiceSearch } from '@lib/hooks/useServiceSearch';
 import { useCategoryStore } from '@stores/Category';
 import { SubCategory } from '@stores/SubCategory/types';
 import { useUserStore } from '@stores/User';
-import { backendHttpClient } from '@lib/helpers/httpClient';
+import { useAppointmentStore } from '@stores/Appointment';
 import { useAppointmentStatusSocket } from '@hooks/useAppointmentStatusSocket';
 import { ClientTrackingMapModal } from '@components/features/ClientTrackingMapModal/ClientTrackingMapModal';
 
@@ -68,27 +68,26 @@ const FeedScreen: React.FC = () => {
   const navigation = useNavigation();
 
   const user = useUserStore((state) => state.user);
+  const { fetchUserAppointments } = useAppointmentStore();
   const [activeAppointment, setActiveAppointment] = useState<any>(null);
   const [showTrackingModal, setShowTrackingModal] = useState(false);
 
-  const fetchActiveClientAppointment = () => {
+  const fetchActiveClientAppointment = useCallback(() => {
     if (user?.id) {
-      backendHttpClient
-        .get(`/api/appointments/user/${user.id}?role=client`)
-        .then((res) => {
-          const appointments = res.data || [];
-          const active = appointments.find((apt: any) =>
+      fetchUserAppointments('client')
+        .then((appointments) => {
+          const active = appointments.find((apt) =>
             ['in_transit', 'arrived'].includes(apt.status),
           );
           setActiveAppointment(active || null);
         })
         .catch(() => {});
     }
-  };
+  }, [user?.id, fetchUserAppointments]);
 
   useEffect(() => {
     fetchActiveClientAppointment();
-  }, [user?.id]);
+  }, [fetchActiveClientAppointment]);
 
   useAppointmentStatusSocket(() => {
     fetchActiveClientAppointment();
@@ -273,19 +272,32 @@ const FeedScreen: React.FC = () => {
                     marginRight: 12,
                   }}>
                   <FontAwesome
-                    name={activeAppointment.status === 'arrived' ? 'map-marker' : 'car'}
+                    name={
+                      activeAppointment.status === 'arrived'
+                        ? 'map-marker'
+                        : 'car'
+                    }
                     size={20}
                     color="#FF6B00"
                   />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 15 }}>
+                  <Text
+                    style={{
+                      color: '#FFFFFF',
+                      fontWeight: '800',
+                      fontSize: 15,
+                    }}>
                     {activeAppointment.status === 'arrived'
                       ? 'Prestador Chegou no Local! 🎯'
                       : 'Prestador a Caminho! 🚘'}
                   </Text>
-                  <Text style={{ color: '#FFF7ED', fontSize: 12, marginTop: 2 }} numberOfLines={1}>
-                    {activeAppointment.Professional?.User?.name || 'Profissional'} está a caminho. Toque para ver no mapa 🗺️
+                  <Text
+                    style={{ color: '#FFF7ED', fontSize: 12, marginTop: 2 }}
+                    numberOfLines={1}>
+                    {activeAppointment.Professional?.User?.name ||
+                      'Profissional'}{' '}
+                    está a caminho. Toque para ver no mapa 🗺️
                   </Text>
                 </View>
                 <View
@@ -295,7 +307,14 @@ const FeedScreen: React.FC = () => {
                     paddingVertical: 6,
                     borderRadius: 12,
                   }}>
-                  <Text style={{ color: '#FF6B00', fontWeight: '800', fontSize: 12 }}>Ver Mapa</Text>
+                  <Text
+                    style={{
+                      color: '#FF6B00',
+                      fontWeight: '800',
+                      fontSize: 12,
+                    }}>
+                    Ver Mapa
+                  </Text>
                 </View>
               </TouchableOpacity>
             ) : null}

@@ -53,6 +53,22 @@ export const useAppointmentStore = create<AppointmentStore>()((set) => ({
     }
   },
 
+  fetchUserAppointments: async (role): Promise<Appointment[]> => {
+    try {
+      const { user } = useUserStore.getState();
+      if (!user) return [];
+
+      let endpoint = `api/appointments/user/${user.id}`;
+      if (role) {
+        endpoint += `?role=${role}`;
+      }
+      const response = await backendHttpClient.get(endpoint);
+      return response.data || [];
+    } catch {
+      return [];
+    }
+  },
+
   fetchAppointmentsAsSheet: async (role): Promise<AppointmentSheetRow[]> => {
     try {
       const { user } = useUserStore.getState();

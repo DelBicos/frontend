@@ -31,7 +31,7 @@ import ProfessionalRadiusScreen from '@screens/private/professional/RadiusScreen
 import ChatListScreen from '@screens/private/chat/ChatListScreen';
 import ChatThreadScreen from '@screens/private/chat/ChatThreadScreen';
 import ChatBotScreen from '@screens/private/chatbot/ChatBotScreen';
-import DeslocamentoScreen from './private/professional/DeslocamentoScreen';
+import { DeslocamentoScreen } from './private/professional/Deslocamento';
 
 const Tab = createBottomTabNavigator();
 
