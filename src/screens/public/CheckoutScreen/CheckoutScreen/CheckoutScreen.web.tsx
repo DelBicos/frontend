@@ -170,12 +170,17 @@ function CheckoutScreen() {
         setErrorIntent(null);
 
         if (amountInReais <= 0) {
-          setErrorIntent('Valor do serviço inválido. Entre em contato com o suporte.');
+          setErrorIntent(
+            'Valor do serviço inválido. Entre em contato com o suporte.',
+          );
           setLoadingIntent(false);
           return;
         }
 
-        console.log('[CheckoutScreen] Enviando amount (em reais):', amountInReais);
+        console.log(
+          '[CheckoutScreen] Enviando amount (em reais):',
+          amountInReais,
+        );
 
         const secret = await fetchPaymentIntent(
           amountInReais,
@@ -195,7 +200,14 @@ function CheckoutScreen() {
       };
       initPayment();
     }
-  }, [service, selectedAddress, professionalId, selectedTime, token, amountInReais]);
+  }, [
+    service,
+    selectedAddress,
+    professionalId,
+    selectedTime,
+    token,
+    amountInReais,
+  ]);
 
   const stripeOptions = useMemo(
     () => ({
@@ -204,7 +216,6 @@ function CheckoutScreen() {
     }),
     [clientSecret],
   );
-
 
   if (isLoadingProfessional) {
     return (

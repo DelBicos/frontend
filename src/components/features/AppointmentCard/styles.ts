@@ -170,5 +170,5 @@ export const createStyles = (colors: ColorsType) =>
       color: colors.primaryOrange,
       fontSize: 12,
       fontWeight: '500',
-    }
+    },
   });

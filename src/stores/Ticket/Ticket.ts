@@ -2,11 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'expo-zustand-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { backendHttpClient } from '@lib/helpers/httpClient';
-import {
-  Ticket,
-  TicketStore,
-  CreateTicketPayload,
-} from './types';
+import { Ticket, TicketStore, CreateTicketPayload } from './types';
 
 const extractErrorMessage = (error: unknown): string => {
   if (typeof error !== 'object' || error === null) {

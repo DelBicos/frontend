@@ -1,9 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import {
-  useNavigation,
-  useRoute,
-  RouteProp,
-} from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useTicketStore } from '@stores/Ticket/Ticket';
 import { useUserStore } from '@stores/User';
 import { TicketCategory } from '@stores/Ticket/types';
@@ -77,8 +73,7 @@ export const CreateTicketScreen: React.FC = () => {
 
       setCreatedCode(ticket.ticket_code);
       setSuccessVisible(true);
-    } catch {
-    }
+    } catch {}
   };
 
   const handleViewTickets = () => {

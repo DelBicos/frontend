@@ -95,8 +95,8 @@ function MeusAgendamentos({ role }: MeusAgendamentosProps = {}) {
     'all',
   );
 
-const navigation =
-  useNavigation<NativeStackNavigationProp<NavigationParams>>();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<NavigationParams>>();
 
   useEffect(() => {
     if (user) {
@@ -368,12 +368,12 @@ const navigation =
                               }
                             : undefined
                         }
-                          onOpenHelp={() =>
-                            navigation.navigate('CreateTicket', {
-                              appointmentShortId: String(apt.id),
-                              contextLabel: `agendamento #${apt.id}`,
-                            })
-                          }
+                        onOpenHelp={() =>
+                          navigation.navigate('CreateTicket', {
+                            appointmentShortId: String(apt.id),
+                            contextLabel: `agendamento #${apt.id}`,
+                          })
+                        }
                       />
                     </View>
                   ))}

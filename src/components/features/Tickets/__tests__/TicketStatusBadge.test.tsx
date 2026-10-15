@@ -3,7 +3,7 @@ import { render } from '@testing-library/react-native';
 import { TicketStatusBadge } from '../TicketStatusBadge';
 import { TICKET_STATUS_LABELS } from '@stores/Ticket/types';
 
-describe('TicketStatusBadge', () => {       
+describe('TicketStatusBadge', () => {
   it('deve renderizar o label "Aberto" para status ABERTO', () => {
     const { getByText } = render(<TicketStatusBadge status="ABERTO" />);
     expect(getByText(TICKET_STATUS_LABELS.ABERTO)).toBeTruthy();

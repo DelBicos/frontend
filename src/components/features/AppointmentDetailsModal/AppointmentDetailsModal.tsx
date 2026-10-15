@@ -52,8 +52,15 @@ export function AppointmentDetailsModal({
 
   const formattedFullAddress = (() => {
     if (!appointment.Address) return 'Endereço não informado';
-    const { street, number, complement, neighborhood, city, state, postal_code } =
-      appointment.Address;
+    const {
+      street,
+      number,
+      complement,
+      neighborhood,
+      city,
+      state,
+      postal_code,
+    } = appointment.Address;
     return `${street}, ${number}${complement ? ` (${complement})` : ''} - ${neighborhood}, ${city}/${state}${postal_code ? ` - CEP ${postal_code}` : ''}`;
   })();
 
@@ -253,10 +260,7 @@ export function AppointmentDetailsModal({
             {/* ✅ NOVO — Botão de ajuda contextual */}
             {canShowHelp && (
               <TouchableOpacity
-                style={[
-                  styles.helpButton,
-                  { borderTopColor: colors.divider },
-                ]}
+                style={[styles.helpButton, { borderTopColor: colors.divider }]}
                 onPress={handleOpenHelp}
                 activeOpacity={0.7}
                 accessibilityRole="button"

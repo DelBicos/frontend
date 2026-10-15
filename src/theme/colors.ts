@@ -31,7 +31,8 @@ export const getColors = (): ColorsType => {
 
   // Read the current theme from the zustand store
   const themeFromStore = useThemeStore.getState().theme as
-    ThemeMode | undefined;
+    | ThemeMode
+    | undefined;
   if (themeFromStore && themes[themeFromStore]) return themes[themeFromStore];
 
   return lightScheme;

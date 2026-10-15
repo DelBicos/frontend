@@ -409,7 +409,7 @@ const RootStack = createNativeStackNavigator({
         headerShown: false,
       },
     },
-        // ─── TICKETS ───────────────────────────────────
+    // ─── TICKETS ───────────────────────────────────
     TicketsList: {
       screen: TicketsListScreen,
       linking: {

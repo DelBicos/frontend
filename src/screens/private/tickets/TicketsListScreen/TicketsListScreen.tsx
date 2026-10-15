@@ -41,7 +41,6 @@ export const TicketsListScreen: React.FC = () => {
   }, [navigation]);
 
   return (
-    
     <View style={styles.container}>
       {/* ✅ Botão fixo no topo — substitui o FAB */}
       <View style={styles.topBar}>
@@ -83,9 +82,7 @@ export const TicketsListScreen: React.FC = () => {
                 size={48}
                 color={colors.textTertiary}
               />
-              <Text style={styles.emptyTitle}>
-                Nenhum chamado aberto ainda
-              </Text>
+              <Text style={styles.emptyTitle}>Nenhum chamado aberto ainda</Text>
             </View>
           }
           refreshControl={

@@ -72,14 +72,14 @@ describe('CreateTicketScreen', () => {
     const { getByText, getByDisplayValue } = render(<CreateTicketScreen />);
 
     expect(getByText(/Chamado relacionado ao agendamento/)).toBeTruthy();
-    expect(
-      getByDisplayValue('Problema com agendamento #6BDOKZ'),
-    ).toBeTruthy();
+    expect(getByDisplayValue('Problema com agendamento #6BDOKZ')).toBeTruthy();
   });
 
   // ─── VALIDAÇÃO (via testID) ─────────────────────────
   it('deve manter o botão desabilitado quando o título for curto', () => {
-    const { getByPlaceholderText, getByTestId } = render(<CreateTicketScreen />);
+    const { getByPlaceholderText, getByTestId } = render(
+      <CreateTicketScreen />,
+    );
 
     fireEvent.changeText(
       getByPlaceholderText('Resuma o problema em poucas palavras'),
@@ -96,7 +96,9 @@ describe('CreateTicketScreen', () => {
   });
 
   it('deve manter o botão desabilitado quando a descrição for curta', () => {
-    const { getByPlaceholderText, getByTestId } = render(<CreateTicketScreen />);
+    const { getByPlaceholderText, getByTestId } = render(
+      <CreateTicketScreen />,
+    );
 
     fireEvent.changeText(
       getByPlaceholderText('Resuma o problema em poucas palavras'),
@@ -113,7 +115,9 @@ describe('CreateTicketScreen', () => {
   });
 
   it('deve manter o botão desabilitado sem categoria selecionada', () => {
-    const { getByPlaceholderText, getByTestId } = render(<CreateTicketScreen />);
+    const { getByPlaceholderText, getByTestId } = render(
+      <CreateTicketScreen />,
+    );
 
     fireEvent.changeText(
       getByPlaceholderText('Resuma o problema em poucas palavras'),

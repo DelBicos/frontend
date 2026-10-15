@@ -1,10 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useColors } from '@theme/ThemeProvider';
-import {
-  TicketCategory,
-  TICKET_CATEGORY_LABELS,
-} from '@stores/Ticket/types';
+import { TicketCategory, TICKET_CATEGORY_LABELS } from '@stores/Ticket/types';
 import { createStyles } from './styles';
 
 interface CategoryPickerProps {

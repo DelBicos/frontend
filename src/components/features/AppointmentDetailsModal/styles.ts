@@ -125,5 +125,5 @@ export const createStyles = (colors: ColorsType) =>
       fontWeight: '500',
       flex: 1,
       textAlign: 'center',
-    }
+    },
   });
