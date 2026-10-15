@@ -8,6 +8,7 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
+import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
 import { Appointment } from '@stores/Appointment/types';
 import { useUserStore } from '@stores/User';
@@ -20,6 +21,7 @@ interface AppointmentDetailsModalProps {
   onCancel?: () => void;
   onAccept?: () => void;
   onReject?: () => void;
+  onOpenHelp?: (apt: Appointment) => void;
 }
 
 export function AppointmentDetailsModal({
@@ -29,6 +31,7 @@ export function AppointmentDetailsModal({
   onCancel,
   onAccept,
   onReject,
+  onOpenHelp,
 }: AppointmentDetailsModalProps) {
   const colors = useColors();
   const styles = createStyles(colors);
@@ -36,7 +39,8 @@ export function AppointmentDetailsModal({
 
   if (!appointment) return null;
 
-  const isProfessionalView = user?.professional_id === appointment.professional_id;
+  const isProfessionalView =
+    user?.professional_id === appointment.professional_id;
 
   const headerAvatar = isProfessionalView
     ? appointment.Client?.User?.avatar_uri
@@ -71,22 +75,24 @@ export function AppointmentDetailsModal({
       'Cancelar Agendamento',
       'Tem certeza que deseja cancelar este agendamento?',
       [
-        {
-          text: 'Não',
-          style: 'cancel',
-        },
+        { text: 'Não', style: 'cancel' },
         {
           text: 'Sim, Cancelar',
           style: 'destructive',
           onPress: () => {
-            if (onCancel) {
-              onCancel();
-            }
+            if (onCancel) onCancel();
             onClose();
           },
         },
       ],
     );
+  };
+
+  const handleOpenHelp = () => {
+    if (onOpenHelp) {
+      onOpenHelp(appointment);
+      onClose();
+    }
   };
 
   const getStatusText = (status: string) => {
@@ -118,6 +124,10 @@ export function AppointmentDetailsModal({
         return colors.textSecondary;
     }
   };
+
+  const isCompleted = appointment.status === 'completed';
+  const isCanceled = appointment.status === 'canceled';
+  const canShowHelp = Boolean(onOpenHelp) && !isCanceled;
 
   return (
     <Modal
@@ -221,7 +231,9 @@ export function AppointmentDetailsModal({
                 <Text style={styles.infoLabel}>Valor:</Text>
                 <Text style={styles.infoValue}>
                   {appointment.Service?.price
-                    ? `R$ ${parseFloat(appointment.Service.price).toFixed(2).replace('.', ',')}`
+                    ? `R$ ${parseFloat(appointment.Service.price)
+                        .toFixed(2)
+                        .replace('.', ',')}`
                     : 'N/A'}
                 </Text>
               </View>
@@ -238,6 +250,39 @@ export function AppointmentDetailsModal({
               </View>
             </View>
 
+            {/* ✅ NOVO — Botão de ajuda contextual */}
+            {canShowHelp && (
+              <TouchableOpacity
+                style={[
+                  styles.helpButton,
+                  { borderTopColor: colors.divider },
+                ]}
+                onPress={handleOpenHelp}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel="Preciso de ajuda com este agendamento">
+                <FontAwesome
+                  name="life-ring"
+                  size={14}
+                  color={colors.primaryOrange}
+                  style={{ marginRight: 8 }}
+                />
+                <Text
+                  style={[
+                    styles.helpButtonText,
+                    { color: colors.primaryOrange },
+                  ]}>
+                  Preciso de ajuda com este agendamento
+                </Text>
+                <FontAwesome
+                  name="chevron-right"
+                  size={12}
+                  color={colors.primaryOrange}
+                  style={{ marginLeft: 8 }}
+                />
+              </TouchableOpacity>
+            )}
+
             {/* Botões de ação */}
             <View style={styles.buttonContainer}>
               <TouchableOpacity
@@ -252,7 +297,10 @@ export function AppointmentDetailsModal({
                   <TouchableOpacity
                     style={[
                       styles.okButton,
-                      { backgroundColor: colors.successText, marginBottom: 10 },
+                      {
+                        backgroundColor: colors.successText,
+                        marginBottom: 10,
+                      },
                     ]}
                     onPress={() => {
                       if (onAccept) onAccept();
@@ -273,8 +321,8 @@ export function AppointmentDetailsModal({
                   </TouchableOpacity>
                 </>
               ) : (
-                appointment.status !== 'completed' &&
-                appointment.status !== 'canceled' && (
+                !isCompleted &&
+                !isCanceled && (
                   <TouchableOpacity
                     style={styles.cancelButton}
                     onPress={handleCancelAppointment}
