@@ -24,6 +24,7 @@ interface AppointmentCardProps {
   onToggleFavorite: (apt: Appointment) => void;
   onOpenDetails: (apt: Appointment) => void;
   onOpenRate?: (apt: Appointment) => void;
+  onOpenHelp?: (apt: Appointment) => void;
 }
 
 const formatDateTime = (dateString: string) => {
@@ -47,6 +48,7 @@ const AppointmentCardComponent: React.FC<AppointmentCardProps> = ({
   onToggleFavorite,
   onOpenDetails,
   onOpenRate,
+  onOpenHelp,
 }) => {
   const colors = useColors();
   const styles = createStyles(colors);
@@ -191,6 +193,25 @@ const AppointmentCardComponent: React.FC<AppointmentCardProps> = ({
             {appointment.payment_method || 'Cartão de Crédito'}
           </Text>
         </View>
+
+        {onOpenHelp && (
+          <TouchableOpacity
+            style={styles.helpLink}
+            onPress={() => onOpenHelp(appointment)}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Preciso de ajuda com este agendamento">
+            <FontAwesome
+              name="life-ring"
+              size={12}
+              color={colors.primaryOrange}
+              style={{ marginRight: 6 }}
+            />
+            <Text style={styles.helpLinkText}>
+              Preciso de ajuda com este agendamento
+            </Text>
+          </TouchableOpacity>
+        )}
 
         <View style={styles.actions}>
           {isPending && isProfessional ? (
