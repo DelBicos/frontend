@@ -30,6 +30,9 @@ import ServicesListScreen from '@screens/private/professional/Services/ServicesL
 import ProfessionalRadiusScreen from '@screens/private/professional/RadiusScreen/ProfessionalRadiusScreen';
 import ChatListScreen from '@screens/private/chat/ChatListScreen';
 import ChatThreadScreen from '@screens/private/chat/ChatThreadScreen';
+import TicketsListScreen from '@screens/private/tickets/TicketsListScreen/TicketsListScreen';
+import CreateTicketScreen from '@screens/private/tickets/CreateTicketScreen/CreateTicketScreen';
+import TicketDetailScreen from '@screens/private/tickets/TicketDetailScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -404,6 +407,31 @@ const RootStack = createNativeStackNavigator({
       },
       options: {
         headerShown: false,
+      },
+    },
+        // ─── TICKETS ───────────────────────────────────
+    TicketsList: {
+      screen: TicketsListScreen,
+      linking: {
+        path: 'tickets',
+      },
+      options: {
+        title: 'Central de Ajuda',
+      },
+    },
+    CreateTicket: {
+      screen: CreateTicketScreen,
+      linking: {
+        path: 'tickets/new',
+      },
+      options: {
+        title: 'Abrir Chamado',
+      },
+    },
+    TicketDetail: {
+      screen: TicketDetailScreen,
+      options: {
+        title: 'Detalhes do Chamado',
       },
     },
     /**
