@@ -4,6 +4,8 @@ import { RateServiceModal } from '@components/features/RateServiceModal';
 import { Button } from '@components/ui/Button';
 import { FontAwesome } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { NavigationParams } from '@screens/types';
 import { useAppointmentStore } from '@stores/Appointment';
 import { Appointment, AppointmentStatus } from '@stores/Appointment/types';
 import { useFavoriteStore } from '@stores/Favorite';
@@ -93,7 +95,8 @@ function MeusAgendamentos({ role }: MeusAgendamentosProps = {}) {
     'all',
   );
 
-  const navigation = useNavigation();
+const navigation =
+  useNavigation<NativeStackNavigationProp<NavigationParams>>();
 
   useEffect(() => {
     if (user) {
@@ -365,6 +368,12 @@ function MeusAgendamentos({ role }: MeusAgendamentosProps = {}) {
                               }
                             : undefined
                         }
+                          onOpenHelp={() =>
+                            navigation.navigate('CreateTicket', {
+                              appointmentShortId: String(apt.id),
+                              contextLabel: `agendamento #${apt.id}`,
+                            })
+                          }
                       />
                     </View>
                   ))}
@@ -387,6 +396,16 @@ function MeusAgendamentos({ role }: MeusAgendamentosProps = {}) {
         onReject={
           user?.id === selectedAppointment?.Professional?.user_id
             ? handleReject
+            : undefined
+        }
+        // ✅ MUDOU — passa short_id
+        onOpenHelp={
+          selectedAppointment
+            ? () =>
+                navigation.navigate('CreateTicket', {
+                  appointmentShortId: String(selectedAppointment.id),
+                  contextLabel: `agendamento #${selectedAppointment.id}`,
+                })
             : undefined
         }
       />
