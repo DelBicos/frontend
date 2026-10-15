@@ -157,4 +157,18 @@ export const createStyles = (colors: ColorsType) =>
       fontSize: 14,
       fontFamily: 'Afacad-Bold',
     },
+    helpLink: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 10,
+      marginTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: colors.divider,
+    },
+    helpLinkText: {
+      color: colors.primaryOrange,
+      fontSize: 12,
+      fontWeight: '500',
+    }
   });
