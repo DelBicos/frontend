@@ -72,4 +72,12 @@ export type NavigationParams = {
     serviceTitle?: string | null;
     roomStatus?: ChatRoomStatus;
   };
+  TicketsList: undefined;
+  CreateTicket:
+    | {
+        appointmentShortId?: string;
+        contextLabel?: string;
+      }
+    | undefined;
+  TicketDetail: { id: number };
 };
