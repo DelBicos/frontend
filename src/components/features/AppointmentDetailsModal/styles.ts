@@ -110,4 +110,20 @@ export const createStyles = (colors: ColorsType) =>
       fontSize: 14,
       fontFamily: 'Afacad-SemiBold',
     },
+    helpButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+      marginTop: 8,
+      marginHorizontal: 16,
+      borderTopWidth: 1,
+    },
+    helpButtonText: {
+      fontSize: 13,
+      fontWeight: '500',
+      flex: 1,
+      textAlign: 'center',
+    }
   });
