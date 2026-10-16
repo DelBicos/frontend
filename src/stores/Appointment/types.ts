@@ -1,6 +1,9 @@
 export enum AppointmentStatus {
   PENDING = 'pending',
   CONFIRMED = 'confirmed',
+  IN_TRANSIT = 'in_transit',
+  ARRIVED = 'arrived',
+  IN_PROGRESS = 'in_progress',
   COMPLETED = 'completed',
   CANCELED = 'canceled',
 }
@@ -100,6 +103,7 @@ export interface Appointment {
   Client: Client;
   payment_intent_id?: string | null;
   payment_method?: string;
+  verification_code?: string | null;
   Professional: Professional;
   Address?: Address | null;
 }
@@ -139,6 +143,10 @@ export interface AppointmentStore {
 
   fetchAppointments: (role?: 'client' | 'professional') => Promise<void>;
 
+  fetchUserAppointments: (
+    role?: 'client' | 'professional',
+  ) => Promise<Appointment[]>;
+
   fetchAppointmentsAsSheet: (
     role?: 'client' | 'professional',
   ) => Promise<AppointmentSheetRow[]>;
@@ -153,7 +161,33 @@ export interface AppointmentStore {
     appointmentId: number,
     status: AppointmentStatus,
   ) => Promise<boolean>;
-  cancelAppointment: (appointmentId: number) => Promise<boolean>;
-
+  cancelAppointment: (appointmentId: number | string) => Promise<boolean>;
   fetchInvoice: (appointmentId: number) => Promise<InvoiceData | null>;
+
+  getAppointmentById: (
+    appointmentId: number | string,
+  ) => Promise<Appointment | null>;
+
+  markInTransit: (
+    appointmentId: number | string,
+  ) => Promise<{ success: boolean; error?: string }>;
+
+  markArrived: (
+    appointmentId: number | string,
+    coords?: { latitude?: number; longitude?: number },
+  ) => Promise<{
+    success: boolean;
+    verification_code?: string;
+    error?: string;
+  }>;
+
+  startService: (
+    appointmentId: number | string,
+    code: string,
+  ) => Promise<{ success: boolean; error?: string }>;
+
+  completeService: (
+    appointmentId: number | string,
+    code: string,
+  ) => Promise<{ success: boolean; error?: string }>;
 }

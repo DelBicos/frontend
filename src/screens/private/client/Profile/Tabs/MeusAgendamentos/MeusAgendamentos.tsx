@@ -43,6 +43,24 @@ const appointmentStatusRenderInfo = (
     color: colors.primaryGreen,
     emptyText: 'Você não tem agendamentos futuros confirmados.',
   },
+  [AppointmentStatus.IN_TRANSIT]: {
+    label: 'A caminho',
+    icon: 'car',
+    color: colors.primaryBlue,
+    emptyText: 'Nenhum agendamento a caminho.',
+  },
+  [AppointmentStatus.ARRIVED]: {
+    label: 'Profissional Chegou',
+    icon: 'map-marker',
+    color: colors.primaryOrange,
+    emptyText: 'Nenhum agendamento com profissional no local.',
+  },
+  [AppointmentStatus.IN_PROGRESS]: {
+    label: 'Em Andamento',
+    icon: 'hourglass-start',
+    color: colors.primaryGreen,
+    emptyText: 'Nenhum agendamento em andamento.',
+  },
   [AppointmentStatus.COMPLETED]: {
     label: 'Histórico',
     icon: 'check-circle-o',

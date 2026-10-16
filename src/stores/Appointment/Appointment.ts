@@ -53,6 +53,22 @@ export const useAppointmentStore = create<AppointmentStore>()((set) => ({
     }
   },
 
+  fetchUserAppointments: async (role): Promise<Appointment[]> => {
+    try {
+      const { user } = useUserStore.getState();
+      if (!user) return [];
+
+      let endpoint = `api/appointments/user/${user.id}`;
+      if (role) {
+        endpoint += `?role=${role}`;
+      }
+      const response = await backendHttpClient.get(endpoint);
+      return response.data || [];
+    } catch {
+      return [];
+    }
+  },
+
   fetchAppointmentsAsSheet: async (role): Promise<AppointmentSheetRow[]> => {
     try {
       const { user } = useUserStore.getState();
@@ -144,6 +160,109 @@ export const useAppointmentStore = create<AppointmentStore>()((set) => ({
     } catch (error) {
       console.error('Failed to cancel appointment:', error);
       return false;
+    }
+  },
+
+  getAppointmentById: async (appointmentId) => {
+    try {
+      const response = await backendHttpClient.get(
+        `api/appointments/${appointmentId}`,
+      );
+      return (response.data as Appointment) || null;
+    } catch {
+      return null;
+    }
+  },
+
+  markInTransit: async (appointmentId) => {
+    try {
+      await backendHttpClient.post(
+        `api/appointments/${appointmentId}/in-transit`,
+      );
+      return { success: true };
+    } catch (error) {
+      const errorMsg =
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error &&
+        typeof (error as { response?: { data?: { error?: string } } }).response
+          ?.data?.error === 'string'
+          ? (error as { response: { data: { error: string } } }).response.data
+              .error
+          : 'Erro ao atualizar status para em deslocamento.';
+      return { success: false, error: errorMsg };
+    }
+  },
+
+  markArrived: async (appointmentId, coords) => {
+    try {
+      const response = await backendHttpClient.post(
+        `api/appointments/${appointmentId}/arrived`,
+        coords || {},
+      );
+      const data = response.data as {
+        success?: boolean;
+        verification_code?: string;
+      };
+      return {
+        success: Boolean(data?.success),
+        verification_code: data?.verification_code,
+      };
+    } catch (error) {
+      const errorMsg =
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error &&
+        typeof (error as { response?: { data?: { error?: string } } }).response
+          ?.data?.error === 'string'
+          ? (error as { response: { data: { error: string } } }).response.data
+              .error
+          : 'Erro ao confirmar chegada.';
+      return { success: false, error: errorMsg };
+    }
+  },
+
+  startService: async (appointmentId, code) => {
+    try {
+      const response = await backendHttpClient.post(
+        `api/appointments/${appointmentId}/start-service`,
+        { code },
+      );
+      const data = response.data as { success?: boolean };
+      return { success: Boolean(data?.success) };
+    } catch (error) {
+      const errorMsg =
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error &&
+        typeof (error as { response?: { data?: { error?: string } } }).response
+          ?.data?.error === 'string'
+          ? (error as { response: { data: { error: string } } }).response.data
+              .error
+          : 'Código incorreto. Peça o código de confirmação ao cliente.';
+      return { success: false, error: errorMsg };
+    }
+  },
+
+  completeService: async (appointmentId, code) => {
+    try {
+      const response = await backendHttpClient.post(
+        `api/appointments/${appointmentId}/complete-service`,
+        { code },
+      );
+      const data = response.data as { success?: boolean };
+      return { success: Boolean(data?.success) };
+    } catch (error) {
+      const errorMsg =
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error &&
+        typeof (error as { response?: { data?: { error?: string } } }).response
+          ?.data?.error === 'string'
+          ? (error as { response: { data: { error: string } } }).response.data
+              .error
+          : 'Código incorreto. Peça o código de confirmação ao cliente.';
+      return { success: false, error: errorMsg };
     }
   },
 }));

@@ -9,6 +9,9 @@ export type User = {
   banner_uri?: string | null;
   admin?: boolean;
   professional_id?: number;
+  location_consent_accepted?: boolean;
+  location_consent_at?: string | null;
+  location_consent_revoked_at?: string | null;
 };
 
 export type Address = {
@@ -54,6 +57,12 @@ export interface UpdateUserData {
   phone: string;
 }
 
+export type LocationConsentStatus = {
+  accepted: boolean;
+  accepted_at: string | null;
+  revoked_at: string | null;
+};
+
 export type UserStore = {
   user: User | null;
   address: Address | null;
@@ -86,4 +95,7 @@ export type UserStore = {
     description: string;
     service_radius_km?: number;
   }) => Promise<void>;
+  getLocationConsent: () => Promise<LocationConsentStatus>;
+  acceptLocationConsent: () => Promise<void>;
+  revokeLocationConsent: () => Promise<void>;
 };
