@@ -3,4 +3,6 @@ export { TicketStatusBadge } from './TicketStatusBadge';
 export { CategoryPicker } from './CategoryPicker';
 export { TicketForm } from './TicketForm';
 export { TicketSuccessModal } from './TicketSuccessModal';
+export { TicketMessageBubble } from './TicketMessageBubble';
 export type { TicketFormValues } from './TicketForm';
+
