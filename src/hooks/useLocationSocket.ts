@@ -109,6 +109,11 @@ export function useLocationSocket(
       }
     };
 
+    if (socket.connected) {
+      setConnected(true);
+      joinRoom();
+    }
+
     const handleConnect = () => {
       setConnected(true);
       joinRoom();

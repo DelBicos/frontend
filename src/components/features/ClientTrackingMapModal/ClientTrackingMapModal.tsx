@@ -8,6 +8,7 @@ import {
   Linking,
   Image,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import { Ionicons, FontAwesome, FontAwesome5 } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
@@ -18,6 +19,7 @@ import {
   ProximityWarningEvent,
   LocationArrivedEvent,
 } from '@hooks/useLocationSocket';
+import { styles } from './styles';
 
 interface ClientTrackingMapModalProps {
   visible: boolean;
@@ -211,390 +213,155 @@ export const ClientTrackingMapModal: React.FC<ClientTrackingMapModalProps> = ({
             </View>
           </View>
 
-          {/* Badge Flutuante de Distância em Tempo Real */}
-          <View style={styles.distanceBadgeOverlay}>
-            {hasLiveCoords ? (
-              <>
-                <View style={styles.distanceBadgeRow}>
-                  <FontAwesome5 name="car" size={16} color="#FF6B00" />
-                  <Text style={styles.distanceBadgeText}>
-                    Distância:{' '}
-                    <Text style={{ color: '#FF6B00', fontWeight: '800' }}>
-                      {distanceFormatted}
-                    </Text>
-                  </Text>
-                </View>
-                <Text style={styles.etaText}>
-                  Tempo estimado de chegada:{' '}
-                  <Text style={{ color: '#22C55E', fontWeight: '800' }}>
-                    ~{estimatedMinutes} min
-                  </Text>
-                </Text>
-              </>
-            ) : (
-              <View style={styles.distanceBadgeRow}>
-                <Ionicons name="time-outline" size={18} color="#FF6B00" />
-                <Text style={styles.distanceBadgeText}>
-                  Aguardando sinal GPS do prestador...
-                </Text>
-              </View>
-            )}
-          </View>
-
-          {/* Barra de Coordenadas GPS Ao Vivo */}
-          <View style={styles.gpsCoordsBarOverlay}>
+          {/* Badge Flutuante no Mapa */}
+          {liveStatus === 'arrived' ? (
             <View
               style={[
-                styles.liveDot,
-                !hasLiveCoords && { backgroundColor: '#EAB308' },
-              ]}
-            />
-            <Text style={styles.gpsCoordsText}>
-              {hasLiveCoords
-                ? `GPS Ao Vivo: Lat ${currentProfLat.toFixed(5)} | Lng ${currentProfLng.toFixed(5)} (Atualizado a cada 5s)`
-                : 'GPS em espera: Aguardando prestador iniciar rota'}
-            </Text>
-          </View>
+                styles.distanceBadgeOverlay,
+                styles.arrivedBadgeOverlay,
+              ]}>
+              <View style={styles.distanceBadgeRow}>
+                <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
+                <Text
+                  style={[
+                    styles.distanceBadgeText,
+                    { color: '#FFFFFF', fontWeight: '800' },
+                  ]}>
+                  Prestador no local!
+                </Text>
+              </View>
+            </View>
+          ) : (
+            <>
+              {/* Badge Flutuante de Distância em Tempo Real */}
+              <View style={styles.distanceBadgeOverlay}>
+                {hasLiveCoords ? (
+                  <>
+                    <View style={styles.distanceBadgeRow}>
+                      <FontAwesome5 name="car" size={16} color="#FF6B00" />
+                      <Text style={styles.distanceBadgeText}>
+                        Distância:{' '}
+                        <Text style={{ color: '#FF6B00', fontWeight: '800' }}>
+                          {distanceFormatted}
+                        </Text>
+                      </Text>
+                    </View>
+                    <Text style={styles.etaText}>
+                      Tempo estimado de chegada:{' '}
+                      <Text style={{ color: '#22C55E', fontWeight: '800' }}>
+                        ~{estimatedMinutes} min
+                      </Text>
+                    </Text>
+                  </>
+                ) : (
+                  <View style={styles.distanceBadgeRow}>
+                    <Ionicons name="time-outline" size={18} color="#FF6B00" />
+                    <Text style={styles.distanceBadgeText}>
+                      Aguardando sinal GPS do prestador...
+                    </Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Barra de Coordenadas GPS Ao Vivo */}
+              <View style={styles.gpsCoordsBarOverlay}>
+                <View
+                  style={[
+                    styles.liveDot,
+                    !hasLiveCoords && { backgroundColor: '#EAB308' },
+                  ]}
+                />
+                <Text style={styles.gpsCoordsText}>
+                  {hasLiveCoords
+                    ? `GPS Ao Vivo: Lat ${currentProfLat.toFixed(5)} | Lng ${currentProfLng.toFixed(5)} (Atualizado a cada 5s)`
+                    : 'GPS em espera: Aguardando prestador iniciar rota'}
+                </Text>
+              </View>
+            </>
+          )}
         </View>
 
         {/* Card Inferior Bottom Sheet */}
         <View style={styles.bottomCard}>
           <View style={styles.dragHandle} />
 
-          <View
-            style={[
-              styles.statusBanner,
-              {
-                backgroundColor:
-                  liveStatus === 'arrived' ? '#16A34A' : '#FF6B00',
-              },
-            ]}>
-            <FontAwesome
-              name={liveStatus === 'arrived' ? 'check-circle' : 'car'}
-              size={18}
-              color="#FFFFFF"
-            />
-            <Text style={styles.statusBannerText}>
-              {liveStatus === 'in_transit'
-                ? 'Profissional a caminho do seu endereço'
-                : liveStatus === 'arrived'
-                  ? 'Profissional chegou na sua casa! 🎯'
-                  : 'Serviço em andamento ⚡'}
-            </Text>
-          </View>
-
-          {/* Caixa do Código de Confirmação */}
-          {appointment.verification_code || liveStatus === 'arrived' ? (
-            <View style={styles.pinBox}>
-              <Text style={styles.pinBoxTitle}>
-                CÓDIGO DE CONFIRMAÇÃO DO SERVIÇO 🔑
-              </Text>
-              <Text style={styles.pinBoxCode}>
-                {appointment.verification_code || '----'}
-              </Text>
-              <Text style={styles.pinBoxSub}>
-                Informe este código ao profissional para validação do
-                atendimento
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.bottomScrollContent}>
+            <View
+              style={[
+                styles.statusBanner,
+                {
+                  backgroundColor:
+                    liveStatus === 'arrived' ? '#16A34A' : '#FF6B00',
+                },
+              ]}>
+              <FontAwesome
+                name={liveStatus === 'arrived' ? 'check-circle' : 'car'}
+                size={18}
+                color="#FFFFFF"
+              />
+              <Text style={styles.statusBannerText}>
+                {liveStatus === 'in_transit'
+                  ? 'Profissional a caminho do seu endereço'
+                  : liveStatus === 'arrived'
+                    ? 'Profissional chegou na sua casa! 🎯'
+                    : 'Serviço em andamento ⚡'}
               </Text>
             </View>
-          ) : null}
 
-          {/* Dados do Prestador */}
-          <View style={styles.profRow}>
-            <View style={styles.profInfo}>
-              <Text style={styles.profName}>
-                {appointment.Professional?.User?.name || 'Prestador'}
-              </Text>
-              <Text style={styles.serviceTitle}>
-                {appointment.Service?.title || 'Serviço Agendado'}
-              </Text>
-            </View>
-            {appointment.Professional?.User?.phone ? (
-              <TouchableOpacity
-                style={styles.callBtn}
-                onPress={handleCallProf}
-                activeOpacity={0.8}>
-                <Ionicons name="call" size={20} color="#FFFFFF" />
-              </TouchableOpacity>
+            {/* Caixa do Código de Confirmação */}
+            {appointment.verification_code || liveStatus === 'arrived' ? (
+              <View style={styles.pinBox}>
+                <View style={styles.pinBoxHeaderRow}>
+                  <Ionicons name="key" size={16} color="#EA580C" />
+                  <Text style={styles.pinBoxTitle}>
+                    CÓDIGO DE CONFIRMAÇÃO DO SERVIÇO
+                  </Text>
+                </View>
+                <View style={styles.pinBoxCodeBadge}>
+                  <Text style={styles.pinBoxCode}>
+                    {appointment.verification_code || '----'}
+                  </Text>
+                </View>
+                <Text style={styles.pinBoxSub}>
+                  Informe este código ao profissional para validação do
+                  atendimento
+                </Text>
+              </View>
             ) : null}
-          </View>
 
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={onClose}
-            activeOpacity={0.8}>
-            <Text style={styles.backBtnText}>Fechar Acompanhamento</Text>
-          </TouchableOpacity>
+            {/* Dados do Prestador */}
+            <View style={styles.profRow}>
+              <View style={styles.profInfo}>
+                <Text style={styles.profName}>
+                  {appointment.Professional?.User?.name || 'Prestador'}
+                </Text>
+                <Text style={styles.serviceTitle}>
+                  {appointment.Service?.title || 'Serviço Agendado'}
+                </Text>
+              </View>
+              {appointment.Professional?.User?.phone ? (
+                <TouchableOpacity
+                  style={styles.callBtn}
+                  onPress={handleCallProf}
+                  activeOpacity={0.8}>
+                  <Ionicons name="call" size={20} color="#FFFFFF" />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+
+            <TouchableOpacity
+              style={styles.backBtn}
+              onPress={onClose}
+              activeOpacity={0.8}>
+              <Text style={styles.backBtnText}>Fechar Acompanhamento</Text>
+            </TouchableOpacity>
+          </ScrollView>
         </View>
       </View>
     </Modal>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: 50,
-    paddingBottom: 14,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-    elevation: 3,
-    zIndex: 10,
-  },
-  closeBtn: {
-    padding: 8,
-    marginRight: 10,
-  },
-  headerTitleContainer: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    color: '#2563EB',
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  mapContainer: {
-    flex: 1,
-    position: 'relative',
-    backgroundColor: '#0F172A',
-  },
-  loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(15, 23, 42, 0.75)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 4,
-  },
-  loadingText: {
-    color: '#F8FAFC',
-    fontSize: 13,
-    fontWeight: '600',
-    marginTop: 10,
-  },
-  proximityBannerOverlay: {
-    position: 'absolute',
-    top: 85,
-    left: 16,
-    right: 16,
-    backgroundColor: '#2563EB',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    elevation: 6,
-    zIndex: 6,
-  },
-  proximityBannerText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
-    flex: 1,
-  },
-  houseCardOverlay: {
-    position: 'absolute',
-    top: 16,
-    left: 16,
-    right: 16,
-    backgroundColor: 'rgba(30, 41, 59, 0.94)',
-    borderRadius: 16,
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#334155',
-    elevation: 5,
-    zIndex: 5,
-  },
-  houseIconBadge: {
-    backgroundColor: '#2563EB',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  houseTextInfo: {
-    flex: 1,
-  },
-  houseTitle: {
-    color: '#F8FAFC',
-    fontWeight: '700',
-    fontSize: 14,
-  },
-  houseAddress: {
-    color: '#94A3B8',
-    fontSize: 12,
-    marginTop: 2,
-  },
-  distanceBadgeOverlay: {
-    position: 'absolute',
-    bottom: 50,
-    alignSelf: 'center',
-    backgroundColor: 'rgba(15, 23, 42, 0.94)',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 24,
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: '#FF6B00',
-    elevation: 8,
-    shadowColor: '#FF6B00',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    zIndex: 5,
-  },
-  distanceBadgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  distanceBadgeText: {
-    color: '#F8FAFC',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  etaText: {
-    color: '#94A3B8',
-    fontSize: 12,
-    marginTop: 4,
-  },
-  gpsCoordsBarOverlay: {
-    position: 'absolute',
-    bottom: 10,
-    alignSelf: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(30, 41, 59, 0.90)',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    gap: 8,
-    zIndex: 5,
-  },
-  liveDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#22C55E',
-  },
-  gpsCoordsText: {
-    color: '#94A3B8',
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  bottomCard: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 20,
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-  },
-  dragHandle: {
-    width: 36,
-    height: 4,
-    backgroundColor: '#CBD5E1',
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginBottom: 12,
-  },
-  statusBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    marginBottom: 14,
-    gap: 8,
-  },
-  statusBannerText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 14,
-  },
-  pinBox: {
-    backgroundColor: '#FFF7ED',
-    borderColor: '#FF6B00',
-    borderWidth: 2,
-    borderRadius: 14,
-    padding: 12,
-    alignItems: 'center',
-    marginBottom: 14,
-  },
-  pinBoxTitle: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#EA580C',
-  },
-  pinBoxCode: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: '#FF6B00',
-    letterSpacing: 6,
-    marginVertical: 4,
-  },
-  pinBoxSub: {
-    fontSize: 11,
-    color: '#C2410C',
-  },
-  profRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 14,
-  },
-  profInfo: {
-    flex: 1,
-  },
-  profName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1E293B',
-  },
-  serviceTitle: {
-    fontSize: 13,
-    color: '#64748B',
-    marginTop: 2,
-  },
-  callBtn: {
-    backgroundColor: '#16A34A',
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backBtn: {
-    backgroundColor: '#F1F5F9',
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  backBtnText: {
-    color: '#334155',
-    fontWeight: '700',
-    fontSize: 14,
-  },
-});
+

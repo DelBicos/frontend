@@ -42,10 +42,13 @@ const ProfessionalDashboard: React.FC = () => {
               return true;
             }
             if (apt.status === 'confirmed') {
-              const startTimeMs = new Date(apt.start_time).getTime();
-              const nowMs = Date.now();
-              const diffMinutes = (startTimeMs - nowMs) / (1000 * 60);
-              return diffMinutes <= 30;
+              const startTime = new Date(apt.start_time);
+              const now = new Date();
+              const isToday =
+                startTime.getFullYear() === now.getFullYear() &&
+                startTime.getMonth() === now.getMonth() &&
+                startTime.getDate() === now.getDate();
+              return isToday;
             }
             return false;
           });

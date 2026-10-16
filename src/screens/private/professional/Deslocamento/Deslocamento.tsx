@@ -131,9 +131,6 @@ export const DeslocamentoScreen: React.FC = () => {
                 });
               }
             }
-            if (appt.verification_code) {
-              setVerificationCode(appt.verification_code);
-            }
             if (appt.status === 'in_transit') {
               setInTransit(true);
               startGpsTracking();
@@ -156,9 +153,6 @@ export const DeslocamentoScreen: React.FC = () => {
   // OTP Code Modal State
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otpMode, setOtpMode] = useState<'checkin' | 'checkout'>('checkin');
-  const [verificationCode, setVerificationCode] = useState(
-    params.verificationCode || '',
-  );
   const [otp, setOtp] = useState<string[]>(['', '', '', '']);
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpError, setOtpError] = useState('');
@@ -227,9 +221,6 @@ export const DeslocamentoScreen: React.FC = () => {
         const response = await markArrived(params.appointmentId, coords);
         if (response.success) {
           notifyArrived();
-          if (response.verification_code) {
-            setVerificationCode(response.verification_code);
-          }
           setArrived(true);
           setOtpMode('checkin');
           setShowOtpModal(true);
@@ -403,7 +394,6 @@ export const DeslocamentoScreen: React.FC = () => {
             startTime={params.startTime}
             inProgress={inProgress}
             arrived={arrived}
-            verificationCode={verificationCode}
             onOpenMap={() => setShowMapModal(true)}
           />
         </ScrollView>

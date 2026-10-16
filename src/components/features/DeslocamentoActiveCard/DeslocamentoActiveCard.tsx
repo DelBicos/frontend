@@ -10,7 +10,6 @@ export interface DeslocamentoActiveCardProps {
   startTime?: string;
   inProgress: boolean;
   arrived: boolean;
-  verificationCode?: string;
   onOpenMap: () => void;
 }
 
@@ -21,7 +20,6 @@ export const DeslocamentoActiveCard: React.FC<DeslocamentoActiveCardProps> = ({
   startTime,
   inProgress,
   arrived,
-  verificationCode,
   onOpenMap,
 }) => {
   const colors = useColors();
@@ -165,48 +163,6 @@ export const DeslocamentoActiveCard: React.FC<DeslocamentoActiveCardProps> = ({
         </View>
       )}
 
-      {/* Card com Código de Confirmação (CHK-02) */}
-      {verificationCode ? (
-        <View
-          style={[
-            styles.codeCardRow,
-            {
-              backgroundColor: colors.warningBackground,
-              borderColor: colors.primaryOrange,
-            },
-          ]}>
-          <View style={{ flex: 1, marginRight: 8 }}>
-            <Text
-              style={{
-                fontSize: 12,
-                fontWeight: '800',
-                color: colors.warningText,
-                letterSpacing: 0.5,
-              }}>
-              CÓDIGO DE CONFIRMAÇÃO 🔑
-            </Text>
-            <Text
-              style={{
-                fontSize: 12,
-                color: colors.textSecondary,
-                marginTop: 2,
-                lineHeight: 16,
-              }}>
-              Confirme este código com o cliente para validação:
-            </Text>
-          </View>
-          <View
-            style={[
-              styles.codeBadge,
-              { backgroundColor: colors.primaryOrange },
-            ]}>
-            <Text
-              style={[styles.codeBadgeText, { color: colors.primaryWhite }]}>
-              {verificationCode}
-            </Text>
-          </View>
-        </View>
-      ) : null}
 
       {/* Banner com o Nome do Serviço */}
       <View
@@ -314,25 +270,6 @@ const styles = StyleSheet.create({
   tipSub: {
     fontSize: 13,
     lineHeight: 18,
-  },
-  codeCardRow: {
-    borderWidth: 1.5,
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  codeBadge: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 10,
-  },
-  codeBadgeText: {
-    fontSize: 20,
-    fontWeight: '900',
-    letterSpacing: 3,
   },
   codeCard: {
     borderRadius: 12,

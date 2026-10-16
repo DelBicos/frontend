@@ -32,18 +32,39 @@ export const useDeslocamentoTracking = ({
         locationSubscriptionRef.current.remove();
       }
 
+      const targetApptId =
+        numericAppointmentId ||
+        (typeof appointmentId === 'number'
+          ? appointmentId
+          : Number(appointmentId));
+
+      // Envia imediatamente a primeira localização ao iniciar, sem aguardar deslocamento
+      try {
+        const initialLoc = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+        });
+        if (initialLoc && targetApptId && !isNaN(targetApptId)) {
+          sendLocationUpdate({
+            appointment_id: targetApptId,
+            dest_lat: destCoords.lat,
+            dest_lng: destCoords.lng,
+            latitude: initialLoc.coords.latitude,
+            longitude: initialLoc.coords.longitude,
+            heading: initialLoc.coords.heading || 0,
+            speed: initialLoc.coords.speed || 0,
+          });
+        }
+      } catch {
+        // Silenciosamente ignora falha inicial
+      }
+
       const subscription = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.High,
-          timeInterval: 5000,
-          distanceInterval: 5,
+          timeInterval: 4000,
+          distanceInterval: 1,
         },
         (loc) => {
-          const targetApptId =
-            numericAppointmentId ||
-            (typeof appointmentId === 'number'
-              ? appointmentId
-              : Number(appointmentId));
           if (targetApptId && !isNaN(targetApptId)) {
             sendLocationUpdate({
               appointment_id: targetApptId,
