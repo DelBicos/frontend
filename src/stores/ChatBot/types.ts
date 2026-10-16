@@ -152,7 +152,9 @@ export interface SuggestedTime {
 }
 
 export type ChatBotActionType =
-  'confirm_appointment' | 'confirm_cancel' | 'confirm_reschedule';
+  | 'confirm_appointment'
+  | 'confirm_cancel'
+  | 'confirm_reschedule';
 
 export interface ChatBotAppointmentData {
   id?: number;
@@ -238,6 +240,8 @@ export interface SendMessageRequest {
   utc_offset_minutes?: number;
   /** ISO UTC do horário selecionado — mesmo padrão do checkout */
   selected_time?: string;
+  /** Identificador único da requisição para prevenir duplicação de ações no backend */
+  idempotency_key?: string;
 }
 
 /** Resposta de POST /api/chat/bot/message */
@@ -268,7 +272,11 @@ export interface ChatBotSessionMeta {
   ended_at: string | null;
   appointment_id: number | null;
   appointment_status?:
-    'pending' | 'confirmed' | 'completed' | 'canceled' | null;
+    | 'pending'
+    | 'confirmed'
+    | 'completed'
+    | 'canceled'
+    | null;
   appointment_paid?: boolean;
   payment_pending?: boolean;
   /** Contexto acumulado da conversa — presente quando o backend o inclui na resposta. */
