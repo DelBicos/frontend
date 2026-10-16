@@ -144,6 +144,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
+  const handleFocusText = useCallback(() => {
+    inputRef.current?.focus();
+  }, []);
+
   const handleSend = useCallback(() => {
     const text = inputText.trim();
     if (!text || loading) return;
@@ -157,7 +161,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     try {
       if (isRecording) {
         const recording = await stopRecording();
-        await sendVoiceCommand(recording);
+        const status = await sendVoiceCommand(recording);
+        if (status !== 'sent') {
+          handleFocusText();
+        }
         return;
       }
       await startRecording();
@@ -171,10 +178,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       const message =
         voiceError instanceof Error
           ? voiceError.message
-          : 'Não foi possível usar o microfone. Tente novamente.';
+          : 'Não foi possível usar o microfone. Você pode continuar digitando por texto.';
       reportError(message);
+      handleFocusText();
     }
   }, [
+    handleFocusText,
     isRecording,
     isVoicePreparing,
     loading,
@@ -333,6 +342,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           lastSentText={lastSentText}
           hasRetryableVoiceCommand={hasRetryableVoiceCommand}
           onRetry={lastSentText ? retryLastMessage : retryLastVoiceCommand}
+          onSwitchToText={handleFocusText}
         />
       )}
 

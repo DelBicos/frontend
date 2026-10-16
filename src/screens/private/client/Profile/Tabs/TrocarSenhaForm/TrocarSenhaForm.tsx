@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   StyleSheet,
   useWindowDimensions,
+  Alert,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { useUserStore } from '@stores/User';
@@ -44,7 +45,7 @@ const TrocarSenhaForm: React.FC = () => {
   });
 
   const novaSenha = watch('novaSenha');
-  const { changePassword } = useUserStore();
+  const { user, changePassword, acceptLocationConsent, revokeLocationConsent } = useUserStore();
   const { theme } = useThemeStore();
   const isHighContrast = theme === ThemeMode.LIGHT_HI_CONTRAST;
   const colors = useColors();
@@ -118,7 +119,7 @@ const TrocarSenhaForm: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.pageTitle}>Segurança</Text>
+      <Text style={styles.pageTitle}>Segurança & Privacidade</Text>
 
       {/* Banner de Mensagem */}
       {message && (
@@ -269,6 +270,66 @@ const TrocarSenhaForm: React.FC = () => {
             </TouchableOpacity>
           </View>
         </View>
+      </View>
+
+      {/* Card LGPD de Geolocalização */}
+      <View style={[styles.card, { marginTop: 24 }]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+          <FontAwesome name="map-marker" size={20} color={colors.primaryOrange || '#FF6B00'} style={{ marginRight: 10 }} />
+          <Text style={{ fontSize: 18, fontWeight: '700', color: colors.textSecondary || '#0F172A' }}>
+            Privacidade & LGPD (Geolocalização)
+          </Text>
+        </View>
+
+        <Text style={{ fontSize: 14, color: colors.textSecondary || '#475569', marginBottom: 14, lineHeight: 20 }}>
+          O DelBicos transmite a sua localização em tempo real apenas durante o deslocamento até o local do agendamento (&quot;Estou a Caminho&quot;). Você pode consultar ou revogar esse consentimento a qualquer momento conforme a Lei nº 13.709/2018.
+        </Text>
+
+        <View style={{ backgroundColor: user?.location_consent_accepted ? '#F0FDF4' : '#FEF2F2', padding: 14, borderRadius: 12, borderWidth: 1, borderColor: user?.location_consent_accepted ? '#BBF7D0' : '#FECACA', marginBottom: 16 }}>
+          <Text style={{ fontWeight: '700', color: user?.location_consent_accepted ? '#15803D' : '#B91C1C', fontSize: 14, marginBottom: 4 }}>
+            {user?.location_consent_accepted ? '✓ Consentimento Ativo' : '✕ Consentimento Revogado / Não Concedido'}
+          </Text>
+          {user?.location_consent_accepted && user?.location_consent_at ? (
+            <Text style={{ fontSize: 12, color: '#166534' }}>
+              Autorizado em: {new Date(user.location_consent_at).toLocaleString('pt-BR')}
+            </Text>
+          ) : null}
+          {!user?.location_consent_accepted && user?.location_consent_revoked_at ? (
+            <Text style={{ fontSize: 12, color: '#991B1B' }}>
+              Revogado em: {new Date(user.location_consent_revoked_at).toLocaleString('pt-BR')}
+            </Text>
+          ) : null}
+        </View>
+
+        {user?.location_consent_accepted ? (
+          <TouchableOpacity
+            style={{ backgroundColor: '#EF4444', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10, alignItems: 'center' }}
+            onPress={async () => {
+              try {
+                await revokeLocationConsent();
+                Alert.alert('Sucesso', 'Seu consentimento de geolocalização foi revogado com sucesso.');
+              } catch (err: any) {
+                Alert.alert('Erro', err.message || 'Falha ao revogar consentimento.');
+              }
+            }}
+          >
+            <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 14 }}>Revogar Consentimento de Localização</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={{ backgroundColor: '#2563EB', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10, alignItems: 'center' }}
+            onPress={async () => {
+              try {
+                await acceptLocationConsent();
+                Alert.alert('Sucesso', 'Consentimento de geolocalização registrado com sucesso.');
+              } catch (err: any) {
+                Alert.alert('Erro', err.message || 'Falha ao aceitar consentimento.');
+              }
+            }}
+          >
+            <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 14 }}>Conceder Consentimento de Localização</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );

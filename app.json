@@ -25,6 +25,11 @@
     },
     "android": {
       "package": "com.delbicos.app",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyCtayctpZpx9eot7Iv3t2-TYkrUlZbEnpo"
+        }
+      },
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ff7f00"

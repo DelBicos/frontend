@@ -9,12 +9,14 @@ interface ChatErrorBannerProps {
   lastSentText: string | null;
   hasRetryableVoiceCommand: boolean;
   onRetry: () => void;
+  onSwitchToText?: () => void;
 }
 
 /**
  * Banner de erro do chatbot.
  * Exibe mensagem de erro genérica ou countdown de rate limit (429).
- * Mostra botão "Tentar novamente" quando há uma última mensagem para reenviar.
+ * Mostra botão "Tentar novamente" quando há uma última mensagem para reenviar
+ * e opção de "Digitar por texto" para transição de fallback suave.
  */
 export const ChatErrorBanner: React.FC<ChatErrorBannerProps> = ({
   error,
@@ -22,9 +24,16 @@ export const ChatErrorBanner: React.FC<ChatErrorBannerProps> = ({
   lastSentText,
   hasRetryableVoiceCommand,
   onRetry,
+  onSwitchToText,
 }) => {
   const colors = useColors();
   const styles = useMemo(() => createStyles(colors), [colors]);
+
+  const hasActions =
+    rateLimitCountdown === 0 &&
+    (Boolean(lastSentText) ||
+      hasRetryableVoiceCommand ||
+      Boolean(onSwitchToText));
 
   return (
     <View
@@ -34,17 +43,30 @@ export const ChatErrorBanner: React.FC<ChatErrorBannerProps> = ({
           ? `Aguarde ${rateLimitCountdown}s antes de enviar outra mensagem.`
           : error}
       </Text>
-      {(lastSentText || hasRetryableVoiceCommand) &&
-        rateLimitCountdown === 0 && (
-          <TouchableOpacity
-            onPress={onRetry}
-            accessibilityRole="button"
-            accessibilityLabel="Tentar novamente">
-            <Text style={[styles.retryText, { color: colors.primaryBlue }]}>
-              Tentar novamente
-            </Text>
-          </TouchableOpacity>
-        )}
+      {hasActions && (
+        <View style={styles.errorActionsRow}>
+          {(lastSentText || hasRetryableVoiceCommand) && (
+            <TouchableOpacity
+              onPress={onRetry}
+              accessibilityRole="button"
+              accessibilityLabel="Tentar novamente">
+              <Text style={[styles.retryText, { color: colors.primaryBlue }]}>
+                Tentar novamente
+              </Text>
+            </TouchableOpacity>
+          )}
+          {onSwitchToText && (
+            <TouchableOpacity
+              onPress={onSwitchToText}
+              accessibilityRole="button"
+              accessibilityLabel="Digitar por texto">
+              <Text style={[styles.retryText, { color: colors.primaryOrange }]}>
+                Digitar por texto
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
     </View>
   );
 };

@@ -11,6 +11,7 @@ import { useColors } from '@theme/ThemeProvider';
 import { Appointment } from '@stores/Appointment/types';
 import { useUserStore } from '@stores/User';
 import { createStyles } from './styles';
+import { ClientTrackingMapModal } from '@components/features/ClientTrackingMapModal/ClientTrackingMapModal';
 
 interface AppointmentDetailsModalProps {
   visible: boolean;
@@ -32,6 +33,7 @@ export function AppointmentDetailsModal({
   const colors = useColors();
   const styles = createStyles(colors);
   const user = useUserStore((state) => state.user);
+  const [showTrackingModal, setShowTrackingModal] = useState(false);
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [canceling, setCanceling] = useState(false);
   const [cancelError, setCancelError] = useState('');
@@ -112,6 +114,12 @@ export function AppointmentDetailsModal({
         return 'Pendente';
       case 'confirmed':
         return 'Confirmado pelo prestador';
+      case 'in_transit':
+        return 'Profissional a caminho 🚘';
+      case 'arrived':
+        return 'Profissional no local 🎯';
+      case 'in_progress':
+        return 'Serviço em andamento ⚡';
       case 'completed':
         return 'Concluído';
       case 'canceled':
@@ -127,6 +135,11 @@ export function AppointmentDetailsModal({
         return colors.warningText;
       case 'confirmed':
         return colors.successText;
+      case 'in_transit':
+      case 'arrived':
+        return '#FF6B00';
+      case 'in_progress':
+        return '#10B981';
       case 'completed':
         return colors.primaryBlue;
       case 'canceled':
@@ -169,6 +182,56 @@ export function AppointmentDetailsModal({
                 </Text>
               </View>
             </View>
+
+            {/* Banner de Código de Segurança para o Cliente */}
+            {appointment.verification_code || appointment.status === 'arrived' ? (
+              <View
+                style={{
+                  backgroundColor: '#FFF7ED',
+                  borderColor: '#FF6B00',
+                  borderWidth: 2,
+                  borderRadius: 16,
+                  padding: 16,
+                  marginHorizontal: 16,
+                  marginBottom: 16,
+                  alignItems: 'center',
+                }}>
+                <Text style={{ fontSize: 13, color: '#EA580C', fontWeight: '800', marginBottom: 4, letterSpacing: 1 }}>
+                  CÓDIGO DE INÍCIO DO SERVIÇO 🔑
+                </Text>
+                <Text style={{ fontSize: 13, color: '#C2410C', textAlign: 'center', marginBottom: 12, lineHeight: 18 }}>
+                  Passe este código de 4 dígitos ao profissional para ele iniciar o atendimento:
+                </Text>
+                <View style={{ backgroundColor: '#FF6B00', paddingHorizontal: 28, paddingVertical: 10, borderRadius: 14 }}>
+                  <Text style={{ fontSize: 32, fontWeight: '900', color: '#FFFFFF', letterSpacing: 8 }}>
+                    {appointment.verification_code || '----'}
+                  </Text>
+                </View>
+              </View>
+            ) : null}
+
+            {/* Botão de Rastreamento no Mapa em Tempo Real */}
+            {appointment.status === 'in_transit' || appointment.status === 'arrived' ? (
+              <TouchableOpacity
+                style={{
+                  backgroundColor: '#2563EB',
+                  paddingVertical: 14,
+                  paddingHorizontal: 20,
+                  borderRadius: 14,
+                  marginHorizontal: 16,
+                  marginBottom: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                }}
+                onPress={() => setShowTrackingModal(true)}
+                activeOpacity={0.8}>
+                <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 15 }}>
+                  Acompanhar Prestador no Mapa 🗺️
+                </Text>
+              </TouchableOpacity>
+            ) : null}
 
             {/* Título da seção */}
             <View style={styles.section}>
@@ -346,6 +409,11 @@ export function AppointmentDetailsModal({
           </ScrollView>
         </View>
       </View>
+      <ClientTrackingMapModal
+        visible={showTrackingModal}
+        onClose={() => setShowTrackingModal(false)}
+        appointment={appointment}
+      />
     </Modal>
   );
 }

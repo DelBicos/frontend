@@ -146,8 +146,15 @@ export const createStyles = (colors: ColorsType) =>
     retryText: {
       fontSize: 13,
       fontFamily: 'Afacad-SemiBold',
-      marginTop: 4,
       textAlign: 'center',
+    },
+    errorActionsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 16,
+      marginTop: 6,
+      flexWrap: 'wrap',
     },
     hintBanner: {
       flexDirection: 'row',
