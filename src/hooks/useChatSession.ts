@@ -433,6 +433,7 @@ export function useChatSession() {
   } = useChatBotStore();
   const lastVoiceCommandRef = useRef<VoiceCommandAttempt | null>(null);
   const lastTextMessageRef = useRef<ChatBotMessage | null>(null);
+  const lastTextMessageIdempotencyKeyRef = useRef<string | null>(null);
   const [hasRetryableVoiceCommand, setHasRetryableVoiceCommand] =
     useState(false);
   const [isRestarting, setIsRestarting] = useState(false);
@@ -600,6 +601,7 @@ export function useChatSession() {
       messageText: string,
       request: ConversationRequest,
       preserveUserMessage?: ChatBotMessage,
+      idempotencyKey?: string,
     ): Promise<string | null> => {
       // Salva para uso em retryLastMessage (#5)
       setLastSentText(messageText);
@@ -622,8 +624,14 @@ export function useChatSession() {
             timezone: getClientTimezone(),
             utc_offset_minutes: getClientUtcOffsetMinutes(),
             ...(selectedTime ? { selected_time: selectedTime } : {}),
+            ...(idempotencyKey ? { idempotency_key: idempotencyKey } : {}),
           },
-          { signal: request.controller.signal },
+          {
+            headers: {
+              ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
+            },
+            signal: request.controller.signal,
+          },
         );
 
         if (!isCurrentConversationRequest(request)) return null;
@@ -860,12 +868,14 @@ export function useChatSession() {
         createdAt: new Date().toISOString(),
       };
       const request = beginConversationRequest('message');
+      const idempotencyKey = String(uuid.v4());
       lastTextMessageRef.current = optimisticMessage;
+      lastTextMessageIdempotencyKeyRef.current = idempotencyKey;
       addMessage(optimisticMessage);
       setLoading(true);
       setError(null);
 
-      void postMessage(trimmed, request, optimisticMessage)
+      void postMessage(trimmed, request, optimisticMessage, idempotencyKey)
         .then((errorMsg) => {
           if (errorMsg && isCurrentConversationRequest(request)) {
             setError(errorMsg);
@@ -902,6 +912,7 @@ export function useChatSession() {
     ++_restoreRequestId;
     const request = beginConversationRequest('restart');
     lastTextMessageRef.current = null;
+    lastTextMessageIdempotencyKeyRef.current = null;
     lastVoiceCommandRef.current?.recording.release();
     lastVoiceCommandRef.current = null;
     setHasRetryableVoiceCommand(false);
@@ -975,8 +986,10 @@ export function useChatSession() {
         text: displayLabel,
         createdAt: new Date().toISOString(),
       };
-      lastTextMessageRef.current = optimisticMessage;
       const request = beginConversationRequest('message');
+      const idempotencyKey = String(uuid.v4());
+      lastTextMessageRef.current = optimisticMessage;
+      lastTextMessageIdempotencyKeyRef.current = idempotencyKey;
       addMessage(optimisticMessage);
       setLoading(true);
       setError(null);
@@ -986,6 +999,7 @@ export function useChatSession() {
           textToSend,
           request,
           optimisticMessage,
+          idempotencyKey,
         );
         if (errorMsg && isCurrentConversationRequest(request)) {
           setError(errorMsg);
@@ -1008,10 +1022,14 @@ export function useChatSession() {
     const request = beginConversationRequest('message');
     setLoading(true);
     setError(null);
+    const idempotencyKey =
+      lastTextMessageIdempotencyKeyRef.current ?? String(uuid.v4());
+    lastTextMessageIdempotencyKeyRef.current = idempotencyKey;
     const errorMsg = await postMessage(
       text,
       request,
       lastTextMessageRef.current ?? undefined,
+      idempotencyKey,
     );
     if (errorMsg && isCurrentConversationRequest(request)) setError(errorMsg);
     if (finishConversationRequest(request)) setLoading(false);
