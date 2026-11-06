@@ -5,6 +5,7 @@ import { WS_DOMAIN } from '@config/varEnvs';
 import { useUserStore } from '@stores/User';
 import { ChatMessage, ChatRoomStatus } from '@stores/Chat';
 
+import { logger } from '@lib/logger';
 interface UseChatSocketOptions {
   roomId: number;
   onMessage: (message: ChatMessage) => void;
@@ -82,7 +83,7 @@ export function useChatSocket({ roomId, onMessage }: UseChatSocketOptions) {
         { roomId, clientMessageUuid, text: trimmed, sentAt },
         (resp: SocketAck) => {
           if (!resp?.ok) {
-            console.warn('Falha ao enviar mensagem:', resp?.error);
+            logger.warn('Falha ao enviar mensagem:', resp?.error);
           }
         },
       );

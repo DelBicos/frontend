@@ -52,7 +52,7 @@ const CpfInput: React.FC<CpfInputProps> = ({
         value={displayValue}
         onChangeText={handleChange}
         onBlur={onBlur}
-        error={error as any}
+        error={typeof error === 'string' ? error : undefined}
         keyboardType="numeric"
         maxLength={14}
         editable={!disabled}

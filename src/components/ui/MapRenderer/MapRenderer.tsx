@@ -5,8 +5,10 @@ import { MapComponentProps } from '@lib/hooks/types';
 import { useColors } from '@theme/ThemeProvider';
 import { createStyles } from './styles';
 
+import type { StyleProp, ViewStyle } from 'react-native';
+import type { MapPressEventLike } from '@lib/hooks/types';
 interface NativeMapRendererProps extends MapComponentProps {
-  style?: any;
+  style?: StyleProp<ViewStyle>;
 }
 
 const NativeMapRenderer: React.FC<NativeMapRendererProps> = ({
@@ -25,7 +27,7 @@ const NativeMapRenderer: React.FC<NativeMapRendererProps> = ({
     setMapReady(true);
   };
 
-  const handlePress = (event: any) => {
+  const handlePress = (event: MapPressEventLike) => {
     const { coordinate } = event.nativeEvent;
 
     mapRef.current?.animateCamera(

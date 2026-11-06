@@ -1,11 +1,12 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 
+import { logger } from '@lib/logger';
 interface UsePaginationOptions<T> {
   fetchData: (page: number, limit: number) => Promise<T[]>;
   limit?: number;
 }
 
-export function usePagination<T>({
+export function usePagination<T extends { id: number | string }>({
   fetchData,
   limit = 12,
 }: UsePaginationOptions<T>) {
@@ -29,7 +30,7 @@ export function usePagination<T>({
           if (result.length < limit) setHasMore(false);
         }
       } catch (err) {
-        console.error('Pagination Error:', err);
+        logger.error('Pagination Error:', err);
         if (mounted) setHasMore(false);
       } finally {
         if (mounted) setLoadingInitial(false);
@@ -51,8 +52,8 @@ export function usePagination<T>({
       const result = await fetchData(nextPage, limit);
       if (result.length > 0) {
         setData((prev) => {
-          const existingIds = new Set(prev.map((p: any) => p.id));
-          const unique = result.filter((p: any) => !existingIds.has(p.id));
+          const existingIds = new Set(prev.map((p) => p.id));
+          const unique = result.filter((p) => !existingIds.has(p.id));
           return [...prev, ...unique];
         });
         setPage(nextPage);

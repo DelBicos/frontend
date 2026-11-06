@@ -192,7 +192,23 @@ export interface ChatBotMessage {
   createdAt: string;
 }
 
+export interface SendVoiceCommandInput {
+  audio: Blob;
+  /** Formato real informado pelo gravador (tem prioridade sobre audio.type). */
+  mimeType?: string;
+  channel: string;
+  timezone: string;
+  idempotencyKey: string;
+  sessionId?: number | null;
+  selectedTime?: string;
+}
+
 export interface ChatBotStore {
+  /** Envia o audio ao backend, que transcreve e executa o comando. */
+  submitVoiceAudio: (
+    input: SendVoiceCommandInput,
+    signal?: AbortSignal,
+  ) => Promise<VoiceCommandResponse>;
   /** session_id numérico do backend (inteiro > 0). null = sessão ainda não iniciada. */
   sessionId: number | null;
   messages: ChatBotMessage[];

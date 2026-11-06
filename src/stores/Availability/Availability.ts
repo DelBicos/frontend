@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { backendHttpClient } from '@lib/helpers/httpClient';
 import { useUserStore } from '@stores/User';
 
+import { logger } from '@lib/logger';
 export type AvailabilityItem = {
   id: number;
   professional_id: number;
@@ -58,7 +59,7 @@ export const useAvailabilityStore = create<AvailabilityState>((set, get) => ({
       set({ items: data, loading: false });
       return data;
     } catch (e) {
-      console.error('[Availability] fetchList', e);
+      logger.error('[Availability] fetchList', e);
       set({ loading: false });
       return [];
     }
@@ -69,7 +70,7 @@ export const useAvailabilityStore = create<AvailabilityState>((set, get) => ({
       const res = await backendHttpClient.get(`/api/availabilities/${id}`);
       return res.data;
     } catch (e) {
-      console.error('[Availability] getOne', e);
+      logger.error('[Availability] getOne', e);
       return null;
     }
   },
@@ -85,7 +86,7 @@ export const useAvailabilityStore = create<AvailabilityState>((set, get) => ({
       set({ items: [...(get().items || []), created] });
       return created;
     } catch (e) {
-      console.error('[Availability] create', e);
+      logger.error('[Availability] create', e);
       return null;
     }
   },
@@ -103,7 +104,7 @@ export const useAvailabilityStore = create<AvailabilityState>((set, get) => ({
       });
       return updated;
     } catch (e) {
-      console.error('[Availability] update', e);
+      logger.error('[Availability] update', e);
       return null;
     }
   },
@@ -114,7 +115,7 @@ export const useAvailabilityStore = create<AvailabilityState>((set, get) => ({
       set({ items: (get().items || []).filter((it) => it.id !== id) });
       return true;
     } catch (e) {
-      console.error('[Availability] remove', e);
+      logger.error('[Availability] remove', e);
       return false;
     }
   },
@@ -140,13 +141,25 @@ function ddmmyyyyToIso(dateStr?: string) {
   return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
 }
 
-function preparePayload(data: any) {
-  const payload: any = { ...data };
+/** Campos que o formulario envia (varios formatos: Date, numero, texto). */
+type AvailabilityPayload = Record<string, unknown> & {
+  days_array?: boolean[];
+  days_of_week?: string;
+  start_time?: unknown;
+  end_time?: unknown;
+  start_day?: string;
+  end_day?: string;
+  recurrence_pattern?: string;
+  start_day_of_month?: number | string;
+};
+
+function preparePayload(data: Record<string, unknown>) {
+  const payload: AvailabilityPayload = { ...data };
 
   // days_array -> days_of_week
   if (payload.days_array && Array.isArray(payload.days_array)) {
     payload.days_of_week = payload.days_array
-      .map((b: any) => (b ? '1' : '0'))
+      .map((b) => (b ? '1' : '0'))
       .join('');
     delete payload.days_array;
   }

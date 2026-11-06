@@ -1,118 +1,72 @@
-import { StyleSheet, Platform } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { ColorsType } from '@theme/types';
 
 export const createStyles = (colors: ColorsType) =>
   StyleSheet.create({
     card: {
-      backgroundColor: colors.cardBackground,
+      flexGrow: 1,
+      gap: 14,
+      padding: 16,
       borderRadius: 16,
-      padding: 20,
-      marginBottom: 12,
       borderWidth: 1,
       borderColor: colors.borderColor,
-      ...Platform.select({
-        ios: {
-          shadowColor: colors.primaryBlack,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 6,
-        },
-        android: {
-          elevation: 2,
-        },
-        web: {
-          boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.05)',
-          transition: 'all 0.2s ease',
-        },
-      }),
+      backgroundColor: colors.cardBackground,
     },
     cardPrimary: {
+      borderWidth: 2,
       borderColor: colors.primaryOrange,
-      backgroundColor: colors.backgroundElevated,
     },
-
-    // Cabeçalho
     header: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 16,
+      alignItems: 'flex-start',
+      gap: 12,
     },
-    iconContainer: {
+    icon: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.inputBackground,
+    },
+    texts: {
+      flex: 1,
+      minWidth: 0,
+      gap: 2,
+    },
+    street: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 18,
+      color: colors.primaryBlack,
+    },
+    detail: {
+      fontFamily: 'Afacad-Regular',
+      fontSize: 15,
+      color: colors.textSecondary,
+    },
+    badge: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 10,
-    },
-    iconCircle: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: colors.inputBackground,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    iconCirclePrimary: {
+      gap: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 999,
       backgroundColor: colors.primaryOrange,
     },
-    cardTitle: {
-      fontSize: 14,
+    badgeText: {
       fontFamily: 'Afacad-SemiBold',
-      color: colors.primaryOrange,
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
+      fontSize: 13,
+      color: '#000000',
     },
-    deleteButton: {
-      padding: 8,
-    },
-
-    // Corpo
-    body: {
-      marginBottom: 16,
-    },
-    streetText: {
-      fontSize: 18,
-      fontFamily: 'Afacad-Bold',
-      color: colors.primaryBlack,
-      marginBottom: 4,
-    },
-    complementText: {
-      fontSize: 14,
-      fontFamily: 'Afacad-Regular',
-      color: colors.textSecondary,
-      marginBottom: 4,
-      fontStyle: 'italic',
-    },
-    detailText: {
-      fontSize: 15,
-      fontFamily: 'Afacad-Regular',
-      color: colors.textSecondary,
-      marginBottom: 2,
-    },
-    zipText: {
-      fontSize: 14,
-      fontFamily: 'Afacad-Regular',
-      color: colors.textTertiary,
-      marginTop: 4,
-    },
-
-    // Rodapé
-    footer: {
+    actions: {
       flexDirection: 'row',
-      borderTopWidth: 1,
-      borderTopColor: colors.divider,
-      paddingTop: 12,
-      gap: 16,
+      flexWrap: 'wrap',
+      gap: 8,
+      marginTop: 'auto',
     },
-    actionButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      paddingVertical: 6,
-      paddingRight: 12,
-    },
-    actionText: {
+    note: {
+      fontFamily: 'Afacad-Regular',
       fontSize: 14,
-      fontFamily: 'Afacad-SemiBold',
-      color: colors.primaryBlue,
+      color: colors.textSecondary,
     },
   });

@@ -5,7 +5,6 @@ export const createStyles = (colors: ColorsType) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.inputBackground,
     },
 
     loadingContainer: {
@@ -16,8 +15,10 @@ export const createStyles = (colors: ColorsType) =>
     },
 
     listContent: {
-      paddingVertical: 16,
-      paddingHorizontal: 4,
+      width: '100%',
+      alignSelf: 'center',
+      paddingTop: 16,
+      paddingBottom: 32,
     },
 
     columnWrapper: {

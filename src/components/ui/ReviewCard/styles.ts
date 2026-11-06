@@ -1,87 +1,56 @@
-import { StyleSheet, Platform } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { ColorsType } from '@theme/types';
 
 export const createStyles = (colors: ColorsType) =>
   StyleSheet.create({
     card: {
-      backgroundColor: colors.cardBackground,
-      borderRadius: 12,
+      flexGrow: 1,
+      gap: 10,
       padding: 16,
-      marginBottom: 12,
+      borderRadius: 16,
       borderWidth: 1,
       borderColor: colors.borderColor,
-      ...Platform.select({
-        ios: {
-          shadowColor: colors.primaryBlack,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 4,
-        },
-        android: {
-          elevation: 2,
-        },
-        web: {
-          boxShadow: '0px 2px 8px rgba(0,0,0,0.05)',
-        },
-      }),
-      flex: 1,
-      minWidth: 280,
-      marginRight: 12,
+      backgroundColor: colors.cardBackground,
     },
-    ratingContainer: {
-      marginBottom: 8,
-      alignSelf: 'flex-start',
-    },
-    stars: {
-      backgroundColor: 'transparent',
-    },
-    title: {
-      fontSize: 16,
-      fontFamily: 'Afacad-Bold',
-      color: colors.primaryBlack,
-      marginBottom: 4,
-    },
-    service: {
-      fontSize: 14,
-      fontFamily: 'Afacad-Regular',
-      color: colors.textSecondary,
-      marginBottom: 8,
-    },
-    reviewText: {
-      fontSize: 14,
-      fontFamily: 'Afacad-Regular',
-      color: colors.primaryBlack,
-      lineHeight: 20,
-      marginBottom: 16,
-      fontStyle: 'italic',
-    },
-    clientContainer: {
+    header: {
       flexDirection: 'row',
       alignItems: 'center',
-      borderTopWidth: 1,
-      borderTopColor: colors.divider,
-      paddingTop: 12,
-      marginTop: 'auto',
+      gap: 12,
     },
-    avatar: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      marginRight: 12,
-      backgroundColor: colors.inputBackground,
-    },
-    clientInfo: {
+    headerTexts: {
       flex: 1,
+      minWidth: 0,
     },
-    clientName: {
-      fontSize: 13,
-      fontFamily: 'Afacad-SemiBold',
+    name: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 17,
       color: colors.primaryBlack,
-      marginBottom: 2,
     },
-    date: {
-      fontSize: 11,
+    meta: {
       fontFamily: 'Afacad-Regular',
-      color: colors.textTertiary,
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    ratingRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    ratingLabel: {
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 15,
+      color: colors.primaryBlack,
+    },
+    review: {
+      fontFamily: 'Afacad-Regular',
+      fontSize: 16,
+      lineHeight: 22,
+      color: colors.primaryBlack,
+    },
+    noReview: {
+      fontFamily: 'Afacad-Regular',
+      fontSize: 15,
+      fontStyle: 'italic',
+      color: colors.textSecondary,
     },
   });

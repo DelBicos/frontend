@@ -2,7 +2,6 @@
 
 # dependencies
 node_modules/
-package-lock.json
 pnpm-lock.yaml
 yarn.lock
 .pnpm-debug.log
@@ -68,3 +67,10 @@ android/**/captures/
 android/build/reports/problems/
 android/hs_err_pid63855.log
 env.front.prod
+
+# Relatorios de teste
+coverage/
+
+# Codigo nativo gerado pelo "expo prebuild" (CNG): nao versionar; a fonte e o app.json + plugins
+/ios
+/android

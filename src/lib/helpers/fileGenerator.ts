@@ -8,6 +8,7 @@ import { Platform } from 'react-native';
 import * as Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 
+import { logger } from '@lib/logger';
 type BlobType = 'text/csv' | 'application/octet-stream';
 
 export async function generateFileURI(
@@ -44,7 +45,7 @@ export async function generateFileURI(
 
     return fileUri;
   } catch (error) {
-    console.error('Erro ao compartilhar:', error);
+    logger.error('Erro ao compartilhar:', error);
     return null;
   }
 }
@@ -118,7 +119,7 @@ export const generatePDF = async (
 
     return uri;
   } catch (error) {
-    console.error('Erro ao gerar PDF:', error);
+    logger.error('Erro ao gerar PDF:', error);
     throw new Error(`Falha ao gerar PDF: ${error}`);
   }
 };
@@ -127,13 +128,13 @@ export const generatePDF = async (
 // EXPORTA CSV
 // =============================================================
 export const generateCSV = async (
-  dados: any[] | any[][],
+  dados: Record<string, unknown>[] | (string | number)[][],
 ): Promise<string | undefined> => {
   if (!dados || dados.length === 0) {
-    console.error('Erro', 'Nenhum dado para exportar');
+    logger.error('Erro', 'Nenhum dado para exportar');
     return;
   }
-  const csv = Papa.unparse(dados);
+  const csv = Papa.unparse(dados as Record<string, unknown>[]);
   return csv;
 };
 
@@ -141,10 +142,10 @@ export const generateCSV = async (
 // EXPORTA EXCEL (múltiplas abas)
 // =============================================================
 export const generateXLSX = async (
-  tabs: { title: string; sheetData: any[][] }[],
+  tabs: { title: string; sheetData: unknown[][] }[],
 ): Promise<string | undefined> => {
   if (!tabs || tabs.length === 0) {
-    console.error('Erro', 'Nenhuma aba para exportar');
+    logger.error('Erro', 'Nenhuma aba para exportar');
     return;
   }
 

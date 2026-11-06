@@ -7,6 +7,27 @@ import {
 import { backendHttpClient } from '@lib/helpers/httpClient';
 import { ProfessionalResult } from '@components/features/ProfessionalResultCard';
 
+import { logger } from '@lib/logger';
+const serviceTitle = (s: string | { title: string }) =>
+  typeof s === 'string' ? s : s.title;
+const firstServiceTitle = (services?: (string | { title: string })[]) =>
+  services?.[0] ? serviceTitle(services[0]) : undefined;
+
+/** Item da listagem como a API devolve (formatos antigos e novos). */
+interface RawListedProfessional {
+  id: number;
+  name?: string;
+  rating?: number | string | null;
+  ratings_count?: number | string | null;
+  verified?: boolean;
+  avatar_uri?: string | null;
+  User?: { name?: string; avatar_uri?: string | null };
+  MainAddress?: { city?: string; state?: string } | null;
+  distance_km?: number | string | null;
+  dataValues?: { distance_km?: number | string | null };
+  Services?: (string | { title: string })[];
+}
+
 export const useProfessionalStore = create<ProfessionalStore>((set) => ({
   professionals: [],
   selectedProfessional: null,
@@ -19,7 +40,7 @@ export const useProfessionalStore = create<ProfessionalStore>((set) => ({
     lng?: number,
   ) => {
     try {
-      const params: any = {};
+      const params: Record<string, string | number> = {};
       if (!!filter?.length) {
         params.termo = filter;
       }
@@ -39,77 +60,39 @@ export const useProfessionalStore = create<ProfessionalStore>((set) => ({
         ? response.data
         : response.data.professionals || [];
 
-      // Helper to extract coordinates from various possible shapes returned by backend
-      const extractCoords = (
-        prof: any,
-      ): { lat?: number; lng?: number } | null => {
-        try {
-          const addr =
-            prof.MainAddress ||
-            prof.Address ||
-            prof.address ||
-            prof.User?.MainAddress ||
-            prof.User?.address;
-          if (addr) {
-            const lat = addr.lat ?? addr.latitude ?? addr.latitud ?? null;
-            const lng =
-              addr.lng ?? addr.longitude ?? addr.long ?? addr.lon ?? null;
-            if (
-              lat !== null &&
-              lat !== undefined &&
-              lng !== null &&
-              lng !== undefined
-            ) {
-              return { lat: Number(lat), lng: Number(lng) };
-            }
-          }
+      const mappedProfessionals: ListedProfessional[] = (
+        rawData as RawListedProfessional[]
+      ).map((prof) => {
+        const rawDist =
+          prof.distance_km ?? prof.dataValues?.distance_km ?? null;
 
-          // try top-level fields
-          const topLat = prof.lat ?? prof.latitude ?? prof.latitud;
-          const topLng = prof.lng ?? prof.longitude ?? prof.long ?? prof.lon;
-          if (topLat !== undefined && topLng !== undefined) {
-            return { lat: Number(topLat), lng: Number(topLng) };
-          }
-        } catch (e) {
-          // ignore
-        }
-        return null;
-      };
-
-      const mappedProfessionals: ListedProfessional[] = rawData.map(
-        (prof: any) => {
-          const rawDist =
-            prof.distance_km ?? prof.dataValues?.distance_km ?? null;
-
-          return {
-            id: prof.id,
-            name: prof.name || prof.User?.name || 'Profissional',
-            rating: Number(prof.rating || 0),
-            ratingsCount: Number(prof.ratings_count || 0),
-            imageUrl:
-              prof.avatar_uri ||
-              prof.User?.avatar_uri ||
-              'https://via.placeholder.com/150',
-            location:
-              prof.MainAddress && prof.MainAddress.city
-                ? `${prof.MainAddress.city}, ${prof.MainAddress.state || 'BR'}`
-                : 'Localização não informada',
-            distance:
-              rawDist !== null && rawDist !== undefined
-                ? Number(rawDist)
-                : undefined,
-            offeredServices: prof.Services
-              ? prof.Services.map((s: any) =>
-                  typeof s === 'string' ? s : s.title,
-                )
-              : ['Serviços Gerais'],
-            category: prof.Services?.[0]?.title || 'Serviços Diversos',
-          };
-        },
-      );
+        return {
+          id: prof.id,
+          name: prof.name || prof.User?.name || 'Profissional',
+          rating: Number(prof.rating || 0),
+          ratingsCount: Number(prof.ratings_count || 0),
+          verified: Boolean(prof.verified),
+          imageUrl:
+            prof.avatar_uri ||
+            prof.User?.avatar_uri ||
+            'https://via.placeholder.com/150',
+          location:
+            prof.MainAddress && prof.MainAddress.city
+              ? `${prof.MainAddress.city}, ${prof.MainAddress.state || 'BR'}`
+              : 'Localização não informada',
+          distance:
+            rawDist !== null && rawDist !== undefined
+              ? Number(rawDist)
+              : undefined,
+          offeredServices: prof.Services
+            ? prof.Services.map(serviceTitle)
+            : ['Serviços Gerais'],
+          category: firstServiceTitle(prof.Services) || 'Serviços Diversos',
+        };
+      });
       return mappedProfessionals;
     } catch (error) {
-      console.error('[ProfessionalStore] Erro ao buscar profissionais:', error);
+      logger.error('[ProfessionalStore] Erro ao buscar profissionais:', error);
       return [];
     }
   },
@@ -143,7 +126,7 @@ export const useProfessionalStore = create<ProfessionalStore>((set) => ({
       set({ selectedProfessional: professionalWithRating });
       return professionalWithRating;
     } catch (error) {
-      console.error(
+      logger.error(
         `[ProfessionalStore] Error fetching professional by ID ${id}:`,
         error,
       );
@@ -159,7 +142,7 @@ export const useProfessionalStore = create<ProfessionalStore>((set) => ({
     lng?: number,
   ): Promise<ProfessionalResult[]> => {
     try {
-      const params: any = { subCategoryId, date };
+      const params: Record<string, string | number> = { subCategoryId, date };
       if (lat) params.lat = lat;
       if (lng) params.lng = lng;
 
@@ -170,11 +153,11 @@ export const useProfessionalStore = create<ProfessionalStore>((set) => ({
         },
       );
 
-      const data = response.data as ProfessionalResult[];
-      return data;
+      return (response.data as ProfessionalResult[]) ?? [];
     } catch (error) {
-      console.error('[ProfessionalStore] Error fetching availability:', error);
-      return [];
+      // A tela mostra o erro (lista vazia pareceria "nenhum profissional").
+      logger.error('[ProfessionalStore] Error fetching availability:', error);
+      throw error;
     }
   },
 

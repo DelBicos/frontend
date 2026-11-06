@@ -13,36 +13,41 @@ interface PasswordInputProps extends TextInputProps {
   error?: boolean | string;
 }
 
-const PasswordInput: React.FC<PasswordInputProps> = ({ error, ...props }) => {
-  const [visible, setVisible] = useState(false);
-  const colors = useColors();
-  const styles = createStyles(colors);
+const PasswordInput = React.forwardRef<TextInput, PasswordInputProps>(
+  ({ error, ...props }, ref) => {
+    const [visible, setVisible] = useState(false);
+    const colors = useColors();
+    const styles = createStyles(colors);
 
-  const hasError = !!error;
+    const hasError = !!error;
 
-  return (
-    <View style={[styles.container, hasError && styles.inputError]}>
-      <TextInput
-        style={styles.input}
-        secureTextEntry={!visible}
-        placeholderTextColor={colors.textTertiary}
-        accessibilityLabel="Campo de senha"
-        {...props}
-      />
-      <TouchableOpacity
-        style={styles.eyeButton}
-        onPress={() => setVisible(!visible)}
-        activeOpacity={0.7}
-        accessibilityRole="button"
-        accessibilityLabel={visible ? 'Ocultar senha' : 'Exibir senha'}>
-        <Ionicons
-          name={visible ? 'eye-off' : 'eye'}
-          size={24}
-          color={colors.textSecondary}
+    return (
+      <View style={[styles.container, hasError && styles.inputError]}>
+        <TextInput
+          ref={ref}
+          style={styles.input}
+          secureTextEntry={!visible}
+          placeholderTextColor={colors.textTertiary}
+          accessibilityLabel="Campo de senha"
+          {...props}
         />
-      </TouchableOpacity>
-    </View>
-  );
-};
+        <TouchableOpacity
+          style={styles.eyeButton}
+          onPress={() => setVisible(!visible)}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={visible ? 'Ocultar senha' : 'Exibir senha'}>
+          <Ionicons
+            name={visible ? 'eye-off' : 'eye'}
+            size={24}
+            color={colors.textSecondary}
+          />
+        </TouchableOpacity>
+      </View>
+    );
+  },
+);
+
+PasswordInput.displayName = 'PasswordInput';
 
 export default PasswordInput;

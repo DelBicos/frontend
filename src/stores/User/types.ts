@@ -1,3 +1,9 @@
+/** Segunda etapa do login: o codigo foi enviado ao e-mail da conta. */
+export interface MfaChallenge {
+  mfaToken: string;
+  emailHint: string;
+}
+
 export type User = {
   id: number;
   client_id: number;
@@ -9,6 +15,9 @@ export type User = {
   banner_uri?: string | null;
   admin?: boolean;
   professional_id?: number;
+  mfa_enabled?: boolean;
+  /** Profissional com identidade aprovada (selo de verificado). */
+  professional_verified?: boolean;
 };
 
 export type Address = {
@@ -70,9 +79,15 @@ export type UserStore = {
     user: User;
     address: Address | null;
   }) => void;
-  registerUser: (formData: RegisterFormData) => Promise<void>;
   updateUserProfile: (data: UpdateUserData) => Promise<void>;
-  signInPassword: (email: string, password: string) => Promise<void>;
+  /** Retorna o desafio quando a conta exige o codigo do e-mail (MFA). */
+  signInPassword: (
+    email: string,
+    password: string,
+  ) => Promise<MfaChallenge | null>;
+  completeMfaSignIn: (mfaToken: string, code: string) => Promise<void>;
+  /** Novo codigo para um login que aguarda a segunda etapa. */
+  resendMfaCode: (mfaToken: string) => Promise<void>;
   changePassword: (
     currentPassword: string,
     newPassword: string,

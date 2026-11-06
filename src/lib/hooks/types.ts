@@ -51,9 +51,14 @@ export interface Region {
   longitudeDelta: number;
 }
 
+/** O que o mapa entrega ao tocar: igual ao MapPressEvent nativo, so o necessario. */
+export interface MapPressEventLike {
+  nativeEvent: { coordinate: { latitude: number; longitude: number } };
+}
+
 export interface MapComponentProps {
   region: Region | null;
   markerCoords: { latitude: number; longitude: number } | null;
   address?: AddressData;
-  onMapPress: (event: any) => void;
+  onMapPress: (event: MapPressEventLike) => void;
 }

@@ -14,6 +14,7 @@ import {
   useAudioRecorderState,
 } from 'expo-audio';
 
+import { logger } from '@lib/logger';
 const VOICE_MIME_TYPE = Platform.OS === 'web' ? 'audio/webm' : 'audio/m4a';
 /** Mantém o áudio curto, rápido de transcrever e muito abaixo do limite do backend. */
 export const MAX_VOICE_RECORDING_DURATION_MS = 60_000;
@@ -120,7 +121,7 @@ export function useVoiceRecorder() {
     } catch (error) {
       if (!mountedRef.current) return;
 
-      console.warn(
+      logger.warn(
         '[useVoiceRecorder] Não foi possível iniciar a gravação:',
         error,
       );
@@ -187,7 +188,7 @@ export function useVoiceRecorder() {
         throw recordingCancelledError();
       }
 
-      console.warn(
+      logger.warn(
         '[useVoiceRecorder] Não foi possível finalizar a gravação:',
         error,
       );
@@ -217,7 +218,7 @@ export function useVoiceRecorder() {
         URL.revokeObjectURL(uri);
       }
     } catch (error) {
-      console.warn(
+      logger.warn(
         '[useVoiceRecorder] Não foi possível cancelar a gravação:',
         error,
       );

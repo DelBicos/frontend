@@ -13,6 +13,8 @@ import { Region } from '@lib/hooks/types';
 import { useColors } from '@theme/ThemeProvider';
 import { createStyles } from './styles';
 
+import { logger } from '@lib/logger';
+import type { MapPressEventLike } from '@lib/hooks/types';
 interface LocationButtonProps {
   onPress: () => Promise<{ latitude: number; longitude: number } | null>;
   loading: boolean;
@@ -57,7 +59,7 @@ export const LocationButton: React.FC<LocationButtonProps> = ({
         setOpen(true);
       }
     } catch (error) {
-      console.error('Erro ao obter localização:', error);
+      logger.error('Erro ao obter localização:', error);
     } finally {
       setMapLoading(false);
     }
@@ -67,7 +69,7 @@ export const LocationButton: React.FC<LocationButtonProps> = ({
     setOpen(false);
   };
 
-  const handleMapPress = (event: any) => {
+  const handleMapPress = (event: MapPressEventLike) => {
     const { latitude, longitude } = event.nativeEvent.coordinate;
     setMarkerCoords({ latitude, longitude });
   };

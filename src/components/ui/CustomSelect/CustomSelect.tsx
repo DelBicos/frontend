@@ -15,6 +15,8 @@ import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
 import { createStyles } from './styles';
 
+import type { FieldError } from 'react-hook-form';
+import type { CSSProperties } from 'react';
 export interface Option {
   label: string;
   value: string;
@@ -26,7 +28,7 @@ interface CustomSelectProps {
   options: Option[];
   onChange: (value: string) => void;
   placeholder?: string;
-  error?: any;
+  error?: FieldError | string | boolean;
   loading?: boolean;
   disabled?: boolean;
 
@@ -63,7 +65,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
 
     return (
       <select
-        style={styles.webSelect as any}
+        style={styles.webSelect as unknown as CSSProperties}
         value={value}
         disabled={disabled || loading}
         onChange={(e) => onChange(e.target.value)}>
@@ -123,7 +125,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         <Text style={styles.errorText}>
           {typeof error === 'string'
             ? error
-            : error.message || 'Campo inválido'}
+            : (typeof error === 'object' && error.message) || 'Campo inválido'}
         </Text>
       )}
 

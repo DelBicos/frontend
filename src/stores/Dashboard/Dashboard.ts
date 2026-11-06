@@ -7,6 +7,7 @@ import {
   DashboardState,
 } from './types';
 
+import { getApiErrorMessage } from '@api/errors';
 export const useDashboardStore = create<DashboardState>((set, get) => ({
   kpis: null,
   earnings: [],
@@ -21,13 +22,8 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
         '/api/dashboard/kpis',
       );
       set({ kpis: response.data });
-    } catch (err: any) {
-      set({
-        error:
-          err?.message ||
-          (err?.normalizedMessage as string) ||
-          'Erro ao buscar KPIs',
-      });
+    } catch (err) {
+      set({ error: getApiErrorMessage(err, 'Erro ao buscar KPIs') });
     } finally {
       set({ loading: false });
     }
@@ -50,13 +46,8 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
         return { ...item, parsedDate };
       });
       set({ earnings: normalized });
-    } catch (err: any) {
-      set({
-        error:
-          err?.message ||
-          (err?.normalizedMessage as string) ||
-          'Erro ao buscar ganhos',
-      });
+    } catch (err) {
+      set({ error: getApiErrorMessage(err, 'Erro ao buscar ganhos') });
     } finally {
       set({ loading: false });
     }
@@ -73,13 +64,8 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     try {
       const response = await backendHttpClient.get<CategoriesResponse>(url);
       set({ categories: response.data });
-    } catch (err: any) {
-      set({
-        error:
-          err?.message ||
-          (err?.normalizedMessage as string) ||
-          'Erro ao buscar categorias',
-      });
+    } catch (err) {
+      set({ error: getApiErrorMessage(err, 'Erro ao buscar categorias') });
     } finally {
       set({ loading: false });
     }

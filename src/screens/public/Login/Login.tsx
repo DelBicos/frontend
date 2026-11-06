@@ -1,196 +1,273 @@
 import React, { useState } from 'react';
 import {
-  ScrollView,
-  Text,
-  Image,
-  View,
-  TouchableOpacity,
-  Alert,
   ActivityIndicator,
+  Pressable,
+  Text,
+  TextInput,
+  View,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import * as Location from 'expo-location';
-import { useLocation } from '@lib/hooks/LocationContext';
-import CustomTextInput from '@components/ui/CustomTextInput';
-import LogoV3 from '@assets/LogoV3.png';
-import { createStyles } from './styles';
+
+import { useForm, Controller } from 'react-hook-form';
+import { FontAwesome } from '@expo/vector-icons';
+import { useUserStore } from '@stores/User';
+import type { MfaChallenge } from '@stores/User/types';
 import { useColors } from '@theme/ThemeProvider';
+import CustomTextInput from '@components/ui/CustomTextInput';
+import PasswordInput from '@components/ui/PasswordInput';
+import AuthLayout, {
+  AuthAlert,
+  createAuthStyles,
+} from '@components/layout/AuthLayout';
+import { leaveAuthFlow } from '@lib/auth/leaveAuthFlow';
+import { checkForNewNotifications } from '@utils/usePushNotifications';
+import CodeEntry from '@components/ui/CodeEntry';
+import { getApiErrorMessage } from '@api/errors';
 
+import { errorMessage } from '@utils/errors';
+import { useNavigation } from '@react-navigation/native';
+import type { AppNavigation } from '@screens/types';
+type FormData = {
+  email: string;
+  password: string;
+};
+
+const MFA_CODE_LENGTH = 6;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Entrar com e-mail e senha. Clientes e profissionais usam a mesma conta. */
 function LoginScreen() {
-  const navigation = useNavigation();
-  const { setLocation } = useLocation();
-  const [cep, setCep] = useState('');
-  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
-  const [isLoadingCep, setIsLoadingCep] = useState(false);
-
+  const navigation = useNavigation<AppNavigation>();
   const colors = useColors();
-  const styles = createStyles(colors);
+  const styles = createAuthStyles(colors);
+  const { signInPassword } = useUserStore();
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Segunda etapa: codigo enviado ao e-mail quando a conta usa verificacao em duas etapas.
+  const [challenge, setChallenge] = useState<MfaChallenge | null>(null);
+  const [code, setCode] = useState('');
+  const [notice, setNotice] = useState<string | null>(null);
+  const passwordRef = React.useRef<TextInput>(null);
 
-  const handleUseLocation = async () => {
-    setIsLoadingLocation(true);
-    try {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(
-          'Permissão negada',
-          'Não foi possível acessar sua localização.',
-        );
-        return;
-      }
+  const {
+    control,
+    handleSubmit,
+    getValues,
+    formState: { errors },
+  } = useForm<FormData>({
+    mode: 'onTouched',
+    defaultValues: { email: '', password: '' },
+  });
 
-      const locationData = await Location.getCurrentPositionAsync({});
-      const { latitude, longitude } = locationData.coords;
-
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
-        {
-          headers: {
-            'User-Agent': 'DelBicosApp/1.0',
-          },
-        },
-      );
-
-      if (!response.ok) throw new Error('Falha na requisição');
-
-      const data = await response.json();
-
-      if (data && data.address) {
-        const { city, state, town, village, county } = data.address;
-        const cityName = city || town || village || county || 'Localização';
-        const stateName = state || '';
-
-        setLocation(cityName, stateName);
-        // @ts-ignore
-        navigation.navigate('Feed');
-      } else {
-        throw new Error('Endereço não encontrado');
-      }
-    } catch (error) {
-      console.error(error);
-      Alert.alert('Erro', 'Ocorreu um problema ao buscar sua localização.');
-    } finally {
-      setIsLoadingLocation(false);
-    }
-  };
-
-  const handleCepSearch = async () => {
-    const cleanCep = cep.replace(/\D/g, '');
-
-    if (cleanCep.length !== 8) {
-      Alert.alert('CEP Inválido', 'Por favor, digite um CEP com 8 dígitos.');
+  const finishLogin = () => {
+    const user = useUserStore.getState().user;
+    // Administradores entram direto no painel.
+    if (user?.admin) {
+      navigation.reset({ index: 0, routes: [{ name: 'AdminDashboard' }] });
       return;
     }
+    if (user?.id) {
+      setTimeout(() => {
+        checkForNewNotifications(
+          user.id.toString(),
+          new Date(Date.now() - 60000),
+          false,
+        ).catch(() => {});
+      }, 1000);
+    }
+    leaveAuthFlow(navigation, !!user?.professional_id);
+  };
 
-    setIsLoadingCep(true);
+  const confirmCode = async () => {
+    if (!challenge) return;
+    if (code.length !== MFA_CODE_LENGTH) {
+      setError(`Digite os ${MFA_CODE_LENGTH} números do código.`);
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    setNotice(null);
     try {
-      const response = await fetch(
-        `https://viacep.com.br/ws/${cleanCep}/json/`,
-      );
-      const data = await response.json();
-
-      if (data.erro) {
-        Alert.alert('Erro', 'CEP não encontrado.');
-      } else {
-        setLocation(data.localidade, data.uf);
-        // @ts-ignore
-        navigation.navigate('Feed');
-      }
-    } catch {
-      Alert.alert(
-        'Erro',
-        'Não foi possível buscar o CEP. Verifique sua conexão.',
-      );
+      await useUserStore.getState().completeMfaSignIn(challenge.mfaToken, code);
+      finishLogin();
+    } catch (err) {
+      setError(errorMessage(err, 'Código incorreto ou expirado.'));
     } finally {
-      setIsLoadingCep(false);
+      setIsSubmitting(false);
     }
   };
 
-  const onLoginPress = () => {
-    // @ts-ignore
-    navigation.navigate('LoginPassword');
+  const resendCode = async () => {
+    if (!challenge) return;
+    setError(null);
+    try {
+      await useUserStore.getState().resendMfaCode(challenge.mfaToken);
+      setCode('');
+      setNotice('Enviamos um novo código.');
+    } catch (err) {
+      setError(
+        getApiErrorMessage(err, 'Não foi possível reenviar. Entre de novo.'),
+      );
+    }
   };
 
+  const onSubmit = async ({ email, password }: FormData) => {
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const pending = await signInPassword(email.trim(), password);
+      if (pending) {
+        setChallenge(pending);
+        setCode('');
+        return;
+      }
+      finishLogin();
+    } catch (err) {
+      setError(
+        errorMessage(err, 'Não foi possível entrar. Confira e-mail e senha.'),
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const submit = handleSubmit(onSubmit);
+
+  if (challenge) {
+    return (
+      <AuthLayout
+        title="Confirme que é você"
+        onBack={() => {
+          setChallenge(null);
+          setError(null);
+          setNotice(null);
+        }}
+        subtitle={`Enviamos um código de ${MFA_CODE_LENGTH} números para ${challenge.emailHint}. Ele vale por 10 minutos; confira também o spam.`}>
+        {error ? <AuthAlert>{error}</AuthAlert> : null}
+        {notice ? <AuthAlert type="success">{notice}</AuthAlert> : null}
+        <CodeEntry value={code} onChange={setCode} length={MFA_CODE_LENGTH} />
+        <Pressable
+          onPress={confirmCode}
+          disabled={isSubmitting}
+          style={({ pressed }) => [
+            styles.primaryButton,
+            isSubmitting && styles.primaryButtonDisabled,
+            pressed && { opacity: 0.85 },
+          ]}
+          accessibilityRole="button"
+          accessibilityState={{ busy: isSubmitting }}>
+          {isSubmitting ? (
+            <ActivityIndicator color="#000000" />
+          ) : (
+            <FontAwesome name="shield" size={18} color="#000000" />
+          )}
+          <Text style={styles.primaryButtonText}>Confirmar</Text>
+        </Pressable>
+        <Pressable
+          onPress={resendCode}
+          style={[styles.linkButton, { alignSelf: 'center', marginTop: 12 }]}
+          accessibilityRole="button">
+          <Text style={styles.linkText}>Reenviar código</Text>
+        </Pressable>
+      </AuthLayout>
+    );
+  }
+
   return (
-    <View style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.contentContainer}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('Home' as never)}
-          activeOpacity={0.8}>
-          <Image source={LogoV3} style={styles.logo} />
-        </TouchableOpacity>
+    <AuthLayout
+      title="Entrar"
+      subtitle="Acesse para agendar, conversar e acompanhar seus serviços.">
+      {error ? <AuthAlert>{error}</AuthAlert> : null}
 
-        <View style={styles.card}>
-          <Text style={styles.title}>Onde você está?</Text>
-          <Text style={styles.subtitle}>
-            Use sua localização ou CEP para encontrarmos os melhores serviços
-            perto de você.
-          </Text>
+      <Controller
+        control={control}
+        name="email"
+        rules={{
+          required: 'Informe seu e-mail.',
+          pattern: {
+            value: EMAIL_PATTERN,
+            message: 'Digite um e-mail válido.',
+          },
+        }}
+        render={({ field: { onChange, onBlur, value } }) => (
+          <CustomTextInput
+            label="E-mail"
+            placeholder="seu@email.com"
+            onBlur={onBlur}
+            onChangeText={onChange}
+            value={value}
+            error={errors.email}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
+            textContentType="emailAddress"
+            returnKeyType="next"
+            onSubmitEditing={() => passwordRef.current?.focus()}
+          />
+        )}
+      />
 
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleUseLocation}
-            disabled={isLoadingLocation}
-            activeOpacity={0.8}>
-            {isLoadingLocation ? (
-              <ActivityIndicator color={colors.primaryWhite} />
-            ) : (
-              <Text style={styles.buttonText}>Usar minha localização</Text>
-            )}
-          </TouchableOpacity>
-
-          <View style={styles.inputContainer}>
-            <CustomTextInput
-              label="Ou digite seu CEP"
-              placeholder="00000-000"
-              value={cep}
-              onChangeText={(text) => {
-                const masked = text
-                  .replace(/\D/g, '')
-                  .replace(/^(\d{5})(\d)/, '$1-$2')
-                  .slice(0, 9);
-                setCep(masked);
-              }}
-              keyboardType="numeric"
-              maxLength={9}
+      <Controller
+        control={control}
+        name="password"
+        rules={{ required: 'Informe sua senha.' }}
+        render={({ field: { onChange, onBlur, value } }) => (
+          <CustomTextInput label="Senha" error={errors.password}>
+            <PasswordInput
+              ref={passwordRef}
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+              placeholder="Sua senha"
+              accessibilityLabel="Senha"
+              autoComplete="current-password"
+              textContentType="password"
+              returnKeyType="go"
+              onSubmitEditing={submit}
+              error={!!errors.password}
             />
-          </View>
+          </CustomTextInput>
+        )}
+      />
 
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleCepSearch}
-            disabled={isLoadingCep}
-            activeOpacity={0.8}>
-            {isLoadingCep ? (
-              <ActivityIndicator color={colors.primaryWhite} />
-            ) : (
-              <Text style={styles.buttonText}>Buscar CEP</Text>
-            )}
-          </TouchableOpacity>
+      <Pressable
+        onPress={() =>
+          navigation.navigate('ForgotPassword', {
+            email: getValues('email').trim() || undefined,
+          })
+        }
+        style={[styles.linkButton, { marginTop: -8, marginBottom: 12 }]}
+        accessibilityRole="link">
+        <Text style={styles.linkText}>Esqueci minha senha</Text>
+      </Pressable>
 
-          <View style={styles.dividerContainer}>
-            <View style={styles.divider} />
-            <Text style={styles.dividerText}>já tem conta?</Text>
-            <View style={styles.divider} />
-          </View>
+      <Pressable
+        onPress={submit}
+        disabled={isSubmitting}
+        style={({ pressed }) => [
+          styles.primaryButton,
+          isSubmitting && styles.primaryButtonDisabled,
+          pressed && { opacity: 0.85 },
+        ]}
+        accessibilityRole="button"
+        accessibilityState={{ busy: isSubmitting }}>
+        {isSubmitting ? (
+          <ActivityIndicator color="#000000" />
+        ) : (
+          <FontAwesome name="sign-in" size={18} color="#000000" />
+        )}
+        <Text style={styles.primaryButtonText}>Entrar</Text>
+      </Pressable>
 
-          <TouchableOpacity
-            style={[styles.button, styles.buttonSecondary]}
-            onPress={onLoginPress}
-            activeOpacity={0.8}>
-            <Text style={[styles.buttonText, styles.buttonTextSecondary]}>
-              Fazer Login
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-
-      <Text style={styles.footer}>
-        © DelBicos - {new Date().getFullYear()} – Todos os direitos reservados.
-      </Text>
-    </View>
+      <View style={styles.alternate}>
+        <Text style={styles.alternateText}>Ainda não tem conta?</Text>
+        <Pressable
+          onPress={() => navigation.navigate('Register')}
+          style={styles.linkButton}
+          accessibilityRole="link">
+          <Text style={styles.linkText}>Criar conta</Text>
+        </Pressable>
+      </View>
+    </AuthLayout>
   );
 }
 

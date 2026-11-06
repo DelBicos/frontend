@@ -3,28 +3,37 @@ import { ColorsType } from '@theme/types';
 
 export const createStyles = (colors: ColorsType) =>
   StyleSheet.create({
-    container: {
-      flex: 1,
-    },
     menuContainer: {
-      flex: 1,
-      gap: 8,
-      paddingVertical: 16,
+      gap: 16,
+    },
+    section: {
+      gap: 2,
+    },
+    sectionTitle: {
+      paddingHorizontal: 12,
+      marginBottom: 4,
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 13,
+      letterSpacing: 0.6,
+      textTransform: 'uppercase',
+      color: colors.textSecondary,
     },
     menuItem: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: 12,
-      paddingHorizontal: 16,
-      borderRadius: 12,
-      backgroundColor: 'transparent',
+      minHeight: 44,
+      paddingHorizontal: 12,
+      borderRadius: 10,
       overflow: 'hidden',
       ...Platform.select({
         web: {
-          transition: 'background-color 0.2s ease',
+          transition: 'background-color 0.15s ease',
           cursor: 'pointer',
-        } as any,
+        } as object,
       }),
+    },
+    menuItemHovered: {
+      backgroundColor: colors.inputBackground,
     },
     activeMenuItem: {
       backgroundColor: colors.inputBackground,
@@ -32,29 +41,24 @@ export const createStyles = (colors: ColorsType) =>
     activeIndicator: {
       position: 'absolute',
       left: 0,
-      height: 24,
+      top: 10,
+      bottom: 10,
       width: 4,
-      backgroundColor: colors.primaryOrange,
       borderTopRightRadius: 4,
       borderBottomRightRadius: 4,
+      backgroundColor: colors.primaryOrange,
     },
-    menuIconContainer: {
-      width: 32,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginRight: 12,
+    menuIcon: {
+      width: 28,
+      marginRight: 10,
     },
     menuText: {
-      fontSize: 16,
-      fontFamily: 'Afacad-SemiBold',
-      color: colors.textSecondary,
       flex: 1,
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 16,
+      color: colors.primaryBlack,
     },
     activeMenuText: {
       fontFamily: 'Afacad-Bold',
-      color: colors.primaryOrange,
-    },
-    chevronIcon: {
-      marginLeft: 'auto',
     },
   });

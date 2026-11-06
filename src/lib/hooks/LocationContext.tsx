@@ -1,11 +1,21 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+import { useUserStore } from '@stores/User';
 import { AddressData } from './types';
 
+import { errorMessage } from '@utils/errors';
+import { logger } from '@lib/logger';
 const LOCATIONIQ_API_KEY = process.env.EXPO_PUBLIC_LOCATIONIQ_API_KEY || '';
 
 if (!LOCATIONIQ_API_KEY) {
-  console.warn(
-    '⚠️ A chave da API LocationIQ não está definida no arquivo .env (EXPO_PUBLIC_LOCATIONIQ_API_KEY)',
+  logger.warn(
+    'A chave da API LocationIQ não está definida no arquivo .env (EXPO_PUBLIC_LOCATIONIQ_API_KEY)',
   );
 }
 
@@ -23,7 +33,22 @@ const LocationContext = createContext<LocationContextType | undefined>(
   undefined,
 );
 
-function formatBrazilianAddress(data: any): AddressData {
+/** Resposta do Nominatim (reverse geocoding): so o objeto `address` importa. */
+interface NominatimResponse {
+  address?: Record<string, string | undefined>;
+  display_name?: string;
+  place_id?: string;
+  licence?: string;
+  osm_type?: string;
+  osm_id?: number;
+  boundingbox?: string[];
+  lat?: string | number;
+  lon?: string | number;
+  class?: string;
+  type?: string;
+}
+
+function formatBrazilianAddress(data: NominatimResponse): AddressData {
   try {
     const components = data.address || {};
 
@@ -117,14 +142,13 @@ function formatBrazilianAddress(data: any): AddressData {
       ...components,
     };
   } catch (error) {
-    console.error('Erro ao formatar endereço brasileiro:', error);
+    logger.error('Erro ao formatar endereço brasileiro:', error);
     return {
       display_name: data.display_name || 'Endereço não identificado',
       formatted: data.display_name || 'Endereço não identificado',
-      lat: '0',
-      lon: '0',
-      lng: '0',
-      ...data,
+      lat: String(data.lat ?? 0),
+      lon: String(data.lon ?? 0),
+      lng: String(data.lon ?? 0),
     };
   }
 }
@@ -153,13 +177,13 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({
       const res = await fetch(url);
       if (!res.ok) return null;
 
-      const json = await res.json();
+      const json: NominatimResponse[] = await res.json();
       if (json && json.length > 0) {
         return formatBrazilianAddress(json[0]);
       }
       return null;
     } catch (e) {
-      console.error('Erro no geocoding por texto:', e);
+      logger.error('Erro no geocoding por texto:', e);
       return null;
     }
   }, []);
@@ -174,7 +198,7 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({
       if (foundAddress) {
         setAddress(foundAddress);
       } else {
-        console.warn(
+        logger.warn(
           `Não foi possível encontrar coordenadas para ${city}, ${state}`,
         );
         setAddress({
@@ -221,7 +245,8 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({
           throw new Error(`LocationIQ respondeu com ${res.status}: ${text}`);
         }
 
-        const json = await res.json();
+        const json: NominatimResponse & { error?: { message?: string } } =
+          await res.json();
 
         if (!json || json.error) {
           throw new Error(json.error?.message || 'Resposta inválida da API');
@@ -230,12 +255,14 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({
         const addressData = formatBrazilianAddress(json);
 
         setAddress(addressData);
-      } catch (err: any) {
-        const errorMessage =
-          err?.message ?? 'Erro desconhecido no reverse geocoding';
-        console.error('❌ Erro no geocoding:', errorMessage);
-        setError(errorMessage);
-        throw new Error(errorMessage);
+      } catch (err) {
+        const message = errorMessage(
+          err,
+          'Erro desconhecido no reverse geocoding',
+        );
+        logger.error('Erro no geocoding:', message);
+        setError(message);
+        throw new Error(message);
       } finally {
         setLoading(false);
       }
@@ -245,6 +272,18 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const currentCity = address?.city;
   const currentState = address?.state;
+
+  // Logado e sem local escolhido: usa a cidade do endereco da conta
+  // (no web e no app).
+  const accountAddress = useUserStore((st) => st.address);
+  const setLocationRef = useRef(setLocation);
+  setLocationRef.current = setLocation;
+  useEffect(() => {
+    if (accountAddress?.city && !address?.city) {
+      setLocationRef.current(accountAddress.city, accountAddress.state);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accountAddress?.city, accountAddress?.state]);
 
   return (
     <LocationContext.Provider

@@ -1,4 +1,4 @@
-import { ViewStyle, TextStyle } from 'react-native';
+import { StyleProp, ViewStyle, TextStyle } from 'react-native';
 
 export interface ButtonStyleProps {
   defaultColors: {
@@ -57,7 +57,7 @@ export interface ButtonProps {
   startIcon?: React.ReactNode;
   endIcon?: React.ReactNode;
   loading?: boolean;
-  style?: any;
+  style?: StyleProp<ViewStyle>;
 }
 
 export interface ButtonStyles {

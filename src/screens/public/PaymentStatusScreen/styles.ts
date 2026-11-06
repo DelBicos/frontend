@@ -1,50 +1,30 @@
-import { StyleSheet, Platform } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { ColorsType } from '@theme/types';
 
-export const createStyles = (
-  colors: ColorsType,
-  isDark: boolean = false,
-  isHighContrast: boolean = false,
-) =>
+export const createStyles = (colors: ColorsType, isCompact: boolean) =>
   StyleSheet.create({
-    container: {
-      flex: 1,
-      padding: 24,
-      backgroundColor: isDark
-        ? colors.secondaryGray
-        : isHighContrast
-          ? colors.primaryWhite
-          : '#DDE6F0',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
     card: {
       width: '100%',
-      maxWidth: 500,
-      backgroundColor: colors.cardBackground,
-      borderRadius: 16,
-      padding: 32,
+      maxWidth: 560,
+      alignSelf: 'center',
       alignItems: 'center',
+      gap: 14,
+      padding: isCompact ? 20 : 32,
+      borderRadius: 16,
+      backgroundColor: colors.cardBackground,
       borderWidth: 1,
       borderColor: colors.borderColor,
       ...Platform.select({
-        ios: {
-          shadowColor: colors.primaryBlack,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-        },
-        android: { elevation: 5 },
-        web: { boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)' },
+        web: { boxShadow: '0px 2px 8px rgba(0,0,0,0.06)' } as object,
+        default: { elevation: 1 },
       }),
     },
-    iconContainer: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      justifyContent: 'center',
+    icon: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
       alignItems: 'center',
-      marginBottom: 24,
+      justifyContent: 'center',
     },
     iconSuccess: {
       backgroundColor: colors.successBackground,
@@ -52,48 +32,107 @@ export const createStyles = (
     iconError: {
       backgroundColor: colors.errorBackground,
     },
+    iconWarning: {
+      backgroundColor: colors.warningBackground,
+    },
     title: {
-      fontSize: 24,
       fontFamily: 'Afacad-Bold',
-      color: colors.primaryBlue,
-      marginBottom: 12,
+      fontSize: isCompact ? 26 : 30,
+      lineHeight: isCompact ? 32 : 36,
+      color: colors.primaryBlack,
       textAlign: 'center',
     },
-    message: {
-      fontSize: 16,
+    text: {
       fontFamily: 'Afacad-Regular',
+      fontSize: 17,
+      lineHeight: 24,
       color: colors.textSecondary,
       textAlign: 'center',
-      marginBottom: 32,
-      lineHeight: 24,
     },
-    button: {
-      width: '100%',
+
+    details: {
+      alignSelf: 'stretch',
+      gap: 12,
+      marginTop: 4,
+      padding: 16,
       borderRadius: 12,
-      paddingVertical: 14,
-      paddingHorizontal: 24,
+      backgroundColor: colors.inputBackground,
+    },
+    detailRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: 12,
+    },
+    detailIcon: {
+      width: 20,
+      alignItems: 'center',
+      paddingTop: 3,
+    },
+    detailTexts: {
+      flex: 1,
+      minWidth: 0,
+    },
+    detailLabel: {
+      fontFamily: 'Afacad-Regular',
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    detailValue: {
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 17,
+      color: colors.primaryBlack,
+    },
+
+    actions: {
+      alignSelf: 'stretch',
+      gap: 10,
+      marginTop: 6,
+    },
+    primaryButton: {
+      minHeight: 52,
+      borderRadius: 12,
       alignItems: 'center',
       justifyContent: 'center',
-      flexDirection: 'row',
-      gap: 8,
-    },
-    buttonText: {
-      color: colors.primaryWhite,
-      fontFamily: 'Afacad-Bold',
-      fontSize: 16,
-    },
-    receiptButton: {
       backgroundColor: colors.primaryOrange,
-      marginBottom: 16,
+      ...Platform.select({ web: { cursor: 'pointer' } as object }),
     },
-    homeButton: {
-      backgroundColor: colors.primaryBlue,
+    primaryButtonText: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 18,
+      color: '#000000',
     },
-    errorButton: {
-      backgroundColor: colors.primaryBlue,
+    secondaryButton: {
+      minHeight: 48,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.primaryBlack,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      ...Platform.select({ web: { cursor: 'pointer' } as object }),
     },
-    buttonDisabled: {
-      opacity: 0.7,
-      backgroundColor: colors.textTertiary,
+    secondaryButtonText: {
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 17,
+      color: colors.primaryBlack,
+    },
+    feedback: {
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 15,
+      color: colors.successText,
+    },
+    feedbackError: {
+      color: colors.errorText,
+    },
+    link: {
+      minHeight: 44,
+      justifyContent: 'center',
+    },
+    linkText: {
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 16,
+      color: colors.primaryBlack,
+      textDecorationLine: 'underline',
     },
   });

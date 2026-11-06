@@ -1,8 +1,7 @@
 import { createStaticNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { FontAwesome } from '@expo/vector-icons';
-import { Platform, Image } from 'react-native';
+import { Platform } from 'react-native';
 import { useColors } from '@theme/ThemeProvider';
 import Feed from './public/Feed';
 import NotFound from './public/NotFound';
@@ -12,193 +11,95 @@ import PartnerProfile from './public/PartnerProfile';
 import { NavigationParams } from './types';
 import Login from './public/Login';
 import Header from '@components/layout/Header';
+import ProfessionalWebNav from '@components/layout/ProfessionalWebNav';
 import { useUserStore } from '@stores/User';
-import { LoginPassword } from './public/LoginPassword';
+import ForgotPassword from './public/ForgotPassword';
 import CategoryScreen from './public/Category';
 import SubCategoryScreen from './public/SubCategoryScreen';
 import SearchResultScreen from './public/SearchResultScreen';
-import CheckoutScreen from './public/CheckoutScreen/CheckoutScreen';
+import CheckoutScreen from './public/CheckoutScreen';
 import PaymentStatusScreen from './public/PaymentStatusScreen';
 import MySchedulesScreen from './private/client/MySchedulesScreen';
 import HelpScreen from '@screens/public/HelpScreen';
+import TermsScreen from '@screens/public/TermsScreen';
 import AboutUsScreen from '@screens/public/AboutUs';
 import AdminDashboard from './private/admin/AdminDashboard';
 import AdminAnalytics from './private/admin/AdminAnalytics';
+import AdminDisputes from './private/admin/AdminDisputes';
+import AdminVerifications from './private/admin/AdminVerifications';
 import ProfessionalDashboard from './private/ProfessionalDashboard';
 import ProfileScreen from '@screens/private/client/Profile/Tabs/ProfileScreen';
 import ServicesListScreen from '@screens/private/professional/Services/ServicesList';
-import ProfessionalRadiusScreen from '@screens/private/professional/RadiusScreen/ProfessionalRadiusScreen';
 import ChatListScreen from '@screens/private/chat/ChatListScreen';
 import ChatThreadScreen from '@screens/private/chat/ChatThreadScreen';
 import ChatBotScreen from '@screens/private/chatbot/ChatBotScreen';
 
 const Tab = createBottomTabNavigator();
 
-const MainTabs = () => {
-  const { user } = useUserStore();
+// A barra padrao das abas fica oculta: os apps usam o BottomNav (renderizado
+// fora dos navegadores em App.tsx) para o menu seguir visivel mesmo quando
+// uma tela e empilhada sobre as abas. Na web a navegacao e pelo Header.
+const useTabScreenOptions = () => {
   const colors = useColors();
-
-  return (
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        sceneStyle: { backgroundColor: colors.cardBackground },
-        tabBarStyle:
-          Platform.OS === 'web'
-            ? { display: 'none' }
-            : {
-                backgroundColor: colors.cardBackground,
-                borderTopWidth: 1,
-                borderTopColor: colors.borderColor,
-                height: 60,
-                paddingBottom: 8,
-                paddingTop: 8,
-              },
-        tabBarActiveTintColor: colors.primaryOrange,
-        tabBarInactiveTintColor: colors.textTertiary,
-        tabBarLabelStyle: {
-          fontFamily: 'Afacad-SemiBold',
-          fontSize: 12,
-        },
-      }}>
-      <Tab.Screen
-        name="FeedTab"
-        component={Feed}
-        options={{
-          title: 'Início',
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="home" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="CategoryTab"
-        component={CategoryScreen}
-        options={{
-          title: 'Buscar',
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="search" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="SchedulesTab"
-        component={MySchedulesScreen}
-        options={{
-          title: 'Agenda',
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="calendar-o" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="ProfileTab"
-        component={ProfileScreen}
-        options={{
-          title: 'Perfil',
-          tabBarIcon: ({ color, size }) =>
-            user?.avatar_uri ? (
-              <Image
-                source={{ uri: user.avatar_uri }}
-                style={{
-                  width: size,
-                  height: size,
-                  borderRadius: size / 2,
-                  borderWidth: 1,
-                  borderColor: color,
-                }}
-              />
-            ) : (
-              <FontAwesome name="user-o" size={size} color={color} />
-            ),
-        }}
-      />
-    </Tab.Navigator>
-  );
+  return {
+    headerShown: false,
+    sceneStyle: { backgroundColor: colors.cardBackground },
+  };
 };
 
-const ProfessionalTabs = () => {
-  const { user } = useUserStore();
-  const colors = useColors();
+const MainTabs = () => (
+  <Tab.Navigator tabBar={() => null} screenOptions={useTabScreenOptions()}>
+    <Tab.Screen name="FeedTab" component={Feed} options={{ title: 'Início' }} />
+    <Tab.Screen
+      name="CategoryTab"
+      component={CategoryScreen}
+      options={{ title: 'Buscar' }}
+    />
+    <Tab.Screen
+      name="SchedulesTab"
+      component={MySchedulesScreen}
+      options={{ title: 'Agenda' }}
+    />
+    <Tab.Screen
+      name="ProfileTab"
+      component={ProfileScreen}
+      options={{ title: 'Perfil' }}
+    />
+  </Tab.Navigator>
+);
 
-  return (
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        sceneStyle: { backgroundColor: colors.cardBackground },
-        tabBarStyle:
-          Platform.OS === 'web'
-            ? { display: 'none' }
-            : {
-                backgroundColor: colors.cardBackground,
-                borderTopWidth: 1,
-                borderTopColor: colors.borderColor,
-                height: 60,
-                paddingBottom: 8,
-                paddingTop: 8,
-              },
-        tabBarActiveTintColor: colors.primaryOrange,
-        tabBarInactiveTintColor: colors.textTertiary,
-        tabBarLabelStyle: {
-          fontFamily: 'Afacad-SemiBold',
-          fontSize: 12,
-        },
-      }}>
-      <Tab.Screen
-        name="ProfessionalHomeTab"
-        component={ProfessionalDashboard}
-        options={{
-          title: 'Início',
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="home" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="ProfessionalSchedulesTab"
-        component={MySchedulesScreen}
-        options={{
-          title: 'Agenda',
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="calendar-o" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="ProfessionalServicesTab"
-        component={ServicesListScreen}
-        options={{
-          title: 'Serviços',
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="wrench" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="ProfessionalProfileTab"
-        component={ProfileScreen}
-        options={{
-          title: 'Perfil',
-          tabBarIcon: ({ color, size }) =>
-            user?.avatar_uri ? (
-              <Image
-                source={{ uri: user.avatar_uri }}
-                style={{
-                  width: size,
-                  height: size,
-                  borderRadius: size / 2,
-                  borderWidth: 1,
-                  borderColor: color,
-                }}
-              />
-            ) : (
-              <FontAwesome name="user-o" size={size} color={color} />
-            ),
-        }}
-      />
-    </Tab.Navigator>
-  );
-};
+// No web, o painel do colaborador ganha uma barra de secoes no topo.
+const ProfessionalTabs = () => (
+  <Tab.Navigator
+    tabBar={(props) =>
+      Platform.OS === 'web' ? <ProfessionalWebNav {...props} /> : null
+    }
+    screenOptions={{
+      ...useTabScreenOptions(),
+      tabBarPosition: 'top',
+    }}>
+    <Tab.Screen
+      name="ProfessionalHomeTab"
+      component={ProfessionalDashboard}
+      options={{ title: 'Início' }}
+    />
+    <Tab.Screen
+      name="ProfessionalSchedulesTab"
+      component={MySchedulesScreen}
+      options={{ title: 'Agenda' }}
+    />
+    <Tab.Screen
+      name="ProfessionalServicesTab"
+      component={ServicesListScreen}
+      options={{ title: 'Serviços' }}
+    />
+    <Tab.Screen
+      name="ProfessionalProfileTab"
+      component={ProfileScreen}
+      options={{ title: 'Perfil' }}
+    />
+  </Tab.Navigator>
+);
 
 // Home: Sempre abre o MainTabs (ou ProfessionalTabs) no Mobile e Feed na Web
 const Home = () => {
@@ -227,15 +128,17 @@ const RootStack = createNativeStackNavigator({
       },
       options: {
         headerShown: false,
+        title: 'Entrar',
       },
     },
-    LoginPassword: {
-      screen: LoginPassword,
+    ForgotPassword: {
+      screen: ForgotPassword,
       linking: {
-        path: 'login-password',
+        path: 'forgot-password',
       },
       options: {
         headerShown: false,
+        title: 'Recuperar senha',
       },
     },
     Feed: {
@@ -263,19 +166,21 @@ const RootStack = createNativeStackNavigator({
       },
       options: {
         headerShown: false,
+        title: 'Criar conta',
       },
     },
     VerificationScreen: {
       screen: VerificationScreen,
       options: {
-        headerShown: false, // Para manter a consistência com as telas de login/registro
+        headerShown: false,
+        title: 'Confirmar e-mail',
       },
     },
     ClientProfile: {
       screen: ProfileScreen,
       linking: {
-        // Use wildcard so any nested path under client-profile is handled by the app
-        path: 'client-profile/*',
+        // /client-profile?subroute=MeusEnderecos (a secao vai na query).
+        path: 'client-profile',
       },
     },
     Category: {
@@ -312,26 +217,19 @@ const RootStack = createNativeStackNavigator({
       screen: CheckoutScreen,
       linking: {
         path: 'checkout', // A URL será algo como /checkout?professionalId=...&time=...
-        parse: {
-          professionalId: (value) => Number(value),
-          serviceId: (value) => Number(value),
-          appointmentId: (value) => Number(value),
-        },
       },
+      // No web, o cabecalho do site continua visivel durante o agendamento.
       options: {
-        headerShown: false, // Opcional: Esconde o header padrão
+        title: 'Pagamento',
       },
     },
     PaymentStatus: {
       screen: PaymentStatusScreen,
       linking: {
         path: 'payment-status', // <-- Esta é a URL de retorno
-        parse: {
-          appointmentId: (value) => Number(value),
-        },
       },
       options: {
-        headerShown: false, // Sem header
+        title: 'Agendamento',
       },
     },
     MySchedules: {
@@ -351,9 +249,26 @@ const RootStack = createNativeStackNavigator({
           ProfessionalProfileTab: 'profile',
         },
       },
+      options: {
+        // No web mostra o cabecalho do site (no app a navegacao e pela barra inferior).
+        headerShown: Platform.OS === 'web',
+        title: 'Painel do colaborador',
+      },
+    },
+    Terms: {
+      screen: TermsScreen,
+      linking: {
+        path: 'terms',
+      },
+      options: {
+        title: 'Termos de uso',
+      },
     },
     Help: {
       screen: HelpScreen,
+      linking: {
+        path: 'help',
+      },
       options: {
         title: 'Central de Ajuda',
       },
@@ -385,10 +300,22 @@ const RootStack = createNativeStackNavigator({
         title: 'Analytics',
       },
     },
-    ProfessionalArea: {
-      screen: ProfessionalRadiusScreen,
+    AdminDisputes: {
+      screen: AdminDisputes,
+      linking: {
+        path: 'admin-disputes',
+      },
       options: {
-        title: 'Área de Atendimento',
+        title: 'Disputas',
+      },
+    },
+    AdminVerifications: {
+      screen: AdminVerifications,
+      linking: {
+        path: 'admin-verifications',
+      },
+      options: {
+        title: 'Verificações',
       },
     },
     ChatList: {

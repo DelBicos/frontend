@@ -1,33 +1,37 @@
 import React from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { View } from 'react-native';
 import { useColors } from '@theme/ThemeProvider';
-import { Conversation } from '@stores/Chat';
-import ChatRoomListPanel from './components/ChatRoomListPanel';
-import { createStyles } from './listStyles';
+import { useThemeStore, ThemeMode } from '@stores/Theme';
+import { CONTENT_MAX_WIDTH, useBreakpoint } from '@lib/hooks/useBreakpoint';
+import ChatInbox from './components/ChatInbox';
 
+/** Rota /chats: caixa de entrada ocupando a altura da tela. */
 const ChatListScreen: React.FC = () => {
-  const navigation = useNavigation();
   const colors = useColors();
-  const styles = createStyles(colors);
-
-  const handleSelectRoom = (room: Conversation) => {
-    // @ts-ignore
-    navigation.navigate('ChatThread', {
-      roomId: room.room_id,
-      correspondent: room.correspondent,
-      serviceTitle: room.service_title,
-      roomStatus: room.status,
-    });
-  };
+  const theme = useThemeStore((s) => s.theme);
+  const { gutter, isCompact } = useBreakpoint();
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ChatRoomListPanel
-        selectedRoomId={null}
-        onSelectRoom={handleSelectRoom}
-      />
-    </SafeAreaView>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor:
+          theme === ThemeMode.LIGHT_HI_CONTRAST
+            ? colors.primaryWhite
+            : colors.secondaryGray,
+        paddingHorizontal: isCompact ? 0 : gutter,
+        paddingVertical: isCompact ? 0 : 24,
+      }}>
+      <View
+        style={{
+          flex: 1,
+          width: '100%',
+          maxWidth: CONTENT_MAX_WIDTH,
+          alignSelf: 'center',
+        }}>
+        <ChatInbox />
+      </View>
+    </View>
   );
 };
 

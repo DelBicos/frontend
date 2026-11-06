@@ -11,6 +11,7 @@ import CustomTextInput from '@components/ui/CustomTextInput';
 import { useColors } from '@theme/ThemeProvider';
 import { createStyles } from './styles';
 
+import type { FieldError } from 'react-hook-form';
 export interface Option {
   label: string;
   value: string;
@@ -22,7 +23,7 @@ interface AutocompleteProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  error?: any;
+  error?: FieldError | string | undefined;
   disabled?: boolean;
   loading?: boolean;
 }

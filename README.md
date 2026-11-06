@@ -168,57 +168,49 @@ O protótipo do DelBicos no Figma serve como uma demonstração visual interativ
 
 ```
 DelBicosV2
-├── 📁 src
-│  ├── 🖼️ assets        # Static assets like images and fonts
-│  ├── 🧩 components    # Reusable React components
-│  │  ├── ✨ features   # Smart components with business logic
-│  │  ├── 🏗️ layout     # Structural components (Header, Footer)
-│  │  └── 🎨 ui           # Dumb, reusable UI components (Button, Input)
-│  ├── ⚙️ config        # Configuration files for the application
-│  │
-│  ├── lib
-│  │  ├── 🧱 constants  # Constants used throughout the application
-│  │  ├── 🔧 helpers    # Helper functions and utilities
-│  │  └── 🪝 hooks      # Custom React hooks
-│  │
-│  ├── 🖥️ screens       # Main screens of the application and navigation
-│  │  ├── 🔐 private    # Private screens requiring authentication
-│  │  └── 🔓 public     # Public screens accessible unauthenticated
-│  │
-│  ├── 💾 stores        # State management using Zustand
-│  └── 🎨 theme         # Theme and styling files
-│
-├── ⚙️ .nvmrc            # NVM configuration file
-├── ⚙️ .prettierrc       # Prettier configuration file
-├── ⚙️ app.json          # Configuration file for the React Native app
-├── ⚙️ eslint.config.js  # ESLint configuration file
-├── 📄 index.js          # Entry point for the React Native app
-├── 📦 package.json      # Lists dependencies and scripts for the project
-├── 📖 README.md         # Project documentation
-└── ⚙️ tsconfig.json     # TypeScript configuration file
+├── src
+│  ├── api             # Legado (auth, chatbot, pagamentos). Chamadas novas vão para as stores
+│  ├── assets          # Imagens e fontes
+│  ├── components
+│  │  ├── features     # Componentes com regra de negócio (agenda, gestão do agendamento...)
+│  │  ├── layout       # Cabeçalho, navegação inferior, container de página
+│  │  └── ui           # Peças reutilizáveis (botão, campos, selo de verificado...)
+│  ├── config          # Variáveis de ambiente do app
+│  ├── hooks           # Hooks reutilizáveis (voz, sockets, sessão do chatbot)
+│  ├── lib             # Integrações de plataforma (HTTP, Stripe, upload, logger) e regras espelhadas do servidor
+│  ├── utils           # Funções puras (erros, formatação, estilos só-web, nomes de ícones)
+│  ├── screens         # Telas e navegação (public / private / admin)
+│  ├── stores          # Estado global (Zustand) e único lugar que fala com a API
+│  └── theme           # Cores e temas (claro, escuro, alto contraste)
+├── patches            # Correções de dependências aplicadas no npm install (patch-package)
+├── docs               # Guias e relatórios
+├── app.json           # Configuração do Expo (plugins, permissões)
+└── .agents/rules      # Regras de arquitetura do projeto (fonte do CLAUDE.md e AGENTS.md)
 ```
+
+> As pastas `ios/` e `android/` são **geradas** (`expo prebuild`) e não são versionadas.
+> `npm run ios` / `npm run android` criam a pasta sozinhos; a fonte de verdade é o `app.json`.
 
 ## ⚙️ Installation
 
-To install the project, follow these steps:
+```bash
+git clone <repository-url>
+cd DelBicosV2
+npm install          # também aplica os patches de patch-package
+cp .env.example .env # se existir; veja src/config/varEnvs.ts para as variáveis
+```
 
-1. Clone the repository:
+Qualidade antes de abrir um PR:
 
-   ```
-   git clone <repository-url>
-   ```
+```bash
+npx tsc --noEmit     # tipos
+npm run lint         # ESLint + Prettier
+npm test             # Jest
+```
 
-2. Navigate to the project directory:
+## 📚 Documentação
 
-   ```
-   cd DelBicosV2
-   ```
-
-3. Install the dependencies:
-
-   ```
-   npm install
-   ```
+Guias e relatórios em [docs/](docs/): contribuição, requisitos (RF03, RF04), inventário do chatbot e relatório do frontend.
 
 ## Running the Project
 
