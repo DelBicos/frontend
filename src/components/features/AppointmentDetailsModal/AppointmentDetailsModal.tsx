@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Modal,
   View,
@@ -8,6 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { AppointmentManagePanel } from '@components/features/AppointmentManage';
+import { ClientTrackingMapModal } from '@components/features/ClientTrackingMapModal/ClientTrackingMapModal';
 import { useColors } from '@theme/ThemeProvider';
 import { Appointment } from '@stores/Appointment/types';
 import { useUserStore } from '@stores/User';
@@ -30,6 +31,7 @@ export function AppointmentDetailsModal({
   const colors = useColors();
   const styles = createStyles(colors);
   const user = useUserStore((state) => state.user);
+  const [showTracking, setShowTracking] = useState(false);
 
   if (!appointment) return null;
 
@@ -77,6 +79,12 @@ export function AppointmentDetailsModal({
         return 'Pendente';
       case 'confirmed':
         return 'Confirmado pelo prestador';
+      case 'in_transit':
+        return 'Profissional a caminho';
+      case 'arrived':
+        return 'Profissional no local';
+      case 'in_progress':
+        return 'Serviço em andamento';
       case 'completed':
         return 'Concluído';
       case 'canceled':
@@ -93,7 +101,11 @@ export function AppointmentDetailsModal({
       case 'pending':
         return colors.warningText;
       case 'confirmed':
+      case 'in_progress':
         return colors.successText;
+      case 'in_transit':
+      case 'arrived':
+        return colors.primaryOrange;
       case 'completed':
         return colors.primaryBlue;
       case 'canceled':
@@ -223,6 +235,39 @@ export function AppointmentDetailsModal({
               </View>
             </View>
 
+            {/* Código de início: só o cliente recebe da API, durante o atendimento. */}
+            {!isProfessionalView &&
+            ['in_transit', 'arrived', 'in_progress'].includes(
+              appointment.status,
+            ) ? (
+              <View style={styles.codeBanner}>
+                <Text style={styles.codeTitle}>
+                  CÓDIGO DE INÍCIO DO SERVIÇO
+                </Text>
+                <Text style={styles.codeHint}>
+                  Informe este código ao profissional quando ele chegar.
+                </Text>
+                <View style={styles.codeBox}>
+                  <Text style={styles.codeText}>
+                    {appointment.verification_code || '----'}
+                  </Text>
+                </View>
+              </View>
+            ) : null}
+
+            {!isProfessionalView &&
+            (appointment.status === 'in_transit' ||
+              appointment.status === 'arrived') ? (
+              <TouchableOpacity
+                style={styles.trackButton}
+                onPress={() => setShowTracking(true)}
+                activeOpacity={0.8}>
+                <Text style={styles.trackButtonText}>
+                  Acompanhar o profissional no mapa
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+
             {/* Botões de ação */}
             <View style={styles.buttonContainer}>
               <TouchableOpacity
@@ -242,6 +287,11 @@ export function AppointmentDetailsModal({
           </ScrollView>
         </View>
       </View>
+      <ClientTrackingMapModal
+        visible={showTracking}
+        onClose={() => setShowTracking(false)}
+        appointment={appointment}
+      />
     </Modal>
   );
 }

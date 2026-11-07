@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { View, ActivityIndicator, Text } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
+import MapView, { Marker, Region } from 'react-native-maps';
 import { MapComponentProps } from '@lib/hooks/types';
 import { useColors } from '@theme/ThemeProvider';
 import { createStyles } from './styles';
@@ -46,7 +46,6 @@ const NativeMapRenderer: React.FC<NativeMapRendererProps> = ({
     <View style={[styles.container, style]}>
       <MapView
         ref={mapRef}
-        provider={PROVIDER_GOOGLE}
         style={styles.map}
         initialRegion={region as Region}
         onPress={handlePress}

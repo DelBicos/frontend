@@ -11,6 +11,7 @@ import { useBreakpoint } from '@lib/hooks/useBreakpoint';
 import { confirmAction } from '@lib/utils/confirmAction';
 import PageContainer from '@components/layout/PageContainer';
 import SectionHeader from '@components/ui/SectionHeader';
+import { TodayVisitCard } from '@components/features/TodayVisitCard';
 import {
   currentMonthEarnings,
   firstName,
@@ -386,6 +387,7 @@ const ProfessionalDashboard: React.FC = () => {
   return (
     <PageContainer>
       {header}
+      <TodayVisitCard appointments={appointments} />
       {kpiSection}
       {isExpanded ? (
         <View style={styles.columns}>

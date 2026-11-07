@@ -8,11 +8,31 @@ import {
   AppointmentStatus,
   AppointmentStore,
   InvoiceData,
+  VisitStepResult,
 } from './types';
 import { useUserStore } from '@stores/User';
 import { backendHttpClient } from '@lib/helpers/httpClient';
 
 import { logger } from '@lib/logger';
+
+/** Mensagem de erro enviada pela API (campo `error`) ou o texto padrão. */
+function apiErrorMessage(error: unknown, fallback: string): string {
+  const data = (error as { response?: { data?: { error?: unknown } } })
+    ?.response?.data;
+  return typeof data?.error === 'string' ? data.error : fallback;
+}
+
+async function runVisitStep(
+  request: () => Promise<unknown>,
+  fallback: string,
+): Promise<VisitStepResult> {
+  try {
+    await request();
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: apiErrorMessage(error, fallback) };
+  }
+}
 export const useAppointmentStore = create<AppointmentStore>()((set) => ({
   appointments: [],
   appointmentsByStatus: {},
@@ -223,4 +243,46 @@ export const useAppointmentStore = create<AppointmentStore>()((set) => ({
     );
     return data ?? null;
   },
+
+  getAppointmentById: async (id) => {
+    try {
+      const { data } = await backendHttpClient.get<Appointment>(
+        `/api/appointments/${id}`,
+      );
+      return data ?? null;
+    } catch (error) {
+      logger.error('Failed to fetch appointment:', error);
+      return null;
+    }
+  },
+
+  markInTransit: (id) =>
+    runVisitStep(
+      () => backendHttpClient.post(`/api/appointments/${id}/in-transit`),
+      'Erro ao atualizar o status para a caminho.',
+    ),
+
+  markArrived: (id, coords) =>
+    runVisitStep(
+      () => backendHttpClient.post(`/api/appointments/${id}/arrived`, coords),
+      'Erro ao confirmar a chegada.',
+    ),
+
+  startService: (id, code) =>
+    runVisitStep(
+      () =>
+        backendHttpClient.post(`/api/appointments/${id}/start-service`, {
+          code,
+        }),
+      'Código incorreto. Peça o código de confirmação ao cliente.',
+    ),
+
+  completeService: (id, code) =>
+    runVisitStep(
+      () =>
+        backendHttpClient.post(`/api/appointments/${id}/complete-service`, {
+          code,
+        }),
+      'Não foi possível concluir o atendimento.',
+    ),
 }));
