@@ -12,7 +12,8 @@
   ],
   "git": {
     "deploymentEnabled": {
-      "main": true
+      "main": true,
+      "stag": true
     }
   },
   "github": {
