@@ -1,0 +1,74 @@
+name: Deploy do site no Azure Storage (site estático)
+
+# Publica o site no "Static website" de uma storage account do Azure.
+# Alternativa ao Static Web App, que não está disponível nas regiões
+# permitidas para as assinaturas de estudante.
+# Precisa de:
+#   - secret   AZURE_WEB_STORAGE_CONNECTION_STRING (connection string da storage account)
+#   - variável BACKEND_DOMAIN (host do backend no Azure, sem https)
+# Sem o secret, o job é pulado sem falhar.
+
+on:
+  push:
+    branches:
+      - stag
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build (expo export) e upload para o container $web
+    runs-on: ubuntu-latest
+    env:
+      EXPO_PUBLIC_ENVIRONMENT: production
+      EXPO_PUBLIC_DOMAIN_WEB: ${{ vars.BACKEND_DOMAIN }}
+      EXPO_PUBLIC_DOMAIN_ANDROID: ${{ vars.BACKEND_DOMAIN }}
+      EXPO_PUBLIC_DOMAIN_IOS: ${{ vars.BACKEND_DOMAIN }}
+      EXPO_PUBLIC_HTTP_PROTOCOL: https
+      EXPO_PUBLIC_WS_PROTOCOL: wss
+      EXPO_PUBLIC_PORT: ""
+      # Chaves públicas (vão para o navegador de qualquer forma); ficam em Variables do repositório.
+      EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ vars.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+      EXPO_PUBLIC_GOOGLE_MAPS_API_KEY: ${{ vars.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY }}
+      EXPO_PUBLIC_LOCATIONIQ_API_KEY: ${{ vars.EXPO_PUBLIC_LOCATIONIQ_API_KEY }}
+      EXPO_PUBLIC_UNSPLASH_API_KEY: ${{ vars.EXPO_PUBLIC_UNSPLASH_API_KEY }}
+      EXPO_PUBLIC_GOOGLE_ANALYTICS_ID: ${{ vars.EXPO_PUBLIC_GOOGLE_ANALYTICS_ID }}
+      EXPO_PUBLIC_CLARITY_ID: ${{ vars.EXPO_PUBLIC_CLARITY_ID }}
+    steps:
+      - name: Conferir se a storage está configurada
+        id: storage
+        env:
+          CONNECTION_STRING: ${{ secrets.AZURE_WEB_STORAGE_CONNECTION_STRING }}
+        run: |
+          if [ -z "$CONNECTION_STRING" ] || [ -z "$EXPO_PUBLIC_DOMAIN_WEB" ]; then
+            echo "Secret AZURE_WEB_STORAGE_CONNECTION_STRING ou variável BACKEND_DOMAIN ausente: pulando."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.storage.outputs.configured == 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.storage.outputs.configured == 'true'
+        with:
+          node-version: "20.x"
+          cache: npm
+
+      - name: Instalar dependências
+        if: steps.storage.outputs.configured == 'true'
+        run: npm ci
+
+      - name: Gerar o site (web)
+        if: steps.storage.outputs.configured == 'true'
+        run: npx expo export --platform web
+
+      - name: Publicar no container $web
+        if: steps.storage.outputs.configured == 'true'
+        env:
+          AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_WEB_STORAGE_CONNECTION_STRING }}
+        run: |
+          az storage blob upload-batch --destination '$web' --source dist --overwrite --only-show-errors
+          # index.html sem cache, para cada deploy aparecer na hora.
+          az storage blob update --container-name '$web' --name index.html \
+            --content-cache-control "no-cache" --content-type "text/html" --only-show-errors
