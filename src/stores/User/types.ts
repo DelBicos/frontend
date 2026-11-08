@@ -18,6 +18,16 @@ export type User = {
   mfa_enabled?: boolean;
   /** Profissional com identidade aprovada (selo de verificado). */
   professional_verified?: boolean;
+  /** Consentimento LGPD para rastrear a localização durante o atendimento. */
+  location_consent_accepted?: boolean;
+  location_consent_at?: string | null;
+  location_consent_revoked_at?: string | null;
+};
+
+export type LocationConsentStatus = {
+  accepted: boolean;
+  accepted_at: string | null;
+  revoked_at: string | null;
 };
 
 export type Address = {
@@ -93,6 +103,9 @@ export type UserStore = {
     newPassword: string,
   ) => Promise<void>;
   signOut: () => void;
+  getLocationConsent: () => Promise<LocationConsentStatus>;
+  acceptLocationConsent: () => Promise<void>;
+  revokeLocationConsent: () => Promise<void>;
   uploadAvatar: (base64Image: string) => Promise<UploadAvatarResponse>;
   removeAvatar: () => Promise<ErrorResponse>;
   becomeProfessional: (data: {

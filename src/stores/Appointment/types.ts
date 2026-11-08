@@ -1,6 +1,9 @@
 export enum AppointmentStatus {
   PENDING = 'pending',
   CONFIRMED = 'confirmed',
+  IN_TRANSIT = 'in_transit',
+  ARRIVED = 'arrived',
+  IN_PROGRESS = 'in_progress',
   COMPLETED = 'completed',
   CANCELED = 'canceled',
   NO_SHOW = 'no_show',
@@ -91,6 +94,12 @@ export interface Appointment {
   start_time: string;
   end_time: string;
   completed_at?: string | null;
+  arrived_at?: string | null;
+  started_at?: string | null;
+  /** Id numérico interno: usado para entrar na sala de rastreamento do socket. */
+  numeric_id?: number;
+  /** Código de início do atendimento: a API só envia ao cliente. */
+  verification_code?: string | null;
   final_price?: number | null;
   status: AppointmentStatus;
   createdAt: string;
@@ -183,6 +192,19 @@ export interface AppointmentStore {
     input: { reason: DisputeReason; description: string },
   ) => Promise<Dispute>;
   getDispute: (id: AppointmentId) => Promise<Dispute | null>;
+
+  // Atendimento em domicílio: a caminho -> chegou -> início -> conclusão
+  getAppointmentById: (id: AppointmentId) => Promise<Appointment | null>;
+  markInTransit: (id: AppointmentId) => Promise<VisitStepResult>;
+  markArrived: (
+    id: AppointmentId,
+    coords: { latitude?: number; longitude?: number },
+  ) => Promise<VisitStepResult>;
+  startService: (id: AppointmentId, code: string) => Promise<VisitStepResult>;
+  completeService: (
+    id: AppointmentId,
+    code: string,
+  ) => Promise<VisitStepResult>;
 }
 
 // --- Cancelamento, reagendamento e disputas ---
@@ -240,4 +262,10 @@ export interface AdminDispute extends Dispute {
     Client?: { User?: { name: string; email: string } };
     Professional?: { User?: { name: string; email: string } };
   };
+}
+
+/** Resultado de cada etapa do atendimento em domicílio. */
+export interface VisitStepResult {
+  success: boolean;
+  error?: string;
 }

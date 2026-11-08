@@ -88,6 +88,15 @@ export type NavigationParams = {
     roomStatus?: ChatRoomStatus;
   };
   ChatBot: undefined;
+  DeslocamentoScreen: {
+    appointmentId: number | string;
+    serviceTitle?: string;
+    clientName?: string;
+    clientPhone?: string;
+    address?: string;
+    startTime?: string;
+    status?: string;
+  };
 };
 
 /**
