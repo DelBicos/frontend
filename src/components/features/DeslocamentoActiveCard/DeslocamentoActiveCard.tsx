@@ -10,6 +10,7 @@ export interface DeslocamentoActiveCardProps {
   startTime?: string;
   inProgress: boolean;
   arrived: boolean;
+  completed?: boolean;
   onOpenMap: () => void;
 }
 
@@ -20,6 +21,7 @@ export const DeslocamentoActiveCard: React.FC<DeslocamentoActiveCardProps> = ({
   startTime,
   inProgress,
   arrived,
+  completed = false,
   onOpenMap,
 }) => {
   const colors = useColors();
@@ -86,7 +88,31 @@ export const DeslocamentoActiveCard: React.FC<DeslocamentoActiveCardProps> = ({
       </View>
 
       {/* Banner de Dica / Status */}
-      {inProgress ? (
+      {completed ? (
+        <View
+          style={[
+            styles.tipBox,
+            {
+              borderColor: colors.primaryGreen,
+              backgroundColor: colors.successBackground,
+            },
+          ]}>
+          <Ionicons
+            name="checkmark-done-circle"
+            size={24}
+            color={colors.primaryGreen}
+            style={styles.tipIcon}
+          />
+          <View style={styles.tipContent}>
+            <Text style={[styles.tipTitle, { color: colors.successText }]}>
+              Atendimento Concluído 🎉
+            </Text>
+            <Text style={[styles.tipSub, { color: colors.successText }]}>
+              Check-out realizado. O cliente já pode avaliar o serviço.
+            </Text>
+          </View>
+        </View>
+      ) : inProgress ? (
         <View
           style={[
             styles.tipBox,
