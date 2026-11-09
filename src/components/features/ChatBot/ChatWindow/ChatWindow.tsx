@@ -31,6 +31,7 @@ import { ChatErrorBanner } from './ChatErrorBanner';
 import { AppointmentStatusBanner } from './AppointmentStatusBanner';
 import { useAppointmentPolling } from './hooks/useAppointmentPolling';
 import { useRateLimitCountdown } from './hooks/useRateLimitCountdown';
+import { useSilenceDetection } from './hooks/useSilenceDetection';
 import { createStyles } from './styles';
 
 interface ChatWindowProps {
@@ -88,6 +89,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     isRecording,
     isPreparing: isVoicePreparing,
     durationMillis: recordingDurationMillis,
+    meteringDb,
     startRecording,
     stopRecording,
     cancelRecording,
@@ -191,6 +193,16 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       // cancelamento silencioso
     }
   }, [cancelRecording]);
+
+  // Envia sozinho depois de uma pausa na fala, sem precisar tocar de novo.
+  const silenceDetected = useSilenceDetection(isRecording, meteringDb);
+  useEffect(() => {
+    if (!isRecording || !silenceDetected || voiceLimitHandledRef.current) {
+      return;
+    }
+    voiceLimitHandledRef.current = true;
+    void handleVoicePress();
+  }, [handleVoicePress, isRecording, silenceDetected]);
 
   // Evita que um toque esquecido ultrapasse o limite recomendado de 60 s.
   useEffect(() => {
