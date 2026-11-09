@@ -1,175 +1,276 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import { ColorsType } from '@theme/types';
-
-import { webStyle } from '@utils/webStyle';
-const GAP = 16;
 
 export const createStyles = (
   colors: ColorsType,
-  isCompact: boolean,
-  isExpanded: boolean,
+  isMobile: boolean = false,
+  isDark: boolean = false,
+  isHighContrast: boolean = false,
 ) =>
   StyleSheet.create({
-    // --- Apresentacao ---
-    hero: {
-      flexDirection: isExpanded ? 'row' : 'column',
-      alignItems: 'center',
-      gap: isExpanded ? 48 : 24,
-      marginBottom: isCompact ? 40 : 64,
+    container: {
+      flex: 1,
+      backgroundColor: isDark
+        ? colors.secondaryGray
+        : isHighContrast
+          ? colors.primaryWhite
+          : '#DDE6F0',
     },
-    heroTexts: {
-      flex: isExpanded ? 1 : undefined,
-      alignSelf: 'stretch',
-      gap: 12,
+    contentContainer: {
+      paddingBottom: 40,
     },
-    eyebrow: {
+
+    // Title
+    pageTitle: {
+      fontSize: isMobile ? 36 : 62,
       fontFamily: 'Afacad-Bold',
-      fontSize: 14,
-      letterSpacing: 1.2,
-      textTransform: 'uppercase',
-      color: colors.textSecondary,
+      color: colors.primaryOrange,
+      textAlign: 'center',
+      paddingTop: isMobile ? 16 : 20,
     },
-    heroTitle: {
-      fontFamily: 'Afacad-Bold',
-      fontSize: isCompact ? 32 : 44,
-      lineHeight: isCompact ? 38 : 52,
-      color: colors.primaryBlack,
-      marginBottom: 4,
+
+    missionWrapper: {
+      marginHorizontal: isMobile ? 8 : 16,
+      marginBottom: 24,
     },
-    paragraph: {
-      fontFamily: 'Afacad-Regular',
-      fontSize: isCompact ? 17 : 19,
-      lineHeight: isCompact ? 26 : 29,
-      color: colors.textSecondary,
+    // Foto ao lado do texto no desktop, acima do texto no mobile.
+    missionRow: {
+      flexDirection: isMobile ? 'column' : 'row',
+      alignItems: isMobile ? 'stretch' : 'center',
+      gap: isMobile ? 16 : 32,
+      padding: isMobile ? 16 : 28,
     },
-    heroPhotoWrapper: {
-      flex: isExpanded ? 1 : undefined,
-      width: isExpanded ? undefined : '100%',
-      maxWidth: 560,
+    // A proporcao fica no contêiner: o Image do RN web ignora aspectRatio e
+    // usa a altura intrinseca do arquivo.
+    missionPhotoCol: {
+      // 70% do tamanho anterior (100% no mobile, 40% no desktop).
+      width: isMobile ? '70%' : '28%',
       alignSelf: 'center',
+      aspectRatio: 1024 / 768,
+      borderRadius: 20,
+      borderWidth: isHighContrast ? 4 : 3,
+      borderColor: colors.primaryOrange,
+      overflow: 'hidden',
+    },
+    teamPhoto: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
     },
 
-    section: {
-      marginBottom: isCompact ? 40 : 64,
+    // Mission Card
+    missionCard: {
+      flexDirection: 'column',
+      width: '100%',
+      flexShrink: 0,
+      borderRadius: 25,
+      backgroundColor: isDark ? colors.cardBackground : '#FFFFFF',
+      marginTop: isMobile ? 15 : 10,
+      borderWidth: isHighContrast ? 3 : isDark ? 0 : 1,
+      borderColor: isHighContrast ? colors.primaryBlack : colors.borderColor,
+      overflow: 'hidden',
+      ...Platform.select({
+        ios: {
+          shadowColor: colors.primaryBlack,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 6,
+        },
+        android: {
+          elevation: 3,
+        },
+        web: {},
+      }),
+    },
+    missionTextCol: {
+      flex: 1,
+      justifyContent: 'center',
+      gap: isMobile ? 8 : 12,
+    },
+    missionText: {
+      fontSize: isMobile ? 16 : 24,
+      fontFamily: 'Afacad-Bold',
+      color: colors.primaryBlack,
+      lineHeight: isMobile ? 22 : 28,
+      textAlign: 'justify',
     },
 
-    // --- Valores ---
+    // Values ("No que acreditamos")
+    valuesSection: {
+      marginHorizontal: isMobile ? 8 : 16,
+      marginBottom: 24,
+    },
+    valuesTitle: {
+      fontSize: isMobile ? 28 : 40,
+      fontFamily: 'Afacad-Bold',
+      color: colors.primaryOrange,
+      textAlign: 'center',
+      marginBottom: isMobile ? 10 : 14,
+    },
     valuesRow: {
-      flexDirection: isCompact ? 'column' : 'row',
-      gap: GAP,
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: isMobile ? 10 : 12,
     },
     valueCard: {
-      flex: isCompact ? undefined : 1,
-      gap: 8,
-      padding: 22,
-      borderRadius: 18,
+      flex: isMobile ? undefined : 1,
+      gap: 4,
+      padding: isMobile ? 12 : 16,
+      borderRadius: 12,
+      borderWidth: isHighContrast ? 3 : 1,
+      borderColor: isHighContrast ? colors.primaryBlack : colors.borderColor,
       backgroundColor: colors.cardBackground,
-      borderWidth: 1,
-      borderColor: colors.borderColor,
+      ...Platform.select({
+        ios: {
+          shadowColor: colors.primaryBlack,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.06,
+          shadowRadius: 4,
+        },
+        android: {
+          elevation: 2,
+        },
+        web: {},
+      }),
     },
     valueIcon: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
+      width: 38,
+      height: 38,
+      borderRadius: 19,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: colors.primaryOrange,
-      marginBottom: 4,
     },
     valueTitle: {
+      fontSize: isMobile ? 19 : 24,
       fontFamily: 'Afacad-Bold',
-      fontSize: 20,
       color: colors.primaryBlack,
     },
     valueText: {
+      fontSize: isMobile ? 14 : 17,
       fontFamily: 'Afacad-Regular',
-      fontSize: 16,
-      lineHeight: 23,
-      color: colors.textSecondary,
+      color: colors.primaryBlack,
+      lineHeight: isMobile ? 20 : 23,
     },
 
-    // --- Equipe ---
-    teamGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      marginHorizontal: -GAP / 2,
-      rowGap: GAP,
-    },
-    teamCell: {
-      paddingHorizontal: GAP / 2,
-    },
-    devCard: {
-      // Cresce ate a altura da linha (cards alinhados), sem altura em %.
-      flexGrow: 1,
-      alignItems: 'center',
-      padding: 20,
-      borderRadius: 18,
-      backgroundColor: colors.cardBackground,
-      borderWidth: 1,
-      borderColor: colors.borderColor,
-    },
-    devPhoto: {
-      width: 132,
-      height: 132,
-      marginBottom: 8,
-    },
-    devName: {
-      fontFamily: 'Afacad-Bold',
-      fontSize: 20,
-      textAlign: 'center',
-      color: colors.primaryBlack,
-    },
-    devRole: {
-      fontFamily: 'Afacad-SemiBold',
-      fontSize: 15,
-      textAlign: 'center',
-      color: colors.textSecondary,
+    //  Developers Banner
+    developersBanner: {
+      backgroundColor: colors.primaryBlue,
+      paddingVertical: 10,
+      paddingHorizontal: 10,
       marginBottom: 10,
+      alignItems: 'center',
     },
-    devBio: {
-      fontFamily: 'Afacad-Regular',
-      fontSize: 15,
-      lineHeight: 22,
-      textAlign: 'center',
-      color: colors.textSecondary,
+    developersBannerTitle: {
+      fontSize: isMobile ? 36 : 60,
+      fontFamily: 'Afacad-Bold',
+      color: isDark ? colors.primaryBlack : colors.primaryWhite,
+      letterSpacing: 0.5,
     },
-    readMore: {
-      minHeight: 44,
-      justifyContent: 'center',
-      paddingHorizontal: 8,
-      ...webStyle({ cursor: 'pointer' }),
+
+    //  Developer Card
+    developerCard: {
+      flexDirection: isMobile ? 'column' : 'row',
+      marginHorizontal: isMobile ? 8 : 16,
+      marginBottom: 16,
+      borderRadius: 12,
+      borderWidth: isHighContrast ? 3 : 1,
+      borderColor: isHighContrast ? colors.primaryBlack : colors.borderColor,
+      backgroundColor:
+        isDark || isHighContrast ? colors.cardBackground : 'transparent',
+      padding: isMobile ? 12 : 16,
+      gap: isMobile ? 10 : 14,
+      ...Platform.select({
+        ios: {
+          shadowColor: colors.primaryBlack,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.06,
+          shadowRadius: 4,
+        },
+        android: {
+          elevation: 2,
+        },
+        web: {},
+      }),
     },
-    readMoreText: {
-      fontFamily: 'Afacad-SemiBold',
-      fontSize: 15,
-      color: colors.primaryBlack,
-      textDecorationLine: 'underline',
+    developerCardReversed: {
+      flexDirection: isMobile ? 'column' : 'row-reverse',
     },
-    devLinks: {
+    developerPhotoWrapper: {
+      alignItems: 'center',
+    },
+    developerPhoto: {
+      width: isMobile ? 250 : 350,
+      height: isMobile ? 250 : 350,
+      borderRadius: isMobile ? 60 : 0,
+    },
+    developerSocialIcons: {
       flexDirection: 'row',
       gap: 8,
-      marginTop: 'auto',
-      paddingTop: 4,
-    },
-    devLink: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
       alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: colors.borderColor,
-      ...webStyle({ cursor: 'pointer' }),
     },
-    devLinkActive: {
-      borderColor: colors.primaryOrange,
-      backgroundColor: colors.inputBackground,
+    socialIconButton: {
+      padding: 2,
+    },
+    socialIcon: {
+      width: isMobile ? 24 : 30,
+      height: isMobile ? 24 : 30,
+    },
+    socialIconDisabled: {
+      opacity: 0.3,
+    },
+    developerInfo: {
+      flex: 1,
+    },
+    developerName: {
+      fontSize: isMobile ? 22 : 40,
+      fontFamily: 'Afacad-Bold',
+      color: colors.primaryOrange,
+      marginBottom: 2,
+    },
+    developerNameReversed: {
+      textAlign: isMobile ? 'left' : 'right',
+    },
+    developerRoleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: isMobile ? 10 : 18,
+      marginBottom: 8,
+      flexWrap: 'wrap',
+    },
+    developerRoleRowReversed: {
+      flexDirection: isMobile ? 'row' : 'row-reverse',
+    },
+    developerRole: {
+      fontSize: isMobile ? 16 : 30,
+      fontFamily: 'Afacad-SemiBold',
+      color: colors.primaryBlack,
+    },
+    developerBio: {
+      fontSize: isMobile ? 14 : 30,
+      fontFamily: 'Afacad-Regular',
+      color: colors.primaryBlack,
+      lineHeight: isMobile ? 20 : 37,
+      textAlign: 'justify',
     },
 
+    // Separator line between developer cards
+    separatorLine: {
+      width: '100%',
+      height: isMobile ? 40 : 70,
+    },
+    separatorLineReversed: {
+      transform: [{ scaleX: -1 }],
+    },
+
+    // Footer
     footer: {
-      fontFamily: 'Afacad-Regular',
-      fontSize: 14,
+      padding: 20,
       textAlign: 'center',
-      color: colors.textSecondary,
+      fontSize: 12,
+      fontFamily: 'Afacad-Regular',
+      color: colors.textTertiary,
+      marginTop: 8,
     },
   });
