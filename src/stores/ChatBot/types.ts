@@ -9,6 +9,7 @@ export type ChatBotState =
   | 'COLETANDO_SERVICO'
   | 'COLETANDO_DATA'
   | 'COLETANDO_HORARIO'
+  | 'COLETANDO_ENDERECO'
   | 'VERIFICANDO_DISPONIBILIDADE'
   | 'SELECIONANDO_PROFISSIONAL'
   | 'CONFIRMACAO'
@@ -135,6 +136,10 @@ export interface ChatBotContext {
   appointmentId?: number;
   appointmentStatus?: 'pending' | 'confirmed' | 'completed' | 'canceled';
   appointmentPaid?: boolean;
+  bookingDetailsStep?: 'ADDRESS' | 'REVIEW';
+  addressId?: number;
+  addressLabel?: string;
+  addressOptions?: { id: number; label: string }[];
   pendingService?: ChatBotServiceOption | null;
   matchedServiceIds?: number[];
 }
