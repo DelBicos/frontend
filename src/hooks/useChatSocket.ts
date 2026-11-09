@@ -22,6 +22,9 @@ export interface OptimisticMeta {
   sentAt: string;
 }
 
+/** Sem confirmação do servidor nesse prazo, a mensagem conta como não enviada. */
+const SEND_ACK_TIMEOUT_MS = 10_000;
+
 export function useChatSocket({ roomId, onMessage }: UseChatSocketOptions) {
   const token = useUserStore((s) => s.token);
   const user = useUserStore((s) => s.user);
@@ -68,27 +71,48 @@ export function useChatSocket({ roomId, onMessage }: UseChatSocketOptions) {
   /**
    * Envia uma mensagem via socket gerando o UUID e a data-hora no cliente.
    * Retorna os metadados para o caller montar a mensagem otimista.
+   * `onFailure` roda quando o servidor recusa ou não confirma a tempo.
+   * Para reenviar, passe `retry` com os metadados originais: o servidor é
+   * idempotente pelo `clientMessageUuid`.
    */
   const sendMessage = useCallback(
-    (text: string): OptimisticMeta | null => {
+    (
+      text: string,
+      onFailure?: (meta: OptimisticMeta) => void,
+      retry?: OptimisticMeta,
+    ): OptimisticMeta | null => {
       const socket = socketRef.current;
       const trimmed = text.trim();
       if (!trimmed || !user) return null;
 
-      const clientMessageUuid = String(uuid.v4());
-      const sentAt = new Date().toISOString();
+      const meta: OptimisticMeta = retry ?? {
+        clientMessageUuid: String(uuid.v4()),
+        sentAt: new Date().toISOString(),
+      };
 
-      socket?.emit(
-        'message:send',
-        { roomId, clientMessageUuid, text: trimmed, sentAt },
-        (resp: SocketAck) => {
-          if (!resp?.ok) {
-            logger.warn('Falha ao enviar mensagem:', resp?.error);
-          }
-        },
-      );
+      if (!socket) {
+        // Avisa depois do return, quando a mensagem otimista já está na tela.
+        queueMicrotask(() => onFailure?.(meta));
+        return meta;
+      }
 
-      return { clientMessageUuid, sentAt };
+      socket
+        .timeout(SEND_ACK_TIMEOUT_MS)
+        .emit(
+          'message:send',
+          { roomId, text: trimmed, ...meta },
+          (err: Error | null, resp?: SocketAck) => {
+            if (err || !resp?.ok) {
+              logger.warn(
+                'Falha ao enviar mensagem:',
+                err?.message ?? resp?.error,
+              );
+              onFailure?.(meta);
+            }
+          },
+        );
+
+      return meta;
     },
     [roomId, user],
   );
