@@ -1,62 +1,65 @@
-import { StyleSheet, Platform } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { ColorsType } from '@theme/types';
 
-import { webStyle } from '@utils/webStyle';
 export const createStyles = (
   colors: ColorsType,
   isMobile: boolean,
-  isDark: boolean,
-) =>
-  StyleSheet.create({
+  isLightTheme: boolean,
+) => {
+  const shellBackground = isLightTheme
+    ? colors.pageBackground
+    : colors.secondaryGray;
+
+  return StyleSheet.create({
     // --- WEB (barra lateral + conteudo) ---
     desktopContainer: {
       flex: 1,
-      backgroundColor: colors.secondaryGray,
+      backgroundColor: shellBackground,
       overflow: 'hidden',
     },
     desktopWrapper: {
       flex: 1,
+      minHeight: 0,
       flexDirection: 'row',
       width: '100%',
       alignSelf: 'center',
       paddingTop: 32,
+      paddingBottom: 24,
       gap: 32,
       overflow: 'hidden',
     },
     desktopSidebar: {
       width: 272,
-      alignSelf: 'flex-start',
+      alignSelf: 'stretch',
+      minHeight: 0,
       padding: 12,
       borderRadius: 16,
       borderWidth: 1,
       borderColor: colors.borderColor,
       backgroundColor: colors.cardBackground,
-      ...webStyle({ maxHeight: 'calc(100vh - 200px)' }),
     },
     // As telas trazem seus proprios cartoes; aqui so a area de rolagem.
     desktopMainContent: {
       flex: 1,
       minWidth: 0,
+      minHeight: 0,
     },
     desktopMainContentFill: {
+      flex: 1,
       minHeight: 0,
-      ...Platform.select({
-        // 147px = header + pesquisar, 48px = desktopWrapper padding (24px top + 24px bottom)
-        web: webStyle({
-          height: 'calc(100vh - 195px)',
-          maxHeight: 'calc(100vh - 195px)',
-        }),
-        default: {},
-      }),
     },
     desktopContentScroll: {
+      flexGrow: 1,
       paddingBottom: 48,
+    },
+    desktopContentScrollView: {
+      flex: 1,
     },
 
     // --- CELULAR ---
     mobileContainer: {
       flex: 1,
-      backgroundColor: colors.secondaryGray,
+      backgroundColor: shellBackground,
     },
     mobileHeader: {
       minHeight: 56,
@@ -84,8 +87,12 @@ export const createStyles = (
     mobileContentScroll: {
       flexGrow: 1,
     },
+    mobileContentScrollView: {
+      flex: 1,
+    },
     mobileMenuScroll: {
       paddingTop: 20,
       paddingBottom: 40,
     },
   });
+};

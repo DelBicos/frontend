@@ -47,8 +47,8 @@ const ProfileWrapper: React.FC<{ user: UserProfileProps }> = ({ user }) => {
 
   const colors = useColors();
   const { theme } = useThemeStore();
-  const isDark = theme === ThemeMode.DARK;
-  const styles = createStyles(colors, isMobile, isDark);
+  const isLightTheme = theme === ThemeMode.LIGHT;
+  const styles = createStyles(colors, isMobile, isLightTheme);
 
   const params = route.params as ClientProfileRouteParams;
 
@@ -136,6 +136,7 @@ const ProfileWrapper: React.FC<{ user: UserProfileProps }> = ({ user }) => {
           </View>
 
           <ScrollView
+            style={styles.mobileContentScrollView}
             contentContainerStyle={[
               styles.mobileContentScroll,
               { padding: gutter },
@@ -192,6 +193,7 @@ const ProfileWrapper: React.FC<{ user: UserProfileProps }> = ({ user }) => {
             renderContent()
           ) : (
             <ScrollView
+              style={styles.desktopContentScrollView}
               contentContainerStyle={styles.desktopContentScroll}
               showsVerticalScrollIndicator={Platform.OS === 'web'}>
               {renderContent()}

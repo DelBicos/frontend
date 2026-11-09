@@ -263,7 +263,7 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
           />
         ) : (
           <View style={styles.headerAvatarFallback}>
-            <FontAwesome name="user" size={18} color="#000000" />
+            <FontAwesome name="user" size={18} color={colors.textOnAccent} />
           </View>
         )}
 
@@ -344,7 +344,7 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
               disabled={!input.trim()}
               accessibilityRole="button"
               accessibilityLabel="Enviar mensagem">
-              <FontAwesome name="send" size={18} color="#000000" />
+              <FontAwesome name="send" size={14} color={colors.textOnAccent} />
             </TouchableOpacity>
           </View>
         )}

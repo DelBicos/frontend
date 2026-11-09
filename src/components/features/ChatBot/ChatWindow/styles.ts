@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { ColorsType } from '@theme/types';
 
 export const createStyles = (colors: ColorsType) =>
@@ -181,6 +181,9 @@ export const createStyles = (colors: ColorsType) =>
       paddingHorizontal: 16,
       fontSize: 15,
       fontFamily: 'Afacad-Regular',
+      ...Platform.select({
+        web: { outlineStyle: 'none' } as object,
+      }),
     },
     sendButton: {
       width: 42,

@@ -3,6 +3,8 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { MaterialIcons } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
+import { useThemeStore } from '@stores/Theme';
+import { ThemeMode } from '@stores/Theme/types';
 import { ColorsType } from '@theme/types';
 import { useBreakpoint } from '@lib/hooks/useBreakpoint';
 import { ProfileExtras } from '../ProfileWrapper/ProfileMobileHome';
@@ -12,7 +14,8 @@ import type { AppNavigation } from '@screens/types';
 /** Aba Perfil sem login: convite para entrar + tema e ajuda. */
 export const UnauthenticatedProfileView: React.FC = () => {
   const colors = useColors();
-  const styles = createStyles(colors);
+  const theme = useThemeStore((s) => s.theme);
+  const styles = createStyles(colors, theme === ThemeMode.LIGHT);
   const navigation = useNavigation<AppNavigation>();
   const { gutter } = useBreakpoint();
 
@@ -64,11 +67,13 @@ export const UnauthenticatedProfileView: React.FC = () => {
   );
 };
 
-const createStyles = (colors: ColorsType) =>
+const createStyles = (colors: ColorsType, isLightTheme: boolean) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.secondaryGray,
+      backgroundColor: isLightTheme
+        ? colors.pageBackground
+        : colors.secondaryGray,
     },
     content: {
       paddingTop: 20,

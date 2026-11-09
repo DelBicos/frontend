@@ -33,7 +33,7 @@ export const createStyles = (colors: ColorsType) =>
       }),
     },
     menuItemHovered: {
-      backgroundColor: colors.inputBackground,
+      backgroundColor: colors.primaryOrange,
     },
     activeMenuItem: {
       backgroundColor: colors.inputBackground,
