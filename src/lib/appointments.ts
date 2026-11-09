@@ -193,6 +193,12 @@ export function groupAgenda(
         else if (role === 'professional') groups.toComplete.push(a);
         else groups.history.push(a);
         break;
+      // Atendimento em domicilio em curso: continua em "Proximos".
+      case AppointmentStatus.IN_TRANSIT:
+      case AppointmentStatus.ARRIVED:
+      case AppointmentStatus.IN_PROGRESS:
+        groups.upcoming.push(a);
+        break;
       case AppointmentStatus.COMPLETED:
       case AppointmentStatus.NO_SHOW:
         groups.history.push(a);

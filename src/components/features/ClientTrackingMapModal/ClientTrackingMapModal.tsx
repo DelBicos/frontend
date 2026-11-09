@@ -4,10 +4,7 @@ import {
   View,
   Text,
   TouchableOpacity,
-  StyleSheet,
   Linking,
-  Image,
-  ActivityIndicator,
   ScrollView,
 } from 'react-native';
 import { Ionicons, FontAwesome, FontAwesome5 } from '@expo/vector-icons';
@@ -20,16 +17,13 @@ import {
   LocationArrivedEvent,
 } from '@hooks/useLocationSocket';
 import { styles } from './styles';
+import { LiveTrackingMap } from './LiveTrackingMap';
 
 interface ClientTrackingMapModalProps {
   visible: boolean;
   onClose: () => void;
   appointment: Appointment | null;
 }
-
-const GOOGLE_MAPS_API_KEY =
-  process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ||
-  'AIzaSyCtayctpZpx9eot7Iv3t2-TYkrUlZbEnpo';
 
 function calculateDistanceInMeters(
   lat1: number,
@@ -67,7 +61,6 @@ export const ClientTrackingMapModal: React.FC<ClientTrackingMapModalProps> = ({
   const [liveStatus, setLiveStatus] = useState<string>(
     appointment?.status || 'in_transit',
   );
-  const [mapLoading, setMapLoading] = useState<boolean>(true);
   const [proximityAlert, setProximityAlert] = useState<string | null>(null);
 
   // Socket escutando atualizações de geolocalização a cada 5 segundos, alertas de 5 min e evento de chegada
@@ -121,19 +114,6 @@ export const ClientTrackingMapModal: React.FC<ClientTrackingMapModalProps> = ({
 
   const estimatedMinutes = Math.max(1, Math.ceil(distanceMeters / 300));
 
-  const centerLat = hasLiveCoords ? (destLat + currentProfLat) / 2 : destLat;
-  const centerLng = hasLiveCoords ? (destLng + currentProfLng) / 2 : destLng;
-
-  const markersParam = hasLiveCoords
-    ? `&markers=color:0x2563EB%7Clabel:H%7C${destLat},${destLng}&markers=color:0xFF6B00%7Clabel:C%7C${currentProfLat},${currentProfLng}`
-    : `&markers=color:0x2563EB%7Clabel:H%7C${destLat},${destLng}`;
-
-  // URL Oficial da API do Google Maps Static Maps
-  const googleMapImageUrl =
-    `https://maps.googleapis.com/maps/api/staticmap?center=${centerLat},${centerLng}&zoom=15&size=650x650&scale=2&maptype=roadmap` +
-    markersParam +
-    `&key=${GOOGLE_MAPS_API_KEY}`;
-
   const handleCallProf = () => {
     const phone = appointment.Professional?.User?.phone;
     if (phone) {
@@ -169,21 +149,15 @@ export const ClientTrackingMapModal: React.FC<ClientTrackingMapModalProps> = ({
 
         {/* Área Visual do Mapa Oficial Google Maps */}
         <View style={styles.mapContainer}>
-          {/* Imagem Oficial do Google Maps da sua região */}
-          <Image
-            source={{ uri: googleMapImageUrl }}
-            style={StyleSheet.absoluteFillObject}
-            resizeMode="cover"
-            onLoadStart={() => setMapLoading(true)}
-            onLoadEnd={() => setMapLoading(false)}
+          {/* Mapa ao vivo (OpenStreetMap): a Static Maps API do Google exige ativação e cobrança. */}
+          <LiveTrackingMap
+            destination={{ latitude: destLat, longitude: destLng }}
+            professional={
+              hasLiveCoords
+                ? { latitude: currentProfLat, longitude: currentProfLng }
+                : null
+            }
           />
-
-          {mapLoading && (
-            <View style={styles.loadingOverlay}>
-              <ActivityIndicator size="large" color="#FF6B00" />
-              <Text style={styles.loadingText}>Carregando Google Maps...</Text>
-            </View>
-          )}
 
           {/* Banner de Alerta de Proximidade (5 Minutos para Chegar) */}
           {(proximityAlert ||

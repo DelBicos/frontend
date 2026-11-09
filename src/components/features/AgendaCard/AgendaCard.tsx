@@ -99,6 +99,24 @@ function statusInfo(
             bg: colors.successBackground,
             fg: colors.successText,
           };
+    case AppointmentStatus.IN_TRANSIT:
+      return {
+        label: 'Profissional a caminho',
+        bg: colors.warningBackground,
+        fg: colors.warningText,
+      };
+    case AppointmentStatus.ARRIVED:
+      return {
+        label: 'Profissional no local',
+        bg: colors.warningBackground,
+        fg: colors.warningText,
+      };
+    case AppointmentStatus.IN_PROGRESS:
+      return {
+        label: 'Em andamento',
+        bg: colors.successBackground,
+        fg: colors.successText,
+      };
     case AppointmentStatus.COMPLETED:
       return {
         label: 'Concluído',
