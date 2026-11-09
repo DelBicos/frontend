@@ -1,18 +1,31 @@
-import React, { useMemo, useState } from 'react';
-import { Image, Linking, Pressable, Text, View } from 'react-native';
+import React from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  Image,
+  ImageBackground,
+  TouchableOpacity,
+  Linking,
+  useWindowDimensions,
+} from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { useColors } from '@theme/ThemeProvider';
-import { useBreakpoint } from '@lib/hooks/useBreakpoint';
-import PageContainer from '@components/layout/PageContainer';
-import SectionHeader from '@components/ui/SectionHeader';
-import { Developer, developers } from './aboutUsData';
 import { createStyles } from './styles';
+import { developers } from './aboutUsData';
+import { useColors } from '@theme/ThemeProvider';
+import { useThemeStore, ThemeMode } from '@stores/Theme';
 
-import type { WebPressableState } from '@utils/webStyle';
 import type { FontAwesomeName } from '@utils/iconNames';
+
 const teamPhoto = require('@assets/aboutus/TeamDelbicos-profile.png');
-// Proporcao da imagem original (631 x 520).
-const TEAM_PHOTO_RATIO = 631 / 520;
+const hexBackImage = require('@assets/aboutus/hex-back2.png');
+const lineDelbicos = require('@assets/aboutus/line-delbicos.png');
+const gitIcon = require('@assets/aboutus/git-icon.png');
+const linkIcon = require('@assets/aboutus/link-icon.png');
+const portIcon = require('@assets/aboutus/port-icon.png');
+
+const TEAM_PHOTO_LABEL =
+  'Logo DelBicos e foto dos três integrantes da equipe com as camisetas do projeto';
 
 const VALUES: { icon: FontAwesomeName; title: string; text: string }[] = [
   {
@@ -30,81 +43,80 @@ const VALUES: { icon: FontAwesomeName; title: string; text: string }[] = [
     title: 'Acessibilidade',
     text: 'Tecnologia para todos: temas de alto contraste, Libras e navegação por leitores de tela.',
   },
-] as const;
-
-/** Largura a partir da qual os desenvolvedores ficam em 4 colunas. */
-const WIDE_TEAM_MIN_WIDTH = 1100;
+];
 
 function AboutUsScreen() {
   const colors = useColors();
-  const { isCompact, isExpanded, contentWidth } = useBreakpoint();
-  const styles = useMemo(
-    () => createStyles(colors, isCompact, isExpanded),
-    [colors, isCompact, isExpanded],
-  );
-
-  // A altura da foto e calculada a partir da largura medida: altura e
-  // aspect-ratio em % se comportavam diferente entre navegadores.
-  const [photoWidth, setPhotoWidth] = useState(0);
-
-  const teamColumns = isCompact
-    ? 1
-    : contentWidth >= WIDE_TEAM_MIN_WIDTH
-      ? 4
-      : isExpanded
-        ? 3
-        : 2;
+  const { theme } = useThemeStore();
+  const { width } = useWindowDimensions();
+  const isMobile = width < 768;
+  const isDark = theme === ThemeMode.DARK;
+  const isHighContrast = theme === ThemeMode.LIGHT_HI_CONTRAST;
+  const styles = createStyles(colors, isMobile, isDark, isHighContrast);
 
   return (
-    <PageContainer>
-      {/* Apresentacao */}
-      <View style={styles.hero}>
-        <View style={styles.heroTexts}>
-          <Text style={styles.eyebrow}>Quem Somos</Text>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}>
+      {/* Mission section */}
+      <View style={styles.missionWrapper}>
+        {/* Card with title inside */}
+        <ImageBackground
+          source={hexBackImage}
+          style={styles.missionCard}
+          imageStyle={{ resizeMode: 'cover', top: -60 }}>
           <Text
-            style={styles.heroTitle}
+            style={styles.pageTitle}
             accessibilityRole="header"
             {...({ 'aria-level': 1 } as object)}>
-            Tecnologia que aproxima vizinhos
+            Quem Somos
           </Text>
-          <Text style={styles.paragraph}>
-            Somos uma empresa de tecnologia focada em desenvolver soluções
-            digitais que geram impacto social real e transformam a dinâmica das
-            cidades. Nosso propósito é utilizar a inovação para encurtar
-            distâncias, fomentar a economia local e promover a sustentabilidade.
-          </Text>
-          <Text style={styles.paragraph}>
-            O DelBicos é a materialização dessa visão: uma plataforma que une
-            clientes e trabalhadores informais da mesma vizinhança,
-            transformando a dificuldade de captação de clientes e a insegurança
-            na contratação em uma rede local eficiente, confiável e acessível.
-          </Text>
-        </View>
-        <View
-          style={styles.heroPhotoWrapper}
-          onLayout={(e) => setPhotoWidth(e.nativeEvent.layout.width)}>
-          <Image
-            source={teamPhoto}
-            style={
-              photoWidth
-                ? { width: photoWidth, height: photoWidth / TEAM_PHOTO_RATIO }
-                : // Antes da primeira medicao.
-                  { width: '100%', aspectRatio: TEAM_PHOTO_RATIO }
-            }
-            resizeMode="contain"
-            accessibilityLabel="Foto da equipe DelBicos, oito pessoas com camisetas pretas do projeto"
-          />
-        </View>
+          <View style={styles.missionRow}>
+            <View style={styles.missionPhotoCol}>
+              <Image
+                source={teamPhoto}
+                style={styles.teamPhoto}
+                resizeMode="cover"
+                accessibilityLabel={TEAM_PHOTO_LABEL}
+              />
+            </View>
+            <View style={styles.missionTextCol}>
+              <Text style={styles.missionText}>
+                Somos uma empresa de tecnologia focada em desenvolver soluções
+                digitais que geram impacto social real e transformam a dinâmica
+                das cidades. Nosso propósito é utilizar a inovação para encurtar
+                distâncias, fomentar a economia local e promover a
+                sustentabilidade.
+              </Text>
+              <Text style={styles.missionText}>
+                O DelBicos é a materialização dessa visão: uma plataforma que
+                une clientes e trabalhadores informais da mesma vizinhança,
+                transformando a dificuldade de captação de clientes e a
+                insegurança na contratação em uma rede local eficiente,
+                confiável e acessível.
+              </Text>
+            </View>
+          </View>
+        </ImageBackground>
       </View>
 
-      {/* Valores */}
-      <View style={styles.section}>
-        <SectionHeader title="No que acreditamos" />
+      {/* Values */}
+      <View style={styles.valuesSection}>
+        <Text
+          style={styles.valuesTitle}
+          accessibilityRole="header"
+          {...({ 'aria-level': 2 } as object)}>
+          No que acreditamos
+        </Text>
         <View style={styles.valuesRow}>
           {VALUES.map((value) => (
             <View key={value.title} style={styles.valueCard}>
               <View style={styles.valueIcon}>
-                <FontAwesome name={value.icon} size={20} color="#000000" />
+                <FontAwesome
+                  name={value.icon}
+                  size={18}
+                  color={isDark ? colors.primaryWhite : colors.primaryBlack}
+                />
               </View>
               <Text
                 style={styles.valueTitle}
@@ -118,93 +130,113 @@ function AboutUsScreen() {
         </View>
       </View>
 
-      {/* Equipe */}
-      <View style={styles.section}>
-        <SectionHeader
-          title="Quem faz o DelBicos"
-          subtitle={`${developers.length} pessoas desenvolvendo o projeto de ponta a ponta: design, frontend, backend e dados.`}
-        />
-        <View style={styles.teamGrid}>
-          {developers.map((dev) => (
-            <View
-              key={dev.id}
-              style={[styles.teamCell, { width: `${100 / teamColumns}%` }]}>
-              <DeveloperCard dev={dev} styles={styles} />
-            </View>
-          ))}
-        </View>
+      {/* Developers Banner */}
+      <View style={styles.developersBanner}>
+        <Text
+          style={styles.developersBannerTitle}
+          accessibilityRole="header"
+          {...({ 'aria-level': 2 } as object)}>
+          Desenvolvedores
+        </Text>
       </View>
+
+      {/* Developer Cards */}
+      {developers.map((dev, index) => (
+        <React.Fragment key={dev.id}>
+          <View
+            style={[
+              styles.developerCard,
+              !isMobile && index % 2 !== 0 && styles.developerCardReversed,
+            ]}>
+            <View style={styles.developerPhotoWrapper}>
+              <Image
+                source={dev.photo}
+                style={styles.developerPhoto}
+                accessibilityLabel={`Foto de ${dev.name}`}
+              />
+            </View>
+
+            <View style={styles.developerInfo}>
+              <Text
+                style={[
+                  styles.developerName,
+                  !isMobile && index % 2 !== 0 && styles.developerNameReversed,
+                ]}
+                accessibilityRole="header"
+                {...({ 'aria-level': 3 } as object)}>
+                {dev.name}
+              </Text>
+              <View
+                style={[
+                  styles.developerRoleRow,
+                  !isMobile &&
+                    index % 2 !== 0 &&
+                    styles.developerRoleRowReversed,
+                ]}>
+                <Text style={styles.developerRole}>{dev.role}</Text>
+                <View style={styles.developerSocialIcons}>
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel={`LinkedIn de ${dev.name}`}
+                    onPress={() =>
+                      dev.linkedin ? Linking.openURL(dev.linkedin) : undefined
+                    }
+                    disabled={!dev.linkedin}
+                    style={[
+                      styles.socialIconButton,
+                      !dev.linkedin && styles.socialIconDisabled,
+                    ]}>
+                    <Image source={linkIcon} style={styles.socialIcon} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel={`GitHub de ${dev.name}`}
+                    onPress={() =>
+                      dev.github ? Linking.openURL(dev.github) : undefined
+                    }
+                    disabled={!dev.github}
+                    style={[
+                      styles.socialIconButton,
+                      !dev.github && styles.socialIconDisabled,
+                    ]}>
+                    <Image source={gitIcon} style={styles.socialIcon} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel={`Portfólio de ${dev.name}`}
+                    onPress={() =>
+                      dev.portfolio ? Linking.openURL(dev.portfolio) : undefined
+                    }
+                    disabled={!dev.portfolio}
+                    style={[
+                      styles.socialIconButton,
+                      !dev.portfolio && styles.socialIconDisabled,
+                    ]}>
+                    <Image source={portIcon} style={styles.socialIcon} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+              <Text style={styles.developerBio}>{dev.bio}</Text>
+            </View>
+          </View>
+          {index < developers.length - 1 && (
+            <Image
+              source={lineDelbicos}
+              style={[
+                styles.separatorLine,
+                index % 2 !== 0 && styles.separatorLineReversed,
+              ]}
+              resizeMode="contain"
+              accessible={false}
+            />
+          )}
+        </React.Fragment>
+      ))}
 
       <Text style={styles.footer}>
-        © DelBicos {new Date().getFullYear()}. Todos os direitos reservados.
+        © DelBicos - {new Date().getFullYear()} – Todos os direitos reservados.
       </Text>
-    </PageContainer>
-  );
-}
-
-interface DeveloperCardProps {
-  dev: Developer;
-  styles: ReturnType<typeof createStyles>;
-}
-
-function DeveloperCard({ dev, styles }: DeveloperCardProps) {
-  const colors = useColors();
-  const [expanded, setExpanded] = useState(false);
-
-  const allLinks: { url?: string; icon: FontAwesomeName; label: string }[] = [
-    { url: dev.linkedin, icon: 'linkedin', label: 'LinkedIn' },
-    { url: dev.github, icon: 'github', label: 'GitHub' },
-    { url: dev.portfolio, icon: 'globe', label: 'Portfólio' },
-  ];
-  const links = allLinks.filter((link) => !!link.url);
-
-  return (
-    <View style={styles.devCard}>
-      <Image
-        source={dev.photo}
-        style={styles.devPhoto}
-        accessibilityLabel={`Foto de ${dev.name}`}
-      />
-      <Text
-        style={styles.devName}
-        accessibilityRole="header"
-        {...({ 'aria-level': 3 } as object)}>
-        {dev.name}
-      </Text>
-      <Text style={styles.devRole}>{dev.role}</Text>
-      <Text style={styles.devBio} numberOfLines={expanded ? undefined : 4}>
-        {dev.bio}
-      </Text>
-      <Pressable
-        onPress={() => setExpanded((v) => !v)}
-        style={styles.readMore}
-        accessibilityRole="button"
-        accessibilityState={{ expanded }}
-        accessibilityLabel={`${expanded ? 'Ler menos' : 'Ler mais'} sobre ${dev.name}`}>
-        <Text style={styles.readMoreText}>
-          {expanded ? 'Ler menos' : 'Ler mais'}
-        </Text>
-      </Pressable>
-      <View style={styles.devLinks}>
-        {links.map((link) => (
-          <Pressable
-            key={link.label}
-            onPress={() => Linking.openURL(link.url!)}
-            style={({ pressed, hovered }: WebPressableState) => [
-              styles.devLink,
-              (pressed || hovered) && styles.devLinkActive,
-            ]}
-            accessibilityRole="link"
-            accessibilityLabel={`${link.label} de ${dev.name}`}>
-            <FontAwesome
-              name={link.icon}
-              size={20}
-              color={colors.primaryBlack}
-            />
-          </Pressable>
-        ))}
-      </View>
-    </View>
+    </ScrollView>
   );
 }
 
