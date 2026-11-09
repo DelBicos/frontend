@@ -170,6 +170,19 @@ export const createThreadPanelStyles = (colors: ColorsType) =>
     sendButtonDisabled: {
       opacity: 0.5,
     },
+    historyErrorBar: {
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.divider,
+      backgroundColor: colors.secondaryGray,
+    },
+    historyErrorText: {
+      fontSize: 13,
+      fontFamily: 'Afacad-SemiBold',
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
     archivedBar: {
       paddingHorizontal: 16,
       paddingVertical: 14,

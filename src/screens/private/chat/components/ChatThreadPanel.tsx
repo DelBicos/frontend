@@ -77,6 +77,8 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
   const [hasMore, setHasMore] = useState(true);
   const [loadingInitial, setLoadingInitial] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [historyFailed, setHistoryFailed] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [roomStatus, setRoomStatus] =
     useState<ChatRoomStatus>(initialRoomStatus);
   const [input, setInput] = useState('');
@@ -121,6 +123,7 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
       setMessages([]);
       setCursor(null);
       setHasMore(true);
+      setHistoryFailed(false);
       try {
         const result = await fetchMessages(roomId, undefined, PAGE_SIZE);
         if (!mounted) return;
@@ -130,6 +133,8 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
         setRoomStatus(result.roomStatus);
       } catch (err) {
         logger.error('Erro ao carregar histórico do chat:', err);
+        // Sem este aviso a conversa parecia vazia quando o histórico falhava.
+        if (mounted) setHistoryFailed(true);
       } finally {
         if (mounted) setLoadingInitial(false);
       }
@@ -138,7 +143,7 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
     return () => {
       mounted = false;
     };
-  }, [roomId, fetchMessages]);
+  }, [roomId, fetchMessages, reloadKey]);
 
   const loadOlder = useCallback(async () => {
     if (loadingMoreRef.current || !hasMore || !cursor || loadingInitial) return;
@@ -315,6 +320,19 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
+        {historyFailed && !loadingInitial ? (
+          <Pressable
+            style={styles.historyErrorBar}
+            onPress={() => setReloadKey((key) => key + 1)}
+            accessibilityRole="button"
+            accessibilityLabel="Não foi possível carregar as mensagens anteriores. Tentar de novo">
+            <Text style={styles.historyErrorText}>
+              Não foi possível carregar as mensagens anteriores. Toque para
+              tentar de novo.
+            </Text>
+          </Pressable>
+        ) : null}
+
         {loadingInitial ? (
           <View style={styles.centered}>
             <ActivityIndicator size="large" color={colors.primaryOrange} />
