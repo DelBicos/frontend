@@ -15,52 +15,15 @@ import { useCategoryStore } from '@stores/Category';
 import { SubCategory } from '@stores/SubCategory/types';
 import { HeroCarousel } from './components/HeroCarousel';
 import SectionHeader from '@components/ui/SectionHeader';
-
-/** Destaques da pagina inicial; cada um leva a uma categoria. */
-const HIGHLIGHTS: (Omit<HighlightItem, 'link'> & { categoryTitle: string })[] =
-  [
-    {
-      id: '1',
-      title: 'Reformas de Fim de Ano',
-      description: 'Pintores e eletricistas com agenda aberta.',
-      image:
-        'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=1600&h=900&auto=format&fit=crop',
-      ctaLabel: 'Ver reformas',
-      categoryTitle: 'Reformas & Reparos',
-    },
-    {
-      id: '2',
-      title: 'Prepare-se para o Verão',
-      description: 'Instalação de piscina e ar-condicionado.',
-      image:
-        'https://images.unsplash.com/photo-1574610758891-5b809b6e6e2e?q=80&w=1600&h=900&auto=format&fit=crop',
-      ctaLabel: 'Ver serviços gerais',
-      categoryTitle: 'Serviços Gerais',
-    },
-    {
-      id: '3',
-      title: 'Beleza & Estética',
-      description: 'Manicures e cabeleireiros para as festas.',
-      image:
-        'https://images.unsplash.com/photo-1560750588-73207b1ef5b8?q=80&w=1600&h=900&auto=format&fit=crop',
-      ctaLabel: 'Ver beleza',
-      categoryTitle: 'Beleza & Estética',
-    },
-    {
-      id: '4',
-      title: 'Cuidados Pet',
-      description: 'Dog walkers e pet sitters perto de você.',
-      image:
-        'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=1600&h=900&auto=format&fit=crop',
-      ctaLabel: 'Ver serviços pet',
-      categoryTitle: 'Pet',
-    },
-  ];
+import { FEED_HIGHLIGHTS, pickHighlightImages } from './feedHighlights';
 
 const FeedScreen: React.FC = () => {
   const navigation = useNavigation();
   const [search, setSearch] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
+  const [highlightSources] = useState(() =>
+    pickHighlightImages(FEED_HIGHLIGHTS),
+  );
 
   const colors = useColors();
   const { isCompact, isExpanded } = useBreakpoint();
@@ -77,7 +40,7 @@ const FeedScreen: React.FC = () => {
 
   const highlights: HighlightItem[] = useMemo(
     () =>
-      HIGHLIGHTS.map(({ categoryTitle, ...item }) => ({
+      highlightSources.map(({ categoryTitle, ...item }) => ({
         ...item,
         link: () => {
           const category = categories.find((c) => c.title === categoryTitle);
@@ -93,7 +56,7 @@ const FeedScreen: React.FC = () => {
           }
         },
       })),
-    [categories, navigation],
+    [highlightSources, categories, navigation],
   );
 
   const heroHeight = isExpanded ? 380 : isCompact ? 240 : 300;
