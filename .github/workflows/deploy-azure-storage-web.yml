@@ -3,14 +3,16 @@ name: Deploy do site no Azure Storage (site estático)
 # Publica o site no "Static website" de uma storage account do Azure.
 # Alternativa ao Static Web App, que não está disponível nas regiões
 # permitidas para as assinaturas de estudante.
-# Precisa de:
-#   - secret   AZURE_WEB_STORAGE_CONNECTION_STRING (connection string da storage account)
-#   - variável BACKEND_DOMAIN (host do backend no Azure, sem https)
-# Sem o secret, o job é pulado sem falhar.
+#   - main -> produção:    secret AZURE_WEB_STORAGE_CONNECTION_STRING      e variável BACKEND_DOMAIN
+#   - stag -> homologação: secret AZURE_WEB_STORAGE_CONNECTION_STRING_STAG e variável BACKEND_DOMAIN_STAG
+# BACKEND_DOMAIN* é o host do backend no Azure, sem https.
+# Enquanto não houver o ambiente de homologação (_STAG), a stag continua
+# publicando no site de produção, como antes. Sem nada configurado, o job é pulado.
 
 on:
   push:
     branches:
+      - main
       - stag
   workflow_dispatch:
 
@@ -20,9 +22,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       EXPO_PUBLIC_ENVIRONMENT: production
-      EXPO_PUBLIC_DOMAIN_WEB: ${{ vars.BACKEND_DOMAIN }}
-      EXPO_PUBLIC_DOMAIN_ANDROID: ${{ vars.BACKEND_DOMAIN }}
-      EXPO_PUBLIC_DOMAIN_IOS: ${{ vars.BACKEND_DOMAIN }}
       EXPO_PUBLIC_HTTP_PROTOCOL: https
       EXPO_PUBLIC_WS_PROTOCOL: wss
       EXPO_PUBLIC_PORT: ""
@@ -34,17 +33,33 @@ jobs:
       EXPO_PUBLIC_GOOGLE_ANALYTICS_ID: ${{ vars.EXPO_PUBLIC_GOOGLE_ANALYTICS_ID }}
       EXPO_PUBLIC_CLARITY_ID: ${{ vars.EXPO_PUBLIC_CLARITY_ID }}
     steps:
-      - name: Conferir se a storage está configurada
+      - name: Escolher o ambiente e conferir a storage
         id: storage
         env:
           CONNECTION_STRING: ${{ secrets.AZURE_WEB_STORAGE_CONNECTION_STRING }}
+          CONNECTION_STRING_STAG: ${{ secrets.AZURE_WEB_STORAGE_CONNECTION_STRING_STAG }}
+          DOMAIN: ${{ vars.BACKEND_DOMAIN }}
+          DOMAIN_STAG: ${{ vars.BACKEND_DOMAIN_STAG }}
         run: |
-          if [ -z "$CONNECTION_STRING" ] || [ -z "$EXPO_PUBLIC_DOMAIN_WEB" ]; then
+          if [ "$GITHUB_REF_NAME" != "main" ] && [ -n "$CONNECTION_STRING_STAG" ] && [ -n "$DOMAIN_STAG" ]; then
+            echo "Branch $GITHUB_REF_NAME: publicando na homologação."
+            echo "target=stag" >> "$GITHUB_OUTPUT"
+            backend="$DOMAIN_STAG"
+          elif [ -n "$CONNECTION_STRING" ] && [ -n "$DOMAIN" ]; then
+            echo "Branch $GITHUB_REF_NAME: publicando na produção."
+            echo "target=prod" >> "$GITHUB_OUTPUT"
+            backend="$DOMAIN"
+          else
             echo "Secret AZURE_WEB_STORAGE_CONNECTION_STRING ou variável BACKEND_DOMAIN ausente: pulando."
             echo "configured=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "configured=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+          echo "configured=true" >> "$GITHUB_OUTPUT"
+          {
+            echo "EXPO_PUBLIC_DOMAIN_WEB=$backend"
+            echo "EXPO_PUBLIC_DOMAIN_ANDROID=$backend"
+            echo "EXPO_PUBLIC_DOMAIN_IOS=$backend"
+          } >> "$GITHUB_ENV"
 
       - uses: actions/checkout@v4
         if: steps.storage.outputs.configured == 'true'
@@ -66,7 +81,7 @@ jobs:
       - name: Publicar no container $web
         if: steps.storage.outputs.configured == 'true'
         env:
-          AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_WEB_STORAGE_CONNECTION_STRING }}
+          AZURE_STORAGE_CONNECTION_STRING: ${{ steps.storage.outputs.target == 'stag' && secrets.AZURE_WEB_STORAGE_CONNECTION_STRING_STAG || secrets.AZURE_WEB_STORAGE_CONNECTION_STRING }}
         run: |
           az storage blob upload-batch --destination '$web' --source dist --overwrite --only-show-errors
           # index.html sem cache, para cada deploy aparecer na hora.
