@@ -201,12 +201,15 @@ export const DeslocamentoScreen: React.FC = () => {
   };
 
   const handleEstouACaminho = async () => {
-    if (!user?.location_consent_accepted) {
-      const consent = await getLocationConsent();
-      if (!consent?.accepted) {
-        setShowLgpdModal(true);
-        return;
-      }
+    // O perfil guardado no aparelho pode estar desatualizado (consentimento
+    // revogado em outro dispositivo), então a decisão vem do servidor. O valor
+    // guardado só vale se a consulta falhar.
+    const accepted = await getLocationConsent()
+      .then((consent) => consent.accepted)
+      .catch(() => Boolean(user?.location_consent_accepted));
+    if (!accepted) {
+      setShowLgpdModal(true);
+      return;
     }
     await executeEstouACaminho();
   };
