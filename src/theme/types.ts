@@ -19,7 +19,7 @@ export type ColorsType = {
   pageBackground: string;
   /** Texto e icone sobre o laranja da marca (preto: contraste AA). */
   textOnAccent: string;
-  /** Texto e icone sobre foto ou faixa escura (sempre claro). */
+  /** Texto e icone sobre foto, faixa escura ou fundo azul (sempre claro). */
   textOnImage: string;
 
   successBackground: string;

@@ -9,99 +9,67 @@ export const createStyles = (colors: ColorsType) =>
       flexWrap: 'wrap',
     },
 
-    // --- Card de categoria ---
+    // --- Card de categoria: icone a esquerda, titulo ao centro ---
+    // Sem aspectRatio: a altura minima garante que icone e titulo nunca se
+    // sobreponham, e o card cresce se o titulo quebrar em mais linhas.
     card: {
-      borderRadius: 16,
+      flex: 1,
+      minHeight: 96,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      borderRadius: 12,
       overflow: 'hidden',
-      backgroundColor: colors.cardBackground,
+      // A sombra fica no card inteiro; o titulo nao tem sombra.
       ...Platform.select({
         web: webStyle({
           boxShadow: '0px 6px 18px rgba(0, 0, 0, 0.12)',
           cursor: 'pointer',
-          transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+          transition:
+            'transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease',
         }),
         default: { elevation: 3 },
       }),
-    },
-    // Card com imagem: proporcao fixa. Sem imagem: altura minima, para o
-    // icone e o titulo nunca se sobreporem.
-    cardMedia: {
-      aspectRatio: 16 / 10,
-    },
-    cardPlain: {
-      flex: 1,
-      minHeight: 112,
     },
     cardHovered: {
       transform: [{ translateY: -3 }],
       ...webStyle({ boxShadow: '0px 12px 24px rgba(0, 0, 0, 0.2)' }),
     },
-    cardImage: {
-      flex: 1,
-      justifyContent: 'flex-end',
+    cardPressed: {
+      opacity: 0.85,
     },
-    plainContent: {
-      flex: 1,
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      gap: 8,
-      padding: 14,
-    },
-    plainIcon: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
+    // Caixa de largura fixa: os icones tem larguras diferentes e os titulos
+    // ficam alinhados entre os cards.
+    iconBox: {
+      width: 56,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    cardGradient: {
-      paddingHorizontal: 14,
-      paddingTop: 28,
-      paddingBottom: 14,
-    },
     cardTitle: {
-      fontSize: 18,
-      lineHeight: 22,
+      flexShrink: 1,
+      fontSize: 20,
+      lineHeight: 24,
       fontFamily: 'Afacad-Bold',
-    },
-    // Titulo sobre a foto: claro, com sombra para manter a leitura.
-    cardTitleOnImage: {
-      color: colors.textOnImage,
-      textShadowColor: colors.overlay,
-      textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 3,
+      textAlign: 'center',
     },
 
     // --- Variante compacta (celular) ---
     cardCompact: {
-      borderRadius: 12,
-    },
-    cardMediaCompact: {
-      aspectRatio: 3 / 2,
-    },
-    cardPlainCompact: {
-      minHeight: 96,
-    },
-    plainContentCompact: {
-      padding: 10,
-      gap: 6,
-    },
-    cardPressed: {
-      opacity: 0.85,
-    },
-    plainIconCompact: {
-      width: 34,
-      height: 34,
-      borderRadius: 17,
-    },
-    cardGradientCompact: {
+      minHeight: 72,
+      gap: 10,
       paddingHorizontal: 10,
-      paddingTop: 20,
-      paddingBottom: 10,
+      paddingVertical: 10,
+      borderRadius: 10,
+    },
+    iconBoxCompact: {
+      width: 30,
     },
     cardTitleCompact: {
-      fontSize: 16,
-      lineHeight: 19,
+      fontSize: 15,
+      lineHeight: 18,
     },
 
     loadingContainer: {
