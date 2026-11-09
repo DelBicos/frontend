@@ -29,6 +29,7 @@ import { AuthProvider } from '@lib/hooks/AuthContext';
 import { ChatWidget } from '@components/features/ChatBot/ChatWidget';
 import BottomNav from '@components/layout/BottomNav';
 import type { NavigationState } from '@react-navigation/native';
+import { ClientProfileSubRoutes } from '@screens/types';
 
 // Pre-carrega assets de navegação com captura de erro resiliente
 Asset.loadAsync([...NavigationAssets]).catch(() => {});
@@ -51,19 +52,26 @@ const styles = StyleSheet.create({
   },
 });
 
+/** Telas de conversa: o balão do chatbot cobriria o campo e o botão de enviar. */
+const CHAT_ROUTES = new Set(['ChatBot', 'ChatList', 'ChatThread']);
+
 function AppContent() {
   const theme = useThemeStore((state) => state.theme);
   const colors = useColors();
   const { user } = useUserStore();
   const isDark = theme === ThemeMode.DARK;
-  const [currentRouteName, setCurrentRouteName] = React.useState<
-    string | undefined
-  >();
+  const [isChatScreen, setIsChatScreen] = React.useState(false);
 
   const [rootState, setRootState] = React.useState<NavigationState>();
 
   const syncCurrentRoute = React.useCallback(() => {
-    setCurrentRouteName(navigationRef.getCurrentRoute()?.name);
+    const route = navigationRef.getCurrentRoute();
+    const subroute = (route?.params as { subroute?: string } | undefined)
+      ?.subroute;
+    setIsChatScreen(
+      CHAT_ROUTES.has(route?.name ?? '') ||
+        subroute === ClientProfileSubRoutes.Conversas,
+    );
     if (Platform.OS !== 'web') {
       setRootState(navigationRef.getRootState());
     }
@@ -120,8 +128,8 @@ function AppContent() {
               }}
               onStateChange={syncCurrentRoute}
             />
-            {/* Evita montar um segundo chat sobre a tela dedicada do assistente. */}
-            {!!user && currentRouteName !== 'ChatBot' && (
+            {/* Fora das telas de conversa e da tela dedicada do assistente. */}
+            {!!user && !isChatScreen && (
               <ChatWidget bottomOffset={Platform.OS === 'web' ? 24 : 16} />
             )}
           </View>

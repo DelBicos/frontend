@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
@@ -19,7 +20,7 @@ import {
   ChatRoomStatus,
   ChatCorrespondent,
 } from '@stores/Chat';
-import { useChatSocket } from '@hooks/useChatSocket';
+import { OptimisticMeta, useChatSocket } from '@hooks/useChatSocket';
 import { createThreadPanelStyles } from './threadPanelStyles';
 
 import { logger } from '@lib/logger';
@@ -160,11 +161,35 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
     }
   }, [hasMore, cursor, loadingInitial, roomId, fetchMessages]);
 
+  const markFailed = useCallback(({ clientMessageUuid }: OptimisticMeta) => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.client_message_uuid === clientMessageUuid && m.pending
+          ? { ...m, pending: false, failed: true }
+          : m,
+      ),
+    );
+  }, []);
+
+  const retrySend = (message: ChatMessage) => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.client_message_uuid === message.client_message_uuid
+          ? { ...m, pending: true, failed: false }
+          : m,
+      ),
+    );
+    sendMessage(message.text, markFailed, {
+      clientMessageUuid: message.client_message_uuid,
+      sentAt: message.sent_at,
+    });
+  };
+
   const handleSend = () => {
     const trimmed = input.trim();
     if (!trimmed || roomStatus === 'archived' || !user) return;
 
-    const meta = sendMessage(trimmed);
+    const meta = sendMessage(trimmed, markFailed);
     if (!meta) return;
 
     const optimistic: ChatMessage = {
@@ -206,7 +231,13 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
             styles.bubbleRow,
             isMine ? styles.bubbleRowMine : styles.bubbleRowTheirs,
           ]}>
-          <View
+          <Pressable
+            disabled={!item.failed}
+            onPress={() => retrySend(item)}
+            accessibilityRole={item.failed ? 'button' : undefined}
+            accessibilityLabel={
+              item.failed ? 'Mensagem não enviada. Tentar de novo' : undefined
+            }
             style={[
               styles.bubble,
               isMine ? styles.bubbleMine : styles.bubbleTheirs,
@@ -225,8 +256,9 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
                 minute: '2-digit',
               })}
               {item.pending ? ' · enviando…' : ''}
+              {item.failed ? ' · não enviada, toque para tentar de novo' : ''}
             </Text>
-          </View>
+          </Pressable>
         </View>
       </View>
     );
