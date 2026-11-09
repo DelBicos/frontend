@@ -22,6 +22,16 @@ export const useDeslocamentoTracking = ({
   const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(
     null,
   );
+  const lastPositionRef = useRef<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const rememberPosition = (loc: Location.LocationObject) => {
+    lastPositionRef.current = {
+      latitude: loc.coords.latitude,
+      longitude: loc.coords.longitude,
+    };
+  };
 
   const startGpsTracking = useCallback(async () => {
     try {
@@ -43,6 +53,7 @@ export const useDeslocamentoTracking = ({
         const initialLoc = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.High,
         });
+        if (initialLoc) rememberPosition(initialLoc);
         if (initialLoc && targetApptId && !isNaN(targetApptId)) {
           sendLocationUpdate({
             appointment_id: targetApptId,
@@ -65,6 +76,7 @@ export const useDeslocamentoTracking = ({
           distanceInterval: 1,
         },
         (loc) => {
+          rememberPosition(loc);
           if (targetApptId && !isNaN(targetApptId)) {
             sendLocationUpdate({
               appointment_id: targetApptId,
@@ -110,9 +122,12 @@ export const useDeslocamentoTracking = ({
     };
   }, [stopGpsTracking]);
 
+  const getLastPosition = useCallback(() => lastPositionRef.current, []);
+
   return {
     startGpsTracking,
     stopGpsTracking,
     notifyArrived,
+    getLastPosition,
   };
 };
