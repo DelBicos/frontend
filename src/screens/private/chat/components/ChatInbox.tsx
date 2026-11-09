@@ -88,12 +88,12 @@ const createStyles = (colors: ColorsType) =>
   StyleSheet.create({
     single: {
       flex: 1,
-      minHeight: 400,
+      minHeight: 0,
     },
     split: {
       flex: 1,
       flexDirection: 'row',
-      minHeight: 520,
+      minHeight: 0,
       borderRadius: 16,
       overflow: 'hidden',
       borderWidth: 1,
@@ -117,7 +117,7 @@ const createStyles = (colors: ColorsType) =>
       justifyContent: 'center',
       gap: 10,
       padding: 40,
-      backgroundColor: colors.secondaryGray,
+      backgroundColor: colors.pageBackground,
     },
     placeholderTitle: {
       fontFamily: 'Afacad-Bold',

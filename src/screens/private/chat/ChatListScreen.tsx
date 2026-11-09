@@ -18,7 +18,9 @@ const ChatListScreen: React.FC = () => {
         backgroundColor:
           theme === ThemeMode.LIGHT_HI_CONTRAST
             ? colors.primaryWhite
-            : colors.secondaryGray,
+            : theme === ThemeMode.LIGHT
+              ? colors.pageBackground
+              : colors.secondaryGray,
         paddingHorizontal: isCompact ? 0 : gutter,
         paddingVertical: isCompact ? 0 : 24,
       }}>

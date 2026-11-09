@@ -5,7 +5,7 @@ export const createStyles = (colors: ColorsType) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.primaryWhite,
+      backgroundColor: colors.pageBackground,
     },
     flex: {
       flex: 1,
