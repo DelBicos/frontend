@@ -6,6 +6,7 @@ import { useForm, Controller } from 'react-hook-form';
 import CustomTextInput from '@components/ui/CustomTextInput';
 import PhoneInput from '@components/ui/PhoneInput';
 import Avatar from '@components/ui/Avatar';
+import ImageCropModal from '@components/ui/ImageCropModal';
 import ActionButton from '@components/ui/ActionButton';
 import InlineAlert from '@components/ui/InlineAlert';
 import { maskCpf } from '@components/ui/CpfInput/CpfInput';
@@ -59,6 +60,8 @@ export default function DadosContaForm({
 
   const [photoBusy, setPhotoBusy] = useState(false);
   const [photoFeedback, setPhotoFeedback] = useState<Feedback>(null);
+  // Web: foto escolhida aguardando o recorte (no app o sistema já recorta).
+  const [cropUri, setCropUri] = useState<string | null>(null);
   const [formFeedback, setFormFeedback] = useState<Feedback>(null);
 
   const {
@@ -76,10 +79,14 @@ export default function DadosContaForm({
     reset({ ...splitName(fullName), email, phone });
   }, [fullName, email, phone, reset]);
 
-  const sendPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
+  const sendPhoto = async (uri: string) => {
     setPhotoBusy(true);
     setPhotoFeedback(null);
-    const result = await uploadAvatar(asset.uri);
+    const result = await uploadAvatar(uri);
+    // O recorte da web gera uma URL blob: que precisa ser liberada.
+    if (Platform.OS === 'web' && uri.startsWith('blob:')) {
+      URL.revokeObjectURL(uri);
+    }
     setPhotoBusy(false);
     setPhotoFeedback(
       result.erro
@@ -109,7 +116,14 @@ export default function DadosContaForm({
       aspect: [1, 1],
       quality: 0.8,
     });
-    if (!result.canceled && result.assets[0]) sendPhoto(result.assets[0]);
+    if (result.canceled || !result.assets[0]) return;
+    // `allowsEditing` não existe na web: o recorte é feito pelo ImageCropModal.
+    if (Platform.OS === 'web') {
+      setPhotoFeedback(null);
+      setCropUri(result.assets[0].uri);
+    } else {
+      sendPhoto(result.assets[0].uri);
+    }
   };
 
   const takePhoto = async () => {
@@ -127,7 +141,7 @@ export default function DadosContaForm({
       aspect: [1, 1],
       quality: 0.7,
     });
-    if (!result.canceled && result.assets[0]) sendPhoto(result.assets[0]);
+    if (!result.canceled && result.assets[0]) sendPhoto(result.assets[0].uri);
   };
 
   const deletePhoto = async () => {
@@ -174,6 +188,15 @@ export default function DadosContaForm({
     <ProfilePage
       title="Dados da conta"
       subtitle="Como você aparece para os profissionais e como falamos com você.">
+      <ImageCropModal
+        visible={cropUri !== null}
+        imageUri={cropUri}
+        onCancel={() => setCropUri(null)}
+        onConfirm={(croppedUri) => {
+          setCropUri(null);
+          sendPhoto(croppedUri);
+        }}
+      />
       <ProfileCard title="Foto de perfil">
         <View style={[styles.photoRow, isNarrow && styles.photoRowNarrow]}>
           <Avatar uri={avatarUri} name={fullName} size={96} />
