@@ -213,7 +213,11 @@ function ControlButton({
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [style, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        style,
+        { backgroundColor: colors.overlay },
+        pressed && styles.pressed,
+      ]}
       accessibilityRole="button"
       accessibilityLabel={label}
       hitSlop={6}>
