@@ -17,6 +17,9 @@ const lightColors: ColorsType = {
   textSecondary: '#6B7280',
   textTertiary: '#9CA3AF',
   backgroundElevated: '#FFFFFF',
+  pageBackground: '#DDE6F0',
+  textOnAccent: '#000000',
+  textOnImage: '#FFFFFF',
 
   successBackground: '#D4EDDA',
   successText: '#155724',

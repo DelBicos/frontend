@@ -44,6 +44,9 @@ export const createStyles = (colors: ColorsType, isCompact: boolean) =>
       width: 44,
       height: 44,
       borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+      backgroundColor: colors.cardBackground,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -87,10 +90,9 @@ export const createStyles = (colors: ColorsType, isCompact: boolean) =>
       paddingHorizontal: GAP / 2,
     },
     tile: {
-      // No celular, icone em cima do nome: sobra largura para nomes longos.
-      flexDirection: isCompact ? 'column' : 'row',
-      alignItems: isCompact ? 'flex-start' : 'center',
-      gap: isCompact ? 8 : 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
       minHeight: 60,
       // Cresce ate a altura da linha da grade (cards alinhados). Altura em %
       // aqui fazia o card ocupar a tela inteira em alguns navegadores.
@@ -113,17 +115,8 @@ export const createStyles = (colors: ColorsType, isCompact: boolean) =>
         default: { opacity: 0.8 },
       }),
     },
-    tileIcon: {
-      width: 34,
-      height: 34,
-      borderRadius: 17,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.inputBackground,
-    },
     tileTexts: {
-      flex: isCompact ? undefined : 1,
-      alignSelf: 'stretch',
+      flex: 1,
     },
     tileTitle: {
       fontFamily: 'Afacad-SemiBold',
@@ -186,7 +179,7 @@ export const createStyles = (colors: ColorsType, isCompact: boolean) =>
       fontFamily: 'Afacad-Bold',
       fontSize: 17,
       // Texto escuro sobre laranja (contraste AA).
-      color: '#000000',
+      color: colors.textOnAccent,
     },
     fullWidth: {
       alignSelf: 'stretch',

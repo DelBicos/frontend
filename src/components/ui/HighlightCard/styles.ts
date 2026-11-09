@@ -31,7 +31,7 @@ export const createStyles = (
       fontFamily: 'Afacad-Bold',
       fontSize: large ? 40 : 26,
       lineHeight: large ? 44 : 30,
-      color: '#FFFFFF',
+      color: colors.textOnImage,
       textShadowColor: 'rgba(0, 0, 0, 0.6)',
       textShadowOffset: { width: 0, height: 1 },
       textShadowRadius: 4,
@@ -63,7 +63,7 @@ export const createStyles = (
       // 18px em negrito conta como "texto grande" (WCAG), mantendo contraste
       // suficiente tambem no laranja mais escuro do tema de alto contraste.
       fontSize: 18,
-      color: '#000000',
+      color: colors.textOnAccent,
     },
   });
 };

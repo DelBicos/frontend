@@ -7,9 +7,9 @@ import {
   View,
 } from 'react-native';
 import { FontAwesome, FontAwesome5 } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { useColors } from '@theme/ThemeProvider';
+import { ThemeMode, useThemeStore } from '@stores/Theme';
 import { useCategoryStore } from '@stores/Category/Category';
 import { Category } from '@stores/Category/types';
 import { SubCategory } from '@stores/SubCategory/types';
@@ -18,8 +18,6 @@ import {
   loadAllSubCategories,
   normalizeSearchText,
 } from '@lib/hooks/useServiceSearch';
-import { getCategoryGradient, getCategoryIconName } from '@lib/categoryVisuals';
-import { getIconForSubCategory } from '@utils/icons';
 import PageContainer, { PageHeader } from '@components/layout/PageContainer';
 import SearchField from '@components/ui/SearchField';
 import Chip, { ChipGroup } from '@components/ui/Chip';
@@ -35,6 +33,8 @@ type Status = 'loading' | 'ready' | 'error';
  */
 function CategoryScreen() {
   const colors = useColors();
+  const theme = useThemeStore((s) => s.theme);
+  const isHighContrast = theme === ThemeMode.LIGHT_HI_CONTRAST;
   const navigation = useNavigation();
   const { isCompact, isExpanded } = useBreakpoint();
   const styles = useMemo(
@@ -231,16 +231,18 @@ function CategoryScreen() {
               return (
                 <View key={category.id} style={styles.section}>
                   <View style={styles.sectionHeader}>
-                    <LinearGradient
-                      colors={getCategoryGradient(category.id)}
-                      style={styles.sectionBadge}>
+                    <View style={styles.sectionBadge}>
                       <FontAwesome5
-                        name={getCategoryIconName(category.id)}
+                        name={category.iconName}
                         size={20}
-                        color="#FFFFFF"
+                        color={
+                          isHighContrast
+                            ? colors.primaryBlack
+                            : colors.primaryOrange
+                        }
                         solid
                       />
-                    </LinearGradient>
+                    </View>
                     <View style={styles.sectionTexts}>
                       <Text
                         style={styles.sectionTitle}
@@ -275,7 +277,11 @@ function CategoryScreen() {
 
           <View style={styles.helpCard}>
             <View style={styles.helpIcon}>
-              <FontAwesome name="comments-o" size={22} color={'#000000'} />
+              <FontAwesome
+                name="comments-o"
+                size={22}
+                color={colors.textOnAccent}
+              />
             </View>
             <View style={styles.helpTexts}>
               <Text style={styles.helpTitle}>
@@ -323,13 +329,6 @@ function ServiceTile({ sub, subtitle, onPress, styles }: ServiceTileProps) {
       ]}
       accessibilityRole="button"
       accessibilityLabel={`${sub.title}${subtitle ? `, ${subtitle}` : ''}. Escolher data`}>
-      <View style={styles.tileIcon}>
-        <FontAwesome5
-          name={getIconForSubCategory(sub.title)}
-          size={16}
-          color={colors.primaryBlack}
-        />
-      </View>
       <View style={styles.tileTexts}>
         <Text style={styles.tileTitle} numberOfLines={2}>
           {sub.title}

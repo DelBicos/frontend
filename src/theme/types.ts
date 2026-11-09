@@ -15,6 +15,12 @@ export type ColorsType = {
   textSecondary: string;
   textTertiary: string;
   backgroundElevated: string;
+  /** Fundo das paginas (Inicio, Categorias, Subcategorias...). */
+  pageBackground: string;
+  /** Texto e icone sobre o laranja da marca (preto: contraste AA). */
+  textOnAccent: string;
+  /** Texto e icone sobre foto ou faixa escura (sempre claro). */
+  textOnImage: string;
 
   successBackground: string;
   successText: string;

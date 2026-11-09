@@ -18,6 +18,9 @@ const lightContrastColors: ColorsType = {
   textSecondary: '#000000',
   textTertiary: '#444444',
   backgroundElevated: '#FFFFFF',
+  pageBackground: '#FFFFFF',
+  textOnAccent: '#000000',
+  textOnImage: '#FFFFFF',
 
   successBackground: '#D4EDDA',
   successText: '#004400',

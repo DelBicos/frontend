@@ -63,14 +63,6 @@ export const createStyles = (colors: ColorsType, isCompact: boolean) =>
       borderColor: colors.primaryOrange,
       backgroundColor: colors.backgroundElevated,
     },
-    optionIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 10,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.inputBackground,
-    },
     optionText: {
       flex: 1,
       fontFamily: 'Afacad-SemiBold',
@@ -148,7 +140,7 @@ export const createStyles = (colors: ColorsType, isCompact: boolean) =>
     continueText: {
       fontFamily: 'Afacad-Bold',
       fontSize: 18,
-      color: '#000000',
+      color: colors.textOnAccent,
     },
     continueTextDisabled: {
       color: colors.textSecondary,

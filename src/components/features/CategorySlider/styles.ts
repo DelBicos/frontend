@@ -39,7 +39,6 @@ export const createStyles = (colors: ColorsType) =>
       width: 52,
       height: 52,
       borderRadius: 26,
-      backgroundColor: 'rgba(255,255,255,0.18)',
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -52,10 +51,14 @@ export const createStyles = (colors: ColorsType) =>
       fontSize: 18,
       lineHeight: 22,
       fontFamily: 'Afacad-Bold',
-      color: '#FFFFFF',
-      textShadowColor: 'rgba(0, 0, 0, 0.6)',
+      color: colors.textOnImage,
+      textShadowColor: colors.overlay,
       textShadowOffset: { width: 0, height: 1 },
       textShadowRadius: 3,
+    },
+    // Titulo sobre o fundo do tema (card sem imagem): sem sombra.
+    cardTitlePlain: {
+      textShadowRadius: 0,
     },
 
     // --- Variante compacta (celular) ---

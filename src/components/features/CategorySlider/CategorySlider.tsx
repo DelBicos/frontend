@@ -2,9 +2,9 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useCategoryStore } from '@stores/Category/Category';
 import { Category } from '@stores/Category/types';
+import { ThemeMode, useThemeStore } from '@stores/Theme';
 import { useColors } from '@theme/ThemeProvider';
 import { useBreakpoint } from '@lib/hooks/useBreakpoint';
-import { getCategoryGradient, getCategoryIconName } from '@lib/categoryVisuals';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
 import {
@@ -25,7 +25,8 @@ interface CategoryCardProps {
 
 /**
  * Card de categoria usado em todos os tamanhos de tela: imagem com legenda
- * sobre gradiente, ou gradiente colorido + icone quando nao ha imagem.
+ * sobre faixa escura, ou, quando nao ha imagem, card do tema com o icone da
+ * categoria (mesmas cores em todas as categorias).
  */
 function CategoryCard({
   category,
@@ -33,15 +34,34 @@ function CategoryCard({
   compact = false,
 }: CategoryCardProps) {
   const colors = useColors();
+  const theme = useThemeStore((s) => s.theme);
   const styles = createStyles(colors);
   const [isHovered, setIsHovered] = useState(false);
   const [imageFailed, setImageFailed] = useState(!category.imageUrl);
-  const iconName = getCategoryIconName(category.id);
-  const gradient = getCategoryGradient(category.id);
+  const isDark = theme === ThemeMode.DARK;
+  const isHighContrast = theme === ThemeMode.LIGHT_HI_CONTRAST;
 
-  const label = (
+  // Cores do card sem imagem: sempre vindas do tema.
+  const cardBackground = isHovered
+    ? isDark
+      ? colors.primaryOrange
+      : colors.primaryBlue
+    : isDark
+      ? colors.backgroundElevated
+      : colors.cardBackground;
+  const titleColor = isHovered
+    ? isDark
+      ? colors.textOnAccent
+      : colors.primaryWhite
+    : colors.primaryBlack;
+  const iconColor = isHighContrast ? colors.primaryBlack : colors.primaryOrange;
+  const iconBackground = isHovered
+    ? colors.primaryWhite
+    : colors.pageBackground;
+
+  const imageLabel = (
     <LinearGradient
-      colors={['transparent', 'rgba(0,0,0,0.8)']}
+      colors={['transparent', colors.overlay]}
       style={[styles.cardGradient, compact && styles.cardGradientCompact]}>
       <Text
         style={[styles.cardTitle, compact && styles.cardTitleCompact]}
@@ -56,6 +76,11 @@ function CategoryCard({
       style={({ pressed }) => [
         styles.card,
         compact && styles.cardCompact,
+        imageFailed && {
+          backgroundColor: cardBackground,
+          borderColor: isHovered ? cardBackground : colors.borderColor,
+          borderWidth: isHighContrast ? 3 : 1,
+        },
         isHovered && styles.cardHovered,
         pressed && styles.cardPressed,
       ]}
@@ -65,24 +90,44 @@ function CategoryCard({
       accessibilityRole="button"
       accessibilityLabel={`Categoria ${category.title}`}>
       {imageFailed ? (
-        <LinearGradient colors={gradient} style={styles.cardImage}>
-          <View style={[styles.cardIcon, compact && styles.cardIconCompact]}>
+        <View style={styles.cardImage}>
+          <View
+            style={[
+              styles.cardIcon,
+              compact && styles.cardIconCompact,
+              { backgroundColor: iconBackground },
+            ]}>
             <FontAwesome5
-              name={iconName}
+              name={category.iconName}
               size={compact ? 20 : 28}
-              color="#FFFFFF"
+              color={iconColor}
               solid
             />
           </View>
-          {label}
-        </LinearGradient>
+          <View
+            style={[
+              styles.cardGradient,
+              compact && styles.cardGradientCompact,
+            ]}>
+            <Text
+              style={[
+                styles.cardTitle,
+                styles.cardTitlePlain,
+                compact && styles.cardTitleCompact,
+                { color: titleColor },
+              ]}
+              numberOfLines={2}>
+              {category.title}
+            </Text>
+          </View>
+        </View>
       ) : (
         <ImageBackground
           source={{ uri: category.imageUrl }}
           style={styles.cardImage}
           onError={() => setImageFailed(true)}
           accessibilityIgnoresInvertColors>
-          {label}
+          {imageLabel}
         </ImageBackground>
       )}
     </Pressable>

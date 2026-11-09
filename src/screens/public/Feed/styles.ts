@@ -3,11 +3,9 @@ import { ColorsType } from '@theme/types';
 
 export const createStyles = (
   colors: ColorsType,
-  options: { isHighContrast: boolean; isCompact: boolean },
+  options: { isCompact: boolean },
 ) => {
-  const background = options.isHighContrast
-    ? colors.primaryWhite
-    : colors.secondaryGray;
+  const background = colors.pageBackground;
 
   return StyleSheet.create({
     container: {
@@ -94,14 +92,6 @@ export const createStyles = (
       paddingHorizontal: 14,
       borderBottomWidth: 1,
       borderBottomColor: colors.divider,
-    },
-    dropdownIcon: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: colors.inputBackground,
-      justifyContent: 'center',
-      alignItems: 'center',
     },
     dropdownName: {
       flex: 1,

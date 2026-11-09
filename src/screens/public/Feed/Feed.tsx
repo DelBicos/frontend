@@ -1,10 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Text, View, Pressable, Platform, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { FontAwesome, FontAwesome5 } from '@expo/vector-icons';
+import { FontAwesome } from '@expo/vector-icons';
 import { createStyles } from './styles';
 import { useColors } from '@theme/ThemeProvider';
-import { useThemeStore, ThemeMode } from '@stores/Theme';
 import CategorySlider from '@components/features/CategorySlider';
 import ListProfessionals from '@components/features/ListProfessionals';
 import ListServices from '@components/features/ListServices';
@@ -14,7 +13,6 @@ import { useBreakpoint } from '@lib/hooks/useBreakpoint';
 import { useLocation } from '@lib/hooks/LocationContext';
 import { useCategoryStore } from '@stores/Category';
 import { SubCategory } from '@stores/SubCategory/types';
-import { getIconForSubCategory } from '@utils/icons';
 import { HeroCarousel } from './components/HeroCarousel';
 import SectionHeader from '@components/ui/SectionHeader';
 
@@ -65,10 +63,8 @@ const FeedScreen: React.FC = () => {
   const [showDropdown, setShowDropdown] = useState(false);
 
   const colors = useColors();
-  const { theme } = useThemeStore();
-  const isHighContrast = theme === ThemeMode.LIGHT_HI_CONTRAST;
   const { isCompact, isExpanded } = useBreakpoint();
-  const styles = createStyles(colors, { isHighContrast, isCompact });
+  const styles = createStyles(colors, { isCompact });
 
   const { results, search: fetchSearch } = useServiceSearch();
   const { categories } = useCategoryStore();
@@ -177,13 +173,6 @@ const FeedScreen: React.FC = () => {
                     ]}
                     onPress={() => handleSelectService(item)}
                     accessibilityRole="button">
-                    <View style={styles.dropdownIcon}>
-                      <FontAwesome5
-                        name={getIconForSubCategory(item.title)}
-                        size={16}
-                        color={colors.primaryOrange}
-                      />
-                    </View>
                     <Text style={styles.dropdownName} numberOfLines={1}>
                       {item.title}
                     </Text>

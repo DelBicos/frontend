@@ -17,6 +17,9 @@ const darkColors: ColorsType = {
   textSecondary: '#9CA3AF',
   textTertiary: '#6B7280',
   backgroundElevated: '#27272A',
+  pageBackground: '#323232',
+  textOnAccent: '#000000',
+  textOnImage: '#FFFFFF',
 
   successBackground: '#064E3B',
   successText: '#34D399',

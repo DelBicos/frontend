@@ -2,11 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
-import { FontAwesome, FontAwesome5 } from '@expo/vector-icons';
+import { FontAwesome } from '@expo/vector-icons';
 import { useSubCategoryStore } from '@stores/SubCategory';
 import { useColors } from '@theme/ThemeProvider';
 import { useThemeStore } from '@stores/Theme';
-import { getIconForSubCategory } from '@utils/icons';
 import { useBreakpoint } from '@lib/hooks/useBreakpoint';
 import {
   formatLongDate,
@@ -147,11 +146,11 @@ function SubCategoryScreen() {
               selected: true,
               disableTouchEvent: true,
               selectedColor: colors.primaryOrange,
-              selectedTextColor: '#000000',
+              selectedTextColor: colors.textOnAccent,
             },
           }
         : {},
-    [selectedDate, colors.primaryOrange],
+    [selectedDate, colors.primaryOrange, colors.textOnAccent],
   );
 
   const columns = isCompact ? 1 : 2;
@@ -198,18 +197,15 @@ function SubCategoryScreen() {
                   accessibilityRole="radio"
                   accessibilityState={{ checked: isSelected }}
                   accessibilityLabel={item.title}>
-                  <View style={styles.optionIcon}>
-                    <FontAwesome5
-                      name={getIconForSubCategory(item.title)}
-                      size={18}
-                      color={colors.primaryBlack}
-                    />
-                  </View>
                   <Text style={styles.optionText}>{item.title}</Text>
                   <View
                     style={[styles.radio, isSelected && styles.radioSelected]}>
                     {isSelected ? (
-                      <FontAwesome name="check" size={12} color="#000000" />
+                      <FontAwesome
+                        name="check"
+                        size={12}
+                        color={colors.textOnAccent}
+                      />
                     ) : null}
                   </View>
                 </Pressable>
@@ -252,7 +248,7 @@ function SubCategoryScreen() {
             arrowColor: colors.primaryBlack,
             disabledArrowColor: colors.textTertiary,
             selectedDayBackgroundColor: colors.primaryOrange,
-            selectedDayTextColor: '#000000',
+            selectedDayTextColor: colors.textOnAccent,
           }}
         />
       </View>
@@ -298,7 +294,7 @@ function SubCategoryScreen() {
         <FontAwesome
           name="arrow-right"
           size={16}
-          color={canContinue ? '#000000' : colors.textSecondary}
+          color={canContinue ? colors.textOnAccent : colors.textSecondary}
         />
       </Pressable>
     </View>
