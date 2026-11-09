@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Modal,
   View,
@@ -16,7 +16,7 @@ import {
   ProximityWarningEvent,
   LocationArrivedEvent,
 } from '@hooks/useLocationSocket';
-import { styles } from './styles';
+import { createStyles } from './styles';
 import { LiveTrackingMap } from './LiveTrackingMap';
 
 interface ClientTrackingMapModalProps {
@@ -54,6 +54,7 @@ export const ClientTrackingMapModal: React.FC<ClientTrackingMapModalProps> = ({
   appointment,
 }) => {
   const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [profCoords, setProfCoords] = useState<{
     latitude: number;
     longitude: number;
@@ -165,7 +166,11 @@ export const ClientTrackingMapModal: React.FC<ClientTrackingMapModalProps> = ({
               estimatedMinutes <= 5 &&
               liveStatus === 'in_transit')) && (
             <View style={styles.proximityBannerOverlay}>
-              <Ionicons name="notifications" size={18} color="#FFFFFF" />
+              <Ionicons
+                name="notifications"
+                size={18}
+                color={colors.textOnImage}
+              />
               <Text style={styles.proximityBannerText}>
                 {proximityAlert ||
                   '🚘 Prestador a cerca de 5 minutos da sua casa!'}
@@ -176,7 +181,7 @@ export const ClientTrackingMapModal: React.FC<ClientTrackingMapModalProps> = ({
           {/* Card Superior Overlay: Ponto de Referência Casa do Usuário */}
           <View style={styles.houseCardOverlay}>
             <View style={styles.houseIconBadge}>
-              <FontAwesome name="home" size={20} color="#FFFFFF" />
+              <FontAwesome name="home" size={20} color={colors.textOnImage} />
             </View>
             <View style={styles.houseTextInfo}>
               <Text style={styles.houseTitle}>Sua Casa (Ponto de Destino)</Text>
@@ -192,11 +197,15 @@ export const ClientTrackingMapModal: React.FC<ClientTrackingMapModalProps> = ({
             <View
               style={[styles.distanceBadgeOverlay, styles.arrivedBadgeOverlay]}>
               <View style={styles.distanceBadgeRow}>
-                <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
+                <Ionicons
+                  name="checkmark-circle"
+                  size={18}
+                  color={colors.textOnImage}
+                />
                 <Text
                   style={[
                     styles.distanceBadgeText,
-                    { color: '#FFFFFF', fontWeight: '800' },
+                    { color: colors.textOnImage, fontWeight: '800' },
                   ]}>
                   Prestador no local!
                 </Text>
@@ -209,24 +218,40 @@ export const ClientTrackingMapModal: React.FC<ClientTrackingMapModalProps> = ({
                 {hasLiveCoords ? (
                   <>
                     <View style={styles.distanceBadgeRow}>
-                      <FontAwesome5 name="car" size={16} color="#FF6B00" />
+                      <FontAwesome5
+                        name="car"
+                        size={16}
+                        color={colors.primaryOrange}
+                      />
                       <Text style={styles.distanceBadgeText}>
                         Distância:{' '}
-                        <Text style={{ color: '#FF6B00', fontWeight: '800' }}>
+                        <Text
+                          style={{
+                            color: colors.primaryOrange,
+                            fontWeight: '800',
+                          }}>
                           {distanceFormatted}
                         </Text>
                       </Text>
                     </View>
                     <Text style={styles.etaText}>
                       Tempo estimado de chegada:{' '}
-                      <Text style={{ color: '#22C55E', fontWeight: '800' }}>
+                      <Text
+                        style={{
+                          color: colors.primaryGreen,
+                          fontWeight: '800',
+                        }}>
                         ~{estimatedMinutes} min
                       </Text>
                     </Text>
                   </>
                 ) : (
                   <View style={styles.distanceBadgeRow}>
-                    <Ionicons name="time-outline" size={18} color="#FF6B00" />
+                    <Ionicons
+                      name="time-outline"
+                      size={18}
+                      color={colors.primaryOrange}
+                    />
                     <Text style={styles.distanceBadgeText}>
                       Aguardando sinal GPS do prestador...
                     </Text>
@@ -239,7 +264,7 @@ export const ClientTrackingMapModal: React.FC<ClientTrackingMapModalProps> = ({
                 <View
                   style={[
                     styles.liveDot,
-                    !hasLiveCoords && { backgroundColor: '#EAB308' },
+                    !hasLiveCoords && { backgroundColor: colors.warningText },
                   ]}
                 />
                 <Text style={styles.gpsCoordsText}>
@@ -264,13 +289,15 @@ export const ClientTrackingMapModal: React.FC<ClientTrackingMapModalProps> = ({
                 styles.statusBanner,
                 {
                   backgroundColor:
-                    liveStatus === 'arrived' ? '#16A34A' : '#FF6B00',
+                    liveStatus === 'arrived'
+                      ? colors.primaryGreen
+                      : colors.primaryOrange,
                 },
               ]}>
               <FontAwesome
                 name={liveStatus === 'arrived' ? 'check-circle' : 'car'}
                 size={18}
-                color="#FFFFFF"
+                color={colors.textOnImage}
               />
               <Text style={styles.statusBannerText}>
                 {liveStatus === 'in_transit'
@@ -285,7 +312,11 @@ export const ClientTrackingMapModal: React.FC<ClientTrackingMapModalProps> = ({
             {appointment.verification_code || liveStatus === 'arrived' ? (
               <View style={styles.pinBox}>
                 <View style={styles.pinBoxHeaderRow}>
-                  <Ionicons name="key" size={16} color="#EA580C" />
+                  <Ionicons
+                    name="key"
+                    size={16}
+                    color={colors.primaryOrangeHover}
+                  />
                   <Text style={styles.pinBoxTitle}>
                     CÓDIGO DE CONFIRMAÇÃO DO SERVIÇO
                   </Text>
@@ -317,7 +348,7 @@ export const ClientTrackingMapModal: React.FC<ClientTrackingMapModalProps> = ({
                   style={styles.callBtn}
                   onPress={handleCallProf}
                   activeOpacity={0.8}>
-                  <Ionicons name="call" size={20} color="#FFFFFF" />
+                  <Ionicons name="call" size={20} color={colors.textOnImage} />
                 </TouchableOpacity>
               ) : null}
             </View>
