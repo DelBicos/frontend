@@ -9,78 +9,69 @@ export const createStyles = (colors: ColorsType) =>
       flexWrap: 'wrap',
     },
 
-    // --- Card de categoria ---
     card: {
-      aspectRatio: 16 / 10,
-      borderRadius: 16,
-      overflow: 'hidden',
-      backgroundColor: colors.cardBackground,
-      ...Platform.select({
-        web: webStyle({
-          boxShadow: '0px 6px 18px rgba(0, 0, 0, 0.12)',
-          cursor: 'pointer',
-          transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-        }),
-        default: { elevation: 3 },
-      }),
-    },
-    cardHovered: {
-      transform: [{ translateY: -3 }],
-      ...webStyle({ boxShadow: '0px 12px 24px rgba(0, 0, 0, 0.2)' }),
-    },
-    cardImage: {
       flex: 1,
-      justifyContent: 'flex-end',
-    },
-    cardIcon: {
-      position: 'absolute',
-      top: 16,
-      left: 16,
-      width: 52,
-      height: 52,
-      borderRadius: 26,
-      backgroundColor: 'rgba(255,255,255,0.18)',
+      minHeight: 96,
+      flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
+      gap: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      borderRadius: 16,
+      overflow: 'hidden',
+      ...Platform.select({
+        web: webStyle({
+          boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.08)',
+          cursor: 'pointer',
+          transition:
+            'transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease',
+        }),
+        ios: {
+          shadowColor: colors.primaryBlack,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 4,
+        },
+        android: { elevation: 3 },
+      }),
     },
-    cardGradient: {
-      paddingHorizontal: 14,
-      paddingTop: 28,
-      paddingBottom: 14,
-    },
-    cardTitle: {
-      fontSize: 18,
-      lineHeight: 22,
-      fontFamily: 'Afacad-Bold',
-      color: '#FFFFFF',
-      textShadowColor: 'rgba(0, 0, 0, 0.6)',
-      textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 3,
-    },
-
-    // --- Variante compacta (celular) ---
-    cardCompact: {
-      aspectRatio: 3 / 2,
-      borderRadius: 12,
+    cardActive: {
+      transform: [{ scale: 1.03 }],
+      ...Platform.select({
+        web: webStyle({ boxShadow: '0px 8px 20px rgba(0, 0, 0, 0.12)' }),
+        default: {},
+      }),
     },
     cardPressed: {
       opacity: 0.85,
     },
-    cardIconCompact: {
-      top: 10,
-      left: 10,
-      width: 38,
-      height: 38,
-      borderRadius: 19,
+    iconBox: {
+      width: 56,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
-    cardGradientCompact: {
+    cardTitle: {
+      flexShrink: 1,
+      fontSize: 20,
+      lineHeight: 24,
+      fontFamily: 'Afacad-Bold',
+      textAlign: 'center',
+    },
+
+    cardCompact: {
+      minHeight: 72,
+      gap: 10,
       paddingHorizontal: 10,
-      paddingTop: 20,
-      paddingBottom: 10,
+      paddingVertical: 10,
+      borderRadius: 12,
+    },
+    iconBoxCompact: {
+      width: 36,
     },
     cardTitleCompact: {
-      fontSize: 16,
-      lineHeight: 19,
+      fontSize: 15,
+      lineHeight: 18,
     },
 
     loadingContainer: {

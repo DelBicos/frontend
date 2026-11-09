@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { HighlightCard, HighlightItem } from '@components/ui/HighlightCard';
+import { useColors } from '@theme/ThemeProvider';
 
 import { webStyle } from '@utils/webStyle';
 import type { StyleProp, ViewStyle } from 'react-native';
@@ -208,14 +209,19 @@ function ControlButton({
   style: StyleProp<ViewStyle>;
   iconSize?: number;
 }) {
+  const colors = useColors();
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [style, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        style,
+        { backgroundColor: colors.overlay },
+        pressed && styles.pressed,
+      ]}
       accessibilityRole="button"
       accessibilityLabel={label}
       hitSlop={6}>
-      <FontAwesome name={icon} size={iconSize} color="#FFFFFF" />
+      <FontAwesome name={icon} size={iconSize} color={colors.textOnImage} />
     </Pressable>
   );
 }

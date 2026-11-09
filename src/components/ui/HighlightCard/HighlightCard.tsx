@@ -71,7 +71,11 @@ const HighlightCardComponent: React.FC<HighlightCardProps> = ({
             {item.ctaLabel ? (
               <View style={styles.cta}>
                 <Text style={styles.ctaText}>{item.ctaLabel}</Text>
-                <FontAwesome name="arrow-right" size={14} color="#000000" />
+                <FontAwesome
+                  name="arrow-right"
+                  size={14}
+                  color={colors.textOnAccent}
+                />
               </View>
             ) : null}
           </View>

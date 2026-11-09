@@ -21,8 +21,27 @@ describe('CategoryStore', () => {
     });
     await useCategoryStore.getState().fetchCategories();
     expect(useCategoryStore.getState().categories).toEqual([
-      { id: 1, title: 'Beleza' },
+      { id: 1, title: 'Beleza', iconName: 'heartbeat' },
     ]);
+  });
+
+  it('entrega cada categoria com o proprio icone', async () => {
+    http.get.mockResolvedValue({
+      data: [
+        { id: 2, title: 'Beleza' },
+        { id: 6, title: 'Pet' },
+      ],
+    });
+    await useCategoryStore.getState().fetchCategories();
+    expect(
+      useCategoryStore.getState().categories.map((c) => c.iconName),
+    ).toEqual(['cut', 'paw']);
+  });
+
+  it('usa o icone padrao para categoria sem icone mapeado', async () => {
+    http.get.mockResolvedValue({ data: [{ id: 99, title: 'Nova' }] });
+    await useCategoryStore.getState().fetchCategories();
+    expect(useCategoryStore.getState().categories[0].iconName).toBe('shapes');
   });
 
   it('mantem a lista em caso de falha', async () => {

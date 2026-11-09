@@ -2,6 +2,7 @@ import { ColorsType } from './types';
 
 const lightContrastColors: ColorsType = {
   primaryBlue: '#003366',
+  brandBlue: '#003366',
   primaryOrange: '#D65A00',
   primaryBlack: '#000000',
   primaryGreen: '#006400',
@@ -18,6 +19,9 @@ const lightContrastColors: ColorsType = {
   textSecondary: '#000000',
   textTertiary: '#444444',
   backgroundElevated: '#FFFFFF',
+  pageBackground: '#FFFFFF',
+  textOnAccent: '#000000',
+  textOnImage: '#FFFFFF',
 
   successBackground: '#D4EDDA',
   successText: '#004400',

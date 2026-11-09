@@ -31,8 +31,8 @@ export const createStyles = (
       fontFamily: 'Afacad-Bold',
       fontSize: large ? 40 : 26,
       lineHeight: large ? 44 : 30,
-      color: '#FFFFFF',
-      textShadowColor: 'rgba(0, 0, 0, 0.6)',
+      color: colors.textOnImage,
+      textShadowColor: colors.overlay,
       textShadowOffset: { width: 0, height: 1 },
       textShadowRadius: 4,
     },
@@ -40,8 +40,8 @@ export const createStyles = (
       fontFamily: 'Afacad-Regular',
       fontSize: large ? 20 : 16,
       lineHeight: large ? 26 : 21,
-      color: '#F5F5F5',
-      textShadowColor: 'rgba(0, 0, 0, 0.6)',
+      color: colors.textOnImage,
+      textShadowColor: colors.overlay,
       textShadowOffset: { width: 0, height: 1 },
       textShadowRadius: 4,
     },
@@ -63,7 +63,7 @@ export const createStyles = (
       // 18px em negrito conta como "texto grande" (WCAG), mantendo contraste
       // suficiente tambem no laranja mais escuro do tema de alto contraste.
       fontSize: 18,
-      color: '#000000',
+      color: colors.textOnAccent,
     },
   });
 };

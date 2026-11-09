@@ -76,7 +76,7 @@ function ProfessionalCard({ professional }: ProfessionalCardProps) {
         </Text>
 
         <View style={styles.ratingContainer}>
-          <FontAwesome name="star" color="#FFC107" size={14} />
+          <FontAwesome name="star" color={colors.primaryOrange} size={14} />
           <Text style={[styles.rating, { color: colorProps.textColor }]}>
             {professional.rating.toFixed(1)}
             <Text

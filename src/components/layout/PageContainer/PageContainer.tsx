@@ -10,7 +10,6 @@ import {
   ViewStyle,
 } from 'react-native';
 import { useColors } from '@theme/ThemeProvider';
-import { useThemeStore, ThemeMode } from '@stores/Theme';
 import { CONTENT_MAX_WIDTH, useBreakpoint } from '@lib/hooks/useBreakpoint';
 import { ColorsType } from '@theme/types';
 
@@ -50,17 +49,15 @@ function PageContainer({
   ...scrollProps
 }: PageContainerProps) {
   const colors = useColors();
-  const theme = useThemeStore((s) => s.theme);
   const { gutter, isCompact } = useBreakpoint();
   const scrollGutter = useWebScrollGutter();
-  const background =
-    theme === ThemeMode.LIGHT_HI_CONTRAST
-      ? colors.primaryWhite
-      : colors.secondaryGray;
 
   return (
     <ScrollView
-      style={[{ flex: 1, backgroundColor: background }, scrollGutter]}
+      style={[
+        { flex: 1, backgroundColor: colors.pageBackground },
+        scrollGutter,
+      ]}
       contentContainerStyle={{
         paddingHorizontal: gutter,
         paddingTop: isCompact ? 16 : 32,

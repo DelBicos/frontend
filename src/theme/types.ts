@@ -1,5 +1,7 @@
 export type ColorsType = {
   primaryBlue: string;
+  /** Azul da marca; no escuro e distinto do cinza de `primaryBlue` nos cards da Home. */
+  brandBlue: string;
   primaryOrange: string;
   primaryBlack: string;
   primaryGreen: string;
@@ -15,6 +17,12 @@ export type ColorsType = {
   textSecondary: string;
   textTertiary: string;
   backgroundElevated: string;
+  /** Fundo das paginas (Inicio, Categorias, Subcategorias...). */
+  pageBackground: string;
+  /** Texto e icone sobre o laranja da marca (preto: contraste AA). */
+  textOnAccent: string;
+  /** Texto e icone sobre foto, faixa escura ou fundo azul (sempre claro). */
+  textOnImage: string;
 
   successBackground: string;
   successText: string;

@@ -40,21 +40,29 @@ export const createStyles = (colors: ColorsType, isCompact: boolean) =>
       gap: 12,
       marginBottom: 14,
     },
-    sectionBadge: {
-      width: 44,
-      height: 44,
-      borderRadius: 12,
+    sectionTitleCard: {
+      alignSelf: 'flex-start',
+      maxWidth: '100%',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: isCompact ? 10 : 14,
+      minHeight: isCompact ? 64 : 72,
+      paddingHorizontal: isCompact ? 12 : 16,
+      paddingVertical: isCompact ? 10 : 12,
+      borderRadius: 16,
+    },
+    sectionIconBox: {
+      width: isCompact ? 40 : 48,
       alignItems: 'center',
       justifyContent: 'center',
     },
     sectionTexts: {
-      flex: 1,
+      flexShrink: 1,
     },
     sectionTitle: {
       fontFamily: 'Afacad-Bold',
-      fontSize: isCompact ? 21 : 24,
-      lineHeight: isCompact ? 26 : 30,
-      color: colors.primaryBlack,
+      fontSize: isCompact ? 19 : 22,
+      lineHeight: isCompact ? 24 : 28,
     },
     sectionCount: {
       fontFamily: 'Afacad-Regular',
@@ -87,10 +95,9 @@ export const createStyles = (colors: ColorsType, isCompact: boolean) =>
       paddingHorizontal: GAP / 2,
     },
     tile: {
-      // No celular, icone em cima do nome: sobra largura para nomes longos.
-      flexDirection: isCompact ? 'column' : 'row',
-      alignItems: isCompact ? 'flex-start' : 'center',
-      gap: isCompact ? 8 : 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
       minHeight: 60,
       // Cresce ate a altura da linha da grade (cards alinhados). Altura em %
       // aqui fazia o card ocupar a tela inteira em alguns navegadores.
@@ -113,17 +120,8 @@ export const createStyles = (colors: ColorsType, isCompact: boolean) =>
         default: { opacity: 0.8 },
       }),
     },
-    tileIcon: {
-      width: 34,
-      height: 34,
-      borderRadius: 17,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.inputBackground,
-    },
     tileTexts: {
-      flex: isCompact ? undefined : 1,
-      alignSelf: 'stretch',
+      flex: 1,
     },
     tileTitle: {
       fontFamily: 'Afacad-SemiBold',
@@ -186,7 +184,7 @@ export const createStyles = (colors: ColorsType, isCompact: boolean) =>
       fontFamily: 'Afacad-Bold',
       fontSize: 17,
       // Texto escuro sobre laranja (contraste AA).
-      color: '#000000',
+      color: colors.textOnAccent,
     },
     fullWidth: {
       alignSelf: 'stretch',

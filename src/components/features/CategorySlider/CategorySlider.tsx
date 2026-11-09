@@ -1,19 +1,12 @@
-import { FontAwesome5 } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useCategoryStore } from '@stores/Category/Category';
 import { Category } from '@stores/Category/types';
+import { ThemeMode, useThemeStore } from '@stores/Theme';
 import { useColors } from '@theme/ThemeProvider';
 import { useBreakpoint } from '@lib/hooks/useBreakpoint';
-import { getCategoryGradient, getCategoryIconName } from '@lib/categoryVisuals';
-import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  ImageBackground,
-  Pressable,
-  Text,
-  View,
-} from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { getCategorySvg } from './categorySvgs';
 import { createStyles } from './styles';
 
 interface CategoryCardProps {
@@ -24,8 +17,9 @@ interface CategoryCardProps {
 }
 
 /**
- * Card de categoria usado em todos os tamanhos de tela: imagem com legenda
- * sobre gradiente, ou gradiente colorido + icone quando nao ha imagem.
+ * Card de categoria: SVG + titulo. Claro: fundo branco, laranja no repouso;
+ * hover azul com conteudo branco. Escuro: fundo cinza e conteudo branco;
+ * hover laranja com conteudo branco.
  */
 function CategoryCard({
   category,
@@ -33,30 +27,62 @@ function CategoryCard({
   compact = false,
 }: CategoryCardProps) {
   const colors = useColors();
+  const theme = useThemeStore((s) => s.theme);
   const styles = createStyles(colors);
   const [isHovered, setIsHovered] = useState(false);
-  const [imageFailed, setImageFailed] = useState(!category.imageUrl);
-  const iconName = getCategoryIconName(category.id);
-  const gradient = getCategoryGradient(category.id);
+  const isDark = theme === ThemeMode.DARK;
+  const isHighContrast = theme === ThemeMode.LIGHT_HI_CONTRAST;
 
-  const label = (
-    <LinearGradient
-      colors={['transparent', 'rgba(0,0,0,0.8)']}
-      style={[styles.cardGradient, compact && styles.cardGradientCompact]}>
-      <Text
-        style={[styles.cardTitle, compact && styles.cardTitleCompact]}
-        numberOfLines={2}>
-        {category.title}
-      </Text>
-    </LinearGradient>
-  );
+  const svg = getCategorySvg(category.id);
+  const scale = compact ? 0.45 : 0.7;
+
+  const cardColors = useMemo(() => {
+    let backgroundColor = colors.cardBackground;
+    let borderColor = colors.borderColor;
+    let contentColor = colors.primaryOrange;
+
+    if (isHighContrast) {
+      contentColor = colors.primaryBlack;
+    }
+
+    if (isDark && !isHovered && !isHighContrast) {
+      backgroundColor = colors.primaryBlue;
+      contentColor = colors.textOnImage;
+      borderColor = colors.primaryBlue;
+    }
+
+    if (isHovered) {
+      if (isHighContrast) {
+        backgroundColor = colors.primaryBlue;
+        contentColor = colors.textOnImage;
+        borderColor = colors.primaryBlue;
+      } else if (isDark) {
+        backgroundColor = colors.primaryOrange;
+        contentColor = colors.textOnImage;
+        borderColor = colors.primaryOrange;
+      } else {
+        backgroundColor = colors.primaryBlue;
+        contentColor = colors.textOnImage;
+        borderColor = colors.primaryBlue;
+      }
+    }
+
+    return { backgroundColor, borderColor, contentColor };
+  }, [isHovered, isDark, isHighContrast, colors]);
+
+  const borderWidth = isHighContrast ? 3 : 1;
 
   return (
     <Pressable
       style={({ pressed }) => [
         styles.card,
         compact && styles.cardCompact,
-        isHovered && styles.cardHovered,
+        {
+          backgroundColor: cardColors.backgroundColor,
+          borderColor: cardColors.borderColor,
+          borderWidth,
+        },
+        (isHovered || pressed) && styles.cardActive,
         pressed && styles.cardPressed,
       ]}
       onPress={() => onPress(category)}
@@ -64,34 +90,28 @@ function CategoryCard({
       onHoverOut={() => setIsHovered(false)}
       accessibilityRole="button"
       accessibilityLabel={`Categoria ${category.title}`}>
-      {imageFailed ? (
-        <LinearGradient colors={gradient} style={styles.cardImage}>
-          <View style={[styles.cardIcon, compact && styles.cardIconCompact]}>
-            <FontAwesome5
-              name={iconName}
-              size={compact ? 20 : 28}
-              color="#FFFFFF"
-              solid
-            />
-          </View>
-          {label}
-        </LinearGradient>
-      ) : (
-        <ImageBackground
-          source={{ uri: category.imageUrl }}
-          style={styles.cardImage}
-          onError={() => setImageFailed(true)}
-          accessibilityIgnoresInvertColors>
-          {label}
-        </ImageBackground>
-      )}
+      <View style={[styles.iconBox, compact && styles.iconBoxCompact]}>
+        <svg.IconComponent
+          width={svg.width * scale}
+          height={svg.height * scale}
+          color={cardColors.contentColor}
+        />
+      </View>
+      <Text
+        style={[
+          styles.cardTitle,
+          compact && styles.cardTitleCompact,
+          { color: cardColors.contentColor },
+        ]}
+        numberOfLines={3}>
+        {category.title}
+      </Text>
     </Pressable>
   );
 }
 
-const GAP = 16;
-/** Largura de conteudo a partir da qual cabem 6 cards lado a lado. */
-const WIDE_GRID_MIN_WIDTH = 1100;
+const GAP = 24;
+const GAP_COMPACT = 12;
 
 function CategorySlider() {
   const [isLoading, setIsLoading] = useState(true);
@@ -99,7 +119,7 @@ function CategorySlider() {
   const navigation = useNavigation();
   const colors = useColors();
   const styles = createStyles(colors);
-  const { isCompact, contentWidth } = useBreakpoint();
+  const { isCompact } = useBreakpoint();
 
   useEffect(() => {
     if (categories.length === 0) {
@@ -133,18 +153,8 @@ function CategorySlider() {
     );
   }
 
-  // Colunas por tamanho de tela. Larguras percentuais (e nao em pixels) para
-  // a grade se ajustar sozinha a barra de rolagem e a qualquer container.
-  // 6 colunas so quando cada card tem ao menos ~170px; senao 3 (duas linhas
-  // equilibradas), evitando cards pequenos com o titulo sobre o icone. No
-  // celular, 2 colunas com o mesmo card em versao compacta.
-  const columns =
-    !isCompact && contentWidth >= WIDE_GRID_MIN_WIDTH
-      ? Math.min(6, categories.length)
-      : isCompact
-        ? 2
-        : 3;
-  const gap = isCompact ? 12 : GAP;
+  const columns = isCompact ? 2 : 3;
+  const gap = isCompact ? GAP_COMPACT : GAP;
 
   return (
     <View style={[styles.grid, { marginHorizontal: -gap / 2, rowGap: gap }]}>
