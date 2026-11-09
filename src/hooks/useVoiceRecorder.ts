@@ -40,7 +40,12 @@ function recordingCancelledError(): Error {
  * O preset gera WebM na web e AAC/M4A no mobile, ambos aceitos pelo backend.
  */
 export function useVoiceRecorder() {
-  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  // `isMeteringEnabled` expõe o nível do áudio no app nativo, usado para
+  // detectar a pausa na fala e enviar sozinho.
+  const recorder = useAudioRecorder({
+    ...RecordingPresets.HIGH_QUALITY,
+    isMeteringEnabled: true,
+  });
   const recorderState = useAudioRecorderState(recorder, 250);
   const [isPreparing, setIsPreparing] = useState(false);
   // Começa ativo porque o ChatWindow pode existir dentro de um Modal ainda
@@ -236,6 +241,7 @@ export function useVoiceRecorder() {
     isRecording: recorderState.isRecording,
     isPreparing,
     durationMillis: recorderState.durationMillis,
+    meteringDb: recorderState.metering,
     startRecording,
     stopRecording,
     cancelRecording,
