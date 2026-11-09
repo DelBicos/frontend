@@ -11,7 +11,6 @@ export const createStyles = (colors: ColorsType) =>
 
     // --- Card de categoria ---
     card: {
-      aspectRatio: 16 / 10,
       borderRadius: 16,
       overflow: 'hidden',
       backgroundColor: colors.cardBackground,
@@ -24,6 +23,15 @@ export const createStyles = (colors: ColorsType) =>
         default: { elevation: 3 },
       }),
     },
+    // Card com imagem: proporcao fixa. Sem imagem: altura minima, para o
+    // icone e o titulo nunca se sobreporem.
+    cardMedia: {
+      aspectRatio: 16 / 10,
+    },
+    cardPlain: {
+      flex: 1,
+      minHeight: 112,
+    },
     cardHovered: {
       transform: [{ translateY: -3 }],
       ...webStyle({ boxShadow: '0px 12px 24px rgba(0, 0, 0, 0.2)' }),
@@ -32,13 +40,17 @@ export const createStyles = (colors: ColorsType) =>
       flex: 1,
       justifyContent: 'flex-end',
     },
-    cardIcon: {
-      position: 'absolute',
-      top: 16,
-      left: 16,
-      width: 52,
-      height: 52,
-      borderRadius: 26,
+    plainContent: {
+      flex: 1,
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      gap: 8,
+      padding: 14,
+    },
+    plainIcon: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -51,30 +63,36 @@ export const createStyles = (colors: ColorsType) =>
       fontSize: 18,
       lineHeight: 22,
       fontFamily: 'Afacad-Bold',
+    },
+    // Titulo sobre a foto: claro, com sombra para manter a leitura.
+    cardTitleOnImage: {
       color: colors.textOnImage,
       textShadowColor: colors.overlay,
       textShadowOffset: { width: 0, height: 1 },
       textShadowRadius: 3,
     },
-    // Titulo sobre o fundo do tema (card sem imagem): sem sombra.
-    cardTitlePlain: {
-      textShadowRadius: 0,
-    },
 
     // --- Variante compacta (celular) ---
     cardCompact: {
-      aspectRatio: 3 / 2,
       borderRadius: 12,
+    },
+    cardMediaCompact: {
+      aspectRatio: 3 / 2,
+    },
+    cardPlainCompact: {
+      minHeight: 96,
+    },
+    plainContentCompact: {
+      padding: 10,
+      gap: 6,
     },
     cardPressed: {
       opacity: 0.85,
     },
-    cardIconCompact: {
-      top: 10,
-      left: 10,
-      width: 38,
-      height: 38,
-      borderRadius: 19,
+    plainIconCompact: {
+      width: 34,
+      height: 34,
+      borderRadius: 17,
     },
     cardGradientCompact: {
       paddingHorizontal: 10,

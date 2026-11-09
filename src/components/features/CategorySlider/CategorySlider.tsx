@@ -64,7 +64,11 @@ function CategoryCard({
       colors={['transparent', colors.overlay]}
       style={[styles.cardGradient, compact && styles.cardGradientCompact]}>
       <Text
-        style={[styles.cardTitle, compact && styles.cardTitleCompact]}
+        style={[
+          styles.cardTitle,
+          styles.cardTitleOnImage,
+          compact && styles.cardTitleCompact,
+        ]}
         numberOfLines={2}>
         {category.title}
       </Text>
@@ -76,6 +80,9 @@ function CategoryCard({
       style={({ pressed }) => [
         styles.card,
         compact && styles.cardCompact,
+        imageFailed
+          ? [styles.cardPlain, compact && styles.cardPlainCompact]
+          : [styles.cardMedia, compact && styles.cardMediaCompact],
         imageFailed && {
           backgroundColor: cardBackground,
           borderColor: isHovered ? cardBackground : colors.borderColor,
@@ -90,36 +97,30 @@ function CategoryCard({
       accessibilityRole="button"
       accessibilityLabel={`Categoria ${category.title}`}>
       {imageFailed ? (
-        <View style={styles.cardImage}>
+        <View
+          style={[styles.plainContent, compact && styles.plainContentCompact]}>
           <View
             style={[
-              styles.cardIcon,
-              compact && styles.cardIconCompact,
+              styles.plainIcon,
+              compact && styles.plainIconCompact,
               { backgroundColor: iconBackground },
             ]}>
             <FontAwesome5
               name={category.iconName}
-              size={compact ? 20 : 28}
+              size={compact ? 16 : 22}
               color={iconColor}
               solid
             />
           </View>
-          <View
+          <Text
             style={[
-              styles.cardGradient,
-              compact && styles.cardGradientCompact,
-            ]}>
-            <Text
-              style={[
-                styles.cardTitle,
-                styles.cardTitlePlain,
-                compact && styles.cardTitleCompact,
-                { color: titleColor },
-              ]}
-              numberOfLines={2}>
-              {category.title}
-            </Text>
-          </View>
+              styles.cardTitle,
+              compact && styles.cardTitleCompact,
+              { color: titleColor },
+            ]}
+            numberOfLines={2}>
+            {category.title}
+          </Text>
         </View>
       ) : (
         <ImageBackground
