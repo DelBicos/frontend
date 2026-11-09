@@ -17,8 +17,9 @@ interface CategoryCardProps {
 }
 
 /**
- * Card de categoria: SVG + titulo; fundo branco e laranja no repouso; hover
- * azul (claro) ou laranja (escuro) com icone e titulo brancos.
+ * Card de categoria: SVG + titulo. Claro: fundo branco, laranja no repouso;
+ * hover azul com conteudo branco. Escuro: fundo cinza e conteudo branco;
+ * hover laranja com conteudo branco.
  */
 function CategoryCard({
   category,
@@ -42,6 +43,12 @@ function CategoryCard({
 
     if (isHighContrast) {
       contentColor = colors.primaryBlack;
+    }
+
+    if (isDark && !isHovered && !isHighContrast) {
+      backgroundColor = colors.primaryBlue;
+      contentColor = colors.textOnImage;
+      borderColor = colors.primaryBlue;
     }
 
     if (isHovered) {

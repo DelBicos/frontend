@@ -2,6 +2,7 @@ import { ColorsType } from './types';
 
 const lightColors: ColorsType = {
   primaryBlue: '#005A93',
+  brandBlue: '#005A93',
   primaryOrange: '#FC8200',
   primaryBlack: '#000000',
   primaryGreen: '#2E7D32',

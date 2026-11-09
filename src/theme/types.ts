@@ -1,5 +1,7 @@
 export type ColorsType = {
   primaryBlue: string;
+  /** Azul da marca; no escuro e distinto do cinza de `primaryBlue` nos cards da Home. */
+  brandBlue: string;
   primaryOrange: string;
   primaryBlack: string;
   primaryGreen: string;

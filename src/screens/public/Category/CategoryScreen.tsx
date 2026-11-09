@@ -36,6 +36,25 @@ function CategoryScreen() {
   const colors = useColors();
   const theme = useThemeStore((s) => s.theme);
   const isHighContrast = theme === ThemeMode.LIGHT_HI_CONTRAST;
+
+  const sectionHeaderColors = useMemo(() => {
+    if (isHighContrast) {
+      return {
+        backgroundColor: colors.cardBackground,
+        borderColor: colors.borderColor,
+        contentColor: colors.primaryBlack,
+        borderWidth: 3,
+        mutedContentColor: colors.textSecondary,
+      };
+    }
+    return {
+      backgroundColor: colors.brandBlue,
+      borderColor: colors.brandBlue,
+      contentColor: colors.textOnImage,
+      borderWidth: 1,
+      mutedContentColor: colors.textOnImage,
+    };
+  }, [colors, isHighContrast]);
   const navigation = useNavigation();
   const { isCompact, isExpanded } = useBreakpoint();
   const styles = useMemo(
@@ -230,31 +249,48 @@ function CategoryScreen() {
             visibleCategories.map((category) => {
               const items = byCategory.get(category.id) ?? [];
               const svg = getCategorySvg(category.id);
-              const sectionIconColor = isHighContrast
-                ? colors.primaryBlack
-                : colors.primaryOrange;
-              const badgeScale = 28 / Math.max(svg.width, svg.height);
+              const iconScale = isCompact ? 0.4 : 0.5;
               const SectionIcon = svg.IconComponent;
               return (
                 <View key={category.id} style={styles.section}>
                   <View style={styles.sectionHeader}>
-                    <View style={styles.sectionBadge}>
-                      <SectionIcon
-                        width={svg.width * badgeScale}
-                        height={svg.height * badgeScale}
-                        color={sectionIconColor}
-                      />
-                    </View>
-                    <View style={styles.sectionTexts}>
-                      <Text
-                        style={styles.sectionTitle}
-                        accessibilityRole="header"
-                        {...({ 'aria-level': 2 } as object)}>
-                        {category.title}
-                      </Text>
-                      <Text style={styles.sectionCount}>
-                        {items.length} serviços
-                      </Text>
+                    <View
+                      style={[
+                        styles.sectionTitleCard,
+                        {
+                          backgroundColor: sectionHeaderColors.backgroundColor,
+                          borderColor: sectionHeaderColors.borderColor,
+                          borderWidth: sectionHeaderColors.borderWidth,
+                        },
+                      ]}>
+                      <View style={styles.sectionIconBox}>
+                        <SectionIcon
+                          width={svg.width * iconScale}
+                          height={svg.height * iconScale}
+                          color={sectionHeaderColors.contentColor}
+                        />
+                      </View>
+                      <View style={styles.sectionTexts}>
+                        <Text
+                          style={[
+                            styles.sectionTitle,
+                            { color: sectionHeaderColors.contentColor },
+                          ]}
+                          accessibilityRole="header"
+                          {...({ 'aria-level': 2 } as object)}>
+                          {category.title}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.sectionCount,
+                            {
+                              color: sectionHeaderColors.mutedContentColor,
+                              opacity: isHighContrast ? 1 : 0.85,
+                            },
+                          ]}>
+                          {items.length} serviços
+                        </Text>
+                      </View>
                     </View>
                     <Pressable
                       onPress={() => openCategory(category)}

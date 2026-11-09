@@ -207,20 +207,19 @@ export const createStyles = (colors: ColorsType) =>
       paddingHorizontal: 20,
       borderRadius: 999,
       justifyContent: 'center',
-      backgroundColor: colors.primaryOrange,
+      backgroundColor: colors.brandBlue,
       ...webStyle({
         cursor: 'pointer',
-        transition: 'background-color 0.15s ease',
+        transition: 'opacity 0.15s ease',
       }),
     },
     actionButtonActive: {
-      backgroundColor: colors.primaryOrangeHover,
+      opacity: 0.88,
     },
     actionText: {
       fontFamily: 'Afacad-Bold',
       fontSize: 18,
-      // Texto escuro sobre laranja (contraste AA).
-      color: '#000000',
+      color: colors.textOnImage,
     },
   });
 

@@ -2,6 +2,7 @@ import { ColorsType } from './types';
 
 const darkColors: ColorsType = {
   primaryBlue: '#545454',
+  brandBlue: '#005A93',
   primaryOrange: '#FC8200',
   primaryBlack: '#F9FAFB',
   primaryGreen: '#4ADE80',
