@@ -149,7 +149,7 @@ export const createStyles = (colors: ColorsType) =>
     solidButtonText: {
       fontFamily: 'Afacad-Bold',
       fontSize: 16,
-      color: '#000000',
+      color: colors.textOnAccent,
     },
     buttonDisabled: {
       opacity: 0.55,

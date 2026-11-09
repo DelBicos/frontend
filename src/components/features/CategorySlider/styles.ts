@@ -9,9 +9,6 @@ export const createStyles = (colors: ColorsType) =>
       flexWrap: 'wrap',
     },
 
-    // --- Card de categoria: icone a esquerda, titulo ao centro ---
-    // Sem aspectRatio: a altura minima garante que icone e titulo nunca se
-    // sobreponham, e o card cresce se o titulo quebrar em mais linhas.
     card: {
       flex: 1,
       minHeight: 96,
@@ -21,28 +18,34 @@ export const createStyles = (colors: ColorsType) =>
       gap: 16,
       paddingHorizontal: 16,
       paddingVertical: 14,
-      borderRadius: 12,
+      borderRadius: 16,
       overflow: 'hidden',
-      // A sombra fica no card inteiro; o titulo nao tem sombra.
       ...Platform.select({
         web: webStyle({
-          boxShadow: '0px 6px 18px rgba(0, 0, 0, 0.12)',
+          boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.08)',
           cursor: 'pointer',
           transition:
-            'transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease',
+            'transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease',
         }),
-        default: { elevation: 3 },
+        ios: {
+          shadowColor: colors.primaryBlack,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 4,
+        },
+        android: { elevation: 3 },
       }),
     },
-    cardHovered: {
-      transform: [{ translateY: -3 }],
-      ...webStyle({ boxShadow: '0px 12px 24px rgba(0, 0, 0, 0.2)' }),
+    cardActive: {
+      transform: [{ scale: 1.03 }],
+      ...Platform.select({
+        web: webStyle({ boxShadow: '0px 8px 20px rgba(0, 0, 0, 0.12)' }),
+        default: {},
+      }),
     },
     cardPressed: {
       opacity: 0.85,
     },
-    // Caixa de largura fixa: os icones tem larguras diferentes e os titulos
-    // ficam alinhados entre os cards.
     iconBox: {
       width: 56,
       alignItems: 'center',
@@ -56,16 +59,15 @@ export const createStyles = (colors: ColorsType) =>
       textAlign: 'center',
     },
 
-    // --- Variante compacta (celular) ---
     cardCompact: {
       minHeight: 72,
       gap: 10,
       paddingHorizontal: 10,
       paddingVertical: 10,
-      borderRadius: 10,
+      borderRadius: 12,
     },
     iconBoxCompact: {
-      width: 30,
+      width: 36,
     },
     cardTitleCompact: {
       fontSize: 15,

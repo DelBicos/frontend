@@ -1,4 +1,6 @@
 import DelBicosLogo from '@assets/DelBicos_LogoH.png';
+import LocalIcon from '@assets/Local.svg';
+import SearchIcon from '@assets/Search.svg';
 import Avatar from '@components/ui/Avatar';
 import { MapComponent } from '@components/ui/MapComponent/MapComponent';
 import { ThemeToggle, THEME_OPTIONS } from '@components/ui/ThemeToggle';
@@ -366,7 +368,7 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = ({ route }) => {
       accessibilityLabel={
         city ? `Local: ${locationLabel}. Alterar local` : 'Definir local'
       }>
-      <FontAwesome name="map-marker" size={16} color={colors.primaryBlack} />
+      <LocalIcon width={16} height={22} color={colors.primaryBlack} />
       {!isCompact ? (
         <Text style={styles.locationText} numberOfLines={1}>
           {locationLabel}
@@ -511,9 +513,9 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = ({ route }) => {
       {/* Linha 2: busca e local, alinhados ao conteudo */}
       <View style={[styles.searchRow, { paddingHorizontal: sideInset }]}>
         <View style={styles.searchField}>
-          <FontAwesome
-            name="search"
-            size={16}
+          <SearchIcon
+            width={16}
+            height={16}
             color={colors.textSecondary}
             style={styles.searchIcon}
           />
@@ -550,7 +552,7 @@ const HeaderWeb: React.FC<NativeStackHeaderProps> = ({ route }) => {
             accessibilityRole="button"
             accessibilityLabel="Buscar">
             {isCompact ? (
-              <FontAwesome name="search" size={16} color="#000000" />
+              <SearchIcon width={16} height={16} color={colors.textOnAccent} />
             ) : (
               <Text style={styles.solidButtonText}>Buscar</Text>
             )}

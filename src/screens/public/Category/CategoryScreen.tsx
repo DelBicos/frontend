@@ -6,7 +6,8 @@ import {
   Text,
   View,
 } from 'react-native';
-import { FontAwesome, FontAwesome5 } from '@expo/vector-icons';
+import { FontAwesome } from '@expo/vector-icons';
+import { getCategorySvg } from '@components/features/CategorySlider/categorySvgs';
 import { useNavigation } from '@react-navigation/native';
 import { useColors } from '@theme/ThemeProvider';
 import { ThemeMode, useThemeStore } from '@stores/Theme';
@@ -228,19 +229,20 @@ function CategoryScreen() {
           ) : (
             visibleCategories.map((category) => {
               const items = byCategory.get(category.id) ?? [];
+              const svg = getCategorySvg(category.id);
+              const sectionIconColor = isHighContrast
+                ? colors.primaryBlack
+                : colors.primaryOrange;
+              const badgeScale = 28 / Math.max(svg.width, svg.height);
+              const SectionIcon = svg.IconComponent;
               return (
                 <View key={category.id} style={styles.section}>
                   <View style={styles.sectionHeader}>
                     <View style={styles.sectionBadge}>
-                      <FontAwesome5
-                        name={category.iconName}
-                        size={20}
-                        color={
-                          isHighContrast
-                            ? colors.primaryBlack
-                            : colors.primaryOrange
-                        }
-                        solid
+                      <SectionIcon
+                        width={svg.width * badgeScale}
+                        height={svg.height * badgeScale}
+                        color={sectionIconColor}
                       />
                     </View>
                     <View style={styles.sectionTexts}>

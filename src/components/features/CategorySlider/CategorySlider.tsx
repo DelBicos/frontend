@@ -1,12 +1,12 @@
-import { FontAwesome5 } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useCategoryStore } from '@stores/Category/Category';
 import { Category } from '@stores/Category/types';
 import { ThemeMode, useThemeStore } from '@stores/Theme';
 import { useColors } from '@theme/ThemeProvider';
 import { useBreakpoint } from '@lib/hooks/useBreakpoint';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { getCategorySvg } from './categorySvgs';
 import { createStyles } from './styles';
 
 interface CategoryCardProps {
@@ -17,9 +17,8 @@ interface CategoryCardProps {
 }
 
 /**
- * Card de categoria, igual em todos os tamanhos de tela: fundo do card com
- * o icone e o titulo em laranja; ao passar o mouse, fundo azul e icone e
- * titulo brancos. Todas as cores vem do tema.
+ * Card de categoria: SVG + titulo; fundo branco e laranja no repouso; hover
+ * azul (claro) ou laranja (escuro) com icone e titulo brancos.
  */
 function CategoryCard({
   category,
@@ -30,13 +29,41 @@ function CategoryCard({
   const theme = useThemeStore((s) => s.theme);
   const styles = createStyles(colors);
   const [isHovered, setIsHovered] = useState(false);
+  const isDark = theme === ThemeMode.DARK;
   const isHighContrast = theme === ThemeMode.LIGHT_HI_CONTRAST;
 
-  const contentColor = isHovered
-    ? colors.textOnImage
-    : isHighContrast
-      ? colors.primaryBlack
-      : colors.primaryOrange;
+  const svg = getCategorySvg(category.id);
+  const scale = compact ? 0.45 : 0.7;
+
+  const cardColors = useMemo(() => {
+    let backgroundColor = colors.cardBackground;
+    let borderColor = colors.borderColor;
+    let contentColor = colors.primaryOrange;
+
+    if (isHighContrast) {
+      contentColor = colors.primaryBlack;
+    }
+
+    if (isHovered) {
+      if (isHighContrast) {
+        backgroundColor = colors.primaryBlue;
+        contentColor = colors.textOnImage;
+        borderColor = colors.primaryBlue;
+      } else if (isDark) {
+        backgroundColor = colors.primaryOrange;
+        contentColor = colors.textOnImage;
+        borderColor = colors.primaryOrange;
+      } else {
+        backgroundColor = colors.primaryBlue;
+        contentColor = colors.textOnImage;
+        borderColor = colors.primaryBlue;
+      }
+    }
+
+    return { backgroundColor, borderColor, contentColor };
+  }, [isHovered, isDark, isHighContrast, colors]);
+
+  const borderWidth = isHighContrast ? 3 : 1;
 
   return (
     <Pressable
@@ -44,13 +71,11 @@ function CategoryCard({
         styles.card,
         compact && styles.cardCompact,
         {
-          backgroundColor: isHovered
-            ? colors.primaryBlue
-            : colors.cardBackground,
-          borderColor: isHovered ? colors.primaryBlue : colors.primaryBlack,
-          borderWidth: isHighContrast ? 3 : 0,
+          backgroundColor: cardColors.backgroundColor,
+          borderColor: cardColors.borderColor,
+          borderWidth,
         },
-        isHovered && styles.cardHovered,
+        (isHovered || pressed) && styles.cardActive,
         pressed && styles.cardPressed,
       ]}
       onPress={() => onPress(category)}
@@ -59,18 +84,17 @@ function CategoryCard({
       accessibilityRole="button"
       accessibilityLabel={`Categoria ${category.title}`}>
       <View style={[styles.iconBox, compact && styles.iconBoxCompact]}>
-        <FontAwesome5
-          name={category.iconName}
-          size={compact ? 26 : 44}
-          color={contentColor}
-          solid
+        <svg.IconComponent
+          width={svg.width * scale}
+          height={svg.height * scale}
+          color={cardColors.contentColor}
         />
       </View>
       <Text
         style={[
           styles.cardTitle,
           compact && styles.cardTitleCompact,
-          { color: contentColor },
+          { color: cardColors.contentColor },
         ]}
         numberOfLines={3}>
         {category.title}
@@ -122,9 +146,6 @@ function CategorySlider() {
     );
   }
 
-  // 3 colunas no tablet e no web, 2 no celular. Larguras percentuais (e nao
-  // em pixels) para a grade se ajustar sozinha a barra de rolagem e a
-  // qualquer container.
   const columns = isCompact ? 2 : 3;
   const gap = isCompact ? GAP_COMPACT : GAP;
 
