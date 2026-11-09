@@ -111,6 +111,22 @@ describe('ServicesStore', () => {
     });
   });
 
+  it('busca semantica indisponivel (503) cai para a busca por titulo', async () => {
+    http.get
+      .mockRejectedValueOnce({ isAxiosError: true, response: { status: 503 } })
+      .mockResolvedValueOnce({
+        data: { data: [{ id: 4, title: 'Instalação de Tomadas' }], total: 1 },
+      });
+    const result = await useServicesStore
+      .getState()
+      .searchServicesSemantically('tomada');
+    expect(http.get).toHaveBeenLastCalledWith('/api/services', {
+      params: { q: 'tomada', limit: 20 },
+    });
+    expect(result).toMatchObject({ total: 1, resultsLimited: false });
+    expect(result.services).toHaveLength(1);
+  });
+
   it('CRUD dos servicos do profissional atualiza myServices', async () => {
     http.get.mockResolvedValue({ data: { data: [{ id: 1, title: 'A' }] } });
     await useServicesStore.getState().fetchMyServices({ page: 1 });

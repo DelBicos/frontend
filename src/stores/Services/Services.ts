@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { isAxiosError } from 'axios';
 import { backendHttpClient } from '@lib/helpers/httpClient';
 
 import { logger } from '@lib/logger';
@@ -205,6 +206,21 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
         resultsLimited: res.data?.results_limited === true,
       };
     } catch (error) {
+      // Sem o serviço de IA (503), cai para a busca por título do catálogo,
+      // para o usuário não ficar sem resultado.
+      if (isAxiosError(error) && error.response?.status === 503) {
+        const res = await backendHttpClient.get('/api/services', {
+          params: { q: trimmedQuery, limit: 20 },
+        });
+        const raw: RawService[] = Array.isArray(res.data)
+          ? res.data
+          : (res.data?.data ?? []);
+        return {
+          services: raw.map(normalizeService),
+          total: Number(res.data?.total ?? raw.length),
+          resultsLimited: false,
+        };
+      }
       logger.error('[Services] searchServicesSemantically', error);
       throw error;
     }
