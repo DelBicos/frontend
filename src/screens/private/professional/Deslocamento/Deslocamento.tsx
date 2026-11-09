@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  Platform,
   ActivityIndicator,
   Linking,
   SafeAreaView,
@@ -27,6 +28,16 @@ import { DeslocamentoActiveCard } from '@components/features/DeslocamentoActiveC
 import { DeslocamentoActionBar } from '@components/features/DeslocamentoActionBar';
 import { useDeslocamentoTracking } from './useDeslocamentoTracking';
 import { createStyles } from './styles';
+
+// Alert.alert não aparece no react-native-web. Nos erros, a web usa
+// window.alert para a profissional saber por que a ação não avançou.
+const showError = (title: string, message: string) => {
+  if (Platform.OS === 'web') {
+    window.alert(`${title}\n\n${message}`);
+    return;
+  }
+  Alert.alert(title, message);
+};
 
 export interface DeslocamentoParams {
   appointmentId: number | string;
@@ -100,7 +111,7 @@ export const DeslocamentoScreen: React.FC = () => {
     params.address || 'Endereço de atendimento',
   );
 
-  const { startGpsTracking, stopGpsTracking, notifyArrived } =
+  const { startGpsTracking, stopGpsTracking, notifyArrived, getLastPosition } =
     useDeslocamentoTracking({
       numericAppointmentId,
       appointmentId: params.appointmentId,
@@ -183,7 +194,7 @@ export const DeslocamentoScreen: React.FC = () => {
       if (params.appointmentId) {
         const res = await markInTransit(params.appointmentId);
         if (!res.success && res.error) {
-          Alert.alert('Erro', res.error);
+          showError('Erro', res.error);
           return;
         }
       }
@@ -194,7 +205,7 @@ export const DeslocamentoScreen: React.FC = () => {
         'Você informou que está a caminho do local. Sua localização está sendo transmitida em tempo real para o cliente a cada 5 segundos.',
       );
     } catch {
-      Alert.alert('Erro', 'Erro ao atualizar status para em deslocamento.');
+      showError('Erro', 'Erro ao atualizar status para em deslocamento.');
     } finally {
       setLoading(false);
     }
@@ -216,21 +227,27 @@ export const DeslocamentoScreen: React.FC = () => {
 
   const handleChegueiNoLocal = async () => {
     setArrivedLoading(true);
-    let coords: { latitude?: number; longitude?: number } = {};
+    // Na web, getCurrentPositionAsync devolve a posição guardada (maximumAge
+    // infinito), que pode ser o ponto de partida. A posição mais recente da
+    // rota vem do acompanhamento em tempo real.
+    let coords: { latitude?: number; longitude?: number } =
+      getLastPosition() ?? {};
 
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status === 'granted') {
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.High,
-        });
-        coords = {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        };
+    if (coords.latitude === undefined) {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === 'granted') {
+          const location = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.High,
+          });
+          coords = {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          };
+        }
+      } catch {
+        // Coordenadas indisponíveis no momento
       }
-    } catch {
-      // Coordenadas indisponíveis no momento
     }
 
     try {
@@ -242,10 +259,7 @@ export const DeslocamentoScreen: React.FC = () => {
           setOtpMode('checkin');
           setShowOtpModal(true);
         } else {
-          Alert.alert(
-            'Atenção',
-            response.error || 'Erro ao confirmar chegada.',
-          );
+          showError('Atenção', response.error || 'Erro ao confirmar chegada.');
         }
       } else {
         stopGpsTracking();
@@ -253,7 +267,7 @@ export const DeslocamentoScreen: React.FC = () => {
         setShowOtpModal(true);
       }
     } catch {
-      Alert.alert('Atenção', 'Erro ao confirmar chegada.');
+      showError('Atenção', 'Erro ao confirmar chegada.');
     } finally {
       setArrivedLoading(false);
     }
