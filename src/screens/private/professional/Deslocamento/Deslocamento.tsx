@@ -24,6 +24,7 @@ import { NavigationAppModal } from '@components/features/NavigationAppModal';
 import { OtpConfirmationModal } from '@components/features/OtpConfirmationModal';
 import { DeslocamentoInitialCard } from '@components/features/DeslocamentoInitialCard';
 import { DeslocamentoActiveCard } from '@components/features/DeslocamentoActiveCard';
+import { DeslocamentoActionBar } from '@components/features/DeslocamentoActionBar';
 import { useDeslocamentoTracking } from './useDeslocamentoTracking';
 import { createStyles } from './styles';
 
@@ -77,6 +78,7 @@ export const DeslocamentoScreen: React.FC = () => {
     params.status === 'arrived' || params.status === 'in_progress',
   );
   const [inProgress, setInProgress] = useState(params.status === 'in_progress');
+  const [completed, setCompleted] = useState(params.status === 'completed');
   const [loading, setLoading] = useState(false);
   const [arrivedLoading, setArrivedLoading] = useState(false);
   const [showMapModal, setShowMapModal] = useState(false);
@@ -143,6 +145,11 @@ export const DeslocamentoScreen: React.FC = () => {
               setInTransit(true);
               setArrived(true);
               setInProgress(true);
+            } else if (appt.status === 'completed') {
+              setInTransit(true);
+              setArrived(true);
+              setInProgress(false);
+              setCompleted(true);
             }
           }
         })
@@ -156,6 +163,13 @@ export const DeslocamentoScreen: React.FC = () => {
   const [otp, setOtp] = useState<string[]>(['', '', '', '']);
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpError, setOtpError] = useState('');
+
+  const openOtp = (mode: 'checkin' | 'checkout') => {
+    setOtp(['', '', '', '']);
+    setOtpError('');
+    setOtpMode(mode);
+    setShowOtpModal(true);
+  };
 
   const inputRef0 = useRef<TextInput | null>(null);
   const inputRef1 = useRef<TextInput | null>(null);
@@ -284,7 +298,9 @@ export const DeslocamentoScreen: React.FC = () => {
         if (otpMode === 'checkout') {
           const res = await completeService(params.appointmentId, code);
           if (res.success) {
+            // Na web o Alert.alert com botões não aparece: a tela mostra a conclusão.
             setInProgress(false);
+            setCompleted(true);
             setShowOtpModal(false);
             Alert.alert(
               'Serviço Concluído! 🎉',
@@ -310,6 +326,7 @@ export const DeslocamentoScreen: React.FC = () => {
       } else {
         if (otpMode === 'checkout') {
           setInProgress(false);
+          setCompleted(true);
           setShowOtpModal(false);
           Alert.alert(
             'Serviço Concluído! 🎉',
@@ -393,81 +410,21 @@ export const DeslocamentoScreen: React.FC = () => {
             startTime={params.startTime}
             inProgress={inProgress}
             arrived={arrived}
+            completed={completed}
             onOpenMap={() => setShowMapModal(true)}
           />
         </ScrollView>
 
-        <View style={styles.active.bottomBar}>
-          {inProgress ? (
-            <TouchableOpacity
-              style={[
-                styles.active.bottomActionBtn,
-                { backgroundColor: colors.primaryGreen },
-              ]}
-              onPress={() => {
-                setOtp(['', '', '', '']);
-                setOtpError('');
-                setOtpMode('checkout');
-                setShowOtpModal(true);
-              }}
-              activeOpacity={0.85}>
-              <Ionicons
-                name="checkmark-done-circle-outline"
-                size={22}
-                color={colors.primaryWhite}
-                style={{ marginRight: 8 }}
-              />
-              <Text style={styles.active.bottomActionBtnText}>
-                Finalizar Atendimento (Check-out) 🏁
-              </Text>
-            </TouchableOpacity>
-          ) : arrived ? (
-            <TouchableOpacity
-              style={[
-                styles.active.bottomActionBtn,
-                { backgroundColor: colors.primaryOrange },
-              ]}
-              onPress={() => {
-                setOtp(['', '', '', '']);
-                setOtpError('');
-                setOtpMode('checkin');
-                setShowOtpModal(true);
-              }}
-              activeOpacity={0.85}>
-              <Ionicons
-                name="key-outline"
-                size={22}
-                color={colors.primaryWhite}
-                style={{ marginRight: 8 }}
-              />
-              <Text style={styles.active.bottomActionBtnText}>
-                Digitar Código do Cliente 🔐
-              </Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              style={styles.active.bottomActionBtn}
-              onPress={handleChegueiNoLocal}
-              disabled={arrivedLoading}
-              activeOpacity={0.85}>
-              {arrivedLoading ? (
-                <ActivityIndicator color={colors.primaryWhite} size="small" />
-              ) : (
-                <>
-                  <Ionicons
-                    name="checkmark-circle-outline"
-                    size={22}
-                    color={colors.primaryWhite}
-                    style={{ marginRight: 8 }}
-                  />
-                  <Text style={styles.active.bottomActionBtnText}>
-                    Cheguei no Local 🎯
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
-          )}
-        </View>
+        <DeslocamentoActionBar
+          arrived={arrived}
+          inProgress={inProgress}
+          completed={completed}
+          arrivedLoading={arrivedLoading}
+          onArrived={handleChegueiNoLocal}
+          onCheckin={() => openOtp('checkin')}
+          onCheckout={() => openOtp('checkout')}
+          onBack={() => navigation.goBack()}
+        />
 
         <OtpConfirmationModal
           visible={showOtpModal}
