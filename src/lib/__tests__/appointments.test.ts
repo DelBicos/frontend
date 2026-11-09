@@ -46,6 +46,17 @@ describe('groupAgenda', () => {
     expect(ids(g.canceled)).toEqual([2, 6]);
   });
 
+  it('atendimento em domicilio em curso fica em "Proximos", nao em cancelados', () => {
+    const emCurso = [
+      appt(10, AppointmentStatus.IN_TRANSIT, new Date(2026, 8, 25, 9, 0)),
+      appt(11, AppointmentStatus.ARRIVED, new Date(2026, 8, 25, 9, 0)),
+      appt(12, AppointmentStatus.IN_PROGRESS, new Date(2026, 8, 25, 9, 0)),
+    ];
+    const g = groupAgenda(emCurso, 'client', NOW);
+    expect(ids(g.upcoming)).toEqual([10, 11, 12]);
+    expect(g.canceled).toEqual([]);
+  });
+
   it('cliente: confirmados que ja terminaram ficam no historico', () => {
     const g = groupAgenda(list, 'client', NOW);
     expect(g.toComplete).toEqual([]);
