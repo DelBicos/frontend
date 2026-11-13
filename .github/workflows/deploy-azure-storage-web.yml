@@ -74,6 +74,18 @@ jobs:
         if: steps.storage.outputs.configured == 'true'
         run: npm ci
 
+      - name: Lint
+        if: steps.storage.outputs.configured == 'true'
+        run: npm run lint
+
+      - name: Typecheck
+        if: steps.storage.outputs.configured == 'true'
+        run: npm run typecheck
+
+      - name: Testes
+        if: steps.storage.outputs.configured == 'true'
+        run: npm test -- --ci
+
       - name: Gerar o site (web)
         if: steps.storage.outputs.configured == 'true'
         run: npx expo export --platform web
