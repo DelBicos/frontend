@@ -17,12 +17,13 @@
   <a href="#-team">Team</a> |
   <a href="#-project-structure">Project Structure</a> |
   <a href="#️-installation">Installation</a> |
-  <a href="https://github.com/fershibli/DelBicosBackend">Backend Project</a>
+  <a href="https://github.com/DelBicos/backend">Backend</a> |
+  <a href="https://github.com/DelBicos/docs">Docs</a>
 </p>
 
 # 💻 About
 
-DelBicos - Delivery de Bicos, é um projeto que propõe conectar clientes e trabalhadores informais na mesma vizinhança, garantindo demanda local, qualidade e segurança e será projetado através de um website.
+DelBicos (Delivery de Bicos) conecta clientes e trabalhadores informais da mesma vizinhança. O produto é um aplicativo [Expo](https://expo.dev) (React Native) para Android, iOS e web. A API fica no repositório [DelBicos/backend](https://github.com/DelBicos/backend).
 
 Profissionais informais, de diversas vertentes, têm muita dificuldade para adquirir clientes na sua região de atuação, muitas vezes tendo que se deslocar por longas distâncias para chegar aos seus clientes, quando não o inverso. Enquanto que na outra ponta, clientes que se mudaram há pouco tempo para a região encontram muita dificuldade e insegurança ao procurar por profissionais confiáveis para realizar tarefas em suas residências.
 
@@ -146,7 +147,9 @@ O protótipo do DelBicos no Figma serve como uma demonstração visual interativ
 
 ## 🛠️ Tecnologies
 
-![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white) ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white) ![Javascript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black) ![Git](https://img.shields.io/badge/GIT-E44C30?style=for-the-badge&logo=git&logoColor=white) ![Typescript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white) ![Swift](https://img.shields.io/badge/swift-F54A2A?style=for-the-badge&logo=swift&logoColor=white) ![Objective-C](https://img.shields.io/badge/OBJECTIVE--C-%233A95E3.svg?style=for-the-badge&logo=apple&logoColor=white) ![Java](https://img.shields.io/badge/java-%23ED8B00.svg?style=for-the-badge&logo=openjdk&logoColor=white) ![Kotlin](https://img.shields.io/badge/Kotlin-0095D5?&style=for-the-badge&logo=kotlin&logoColor=white) ![Express](https://img.shields.io/badge/Express%20js-000000?style=for-the-badge&logo=express&logoColor=white) ![MaterialUI](https://img.shields.io/badge/Material%20UI-007FFF?style=for-the-badge&logo=mui&logoColor=white) ![Node](https://img.shields.io/badge/Node%20js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white) ![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white) ![Postman](https://img.shields.io/badge/Postman-FF6C37?style=for-the-badge&logo=Postman&logoColor=white) ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB) ![React Native](https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB) ![Zustand](https://img.shields.io/badge/Zustand-007ACC?style=for-the-badge&logo=React&logoColor=white) ![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white) ![Figma](https://img.shields.io/badge/Figma-F24E1E?style=for-the-badge&logo=figma&logoColor=white) ![Penpot](https://img.shields.io/badge/Penpot-000000?style=for-the-badge&logo=penpot&logoColor=white) ![Gimp](https://img.shields.io/badge/gimp-5C5543?style=for-the-badge&logo=gimp&logoColor=white) ![Inkscape](https://img.shields.io/badge/Inkscape-000000?style=for-the-badge&logo=Inkscape&logoColor=white) ![Vscode](https://img.shields.io/badge/Vscode-007ACC?style=for-the-badge&logo=visual-studio-code&logoColor=white) ![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white) ![iOS](https://img.shields.io/badge/iOS-000000?style=for-the-badge&logo=ios&logoColor=white)
+O app é Expo 54, React Native 0.81 e React 19, em TypeScript. O estado e as chamadas HTTP ficam nas stores Zustand. Navegação com React Navigation. Pagamentos com Stripe, chat com Socket.io e mapas com Google Maps.
+
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white) ![Expo](https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white) ![React Native](https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB) ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB) ![Zustand](https://img.shields.io/badge/Zustand-443E38?style=for-the-badge) ![Stripe](https://img.shields.io/badge/Stripe-635BFF?style=for-the-badge&logo=stripe&logoColor=white) ![Socket.io](https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socketdotio&logoColor=white) ![Jest](https://img.shields.io/badge/Jest-C21325?style=for-the-badge&logo=jest&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
 <br>
 
@@ -162,30 +165,32 @@ O protótipo do DelBicos no Figma serve como uma demonstração visual interativ
 
 ## 📝 Project Structure
 
+A tela compõe layout, feature e UI. Só uma store fala com a API: componente não chama HTTP, e componente de UI não lê store. `src/lib` guarda integração de plataforma (cliente HTTP, Stripe, mapas, upload, logger, SSE). `src/utils` guarda função pura, sem interpretar campo do backend. A regra de negócio da API continua no servidor; o que o app repete é só espelho para a experiência. O porquê de cada camada está em [docs/architecture.md](docs/architecture.md).
+
 ```
 DelBicosV2
 ├── src
-│  ├── api             # Legado (auth, chatbot, pagamentos). Chamadas novas vão para as stores
+│  ├── api             # Legado. Chamada nova fica na store
 │  ├── assets          # Imagens e fontes
 │  ├── components
-│  │  ├── features     # Componentes com regra de negócio (agenda, gestão do agendamento...)
-│  │  ├── layout       # Cabeçalho, navegação inferior, container de página
-│  │  └── ui           # Peças reutilizáveis (botão, campos, selo de verificado...)
-│  ├── config          # Variáveis de ambiente do app
-│  ├── hooks           # Hooks reutilizáveis (voz, sockets, sessão do chatbot)
-│  ├── lib             # Integrações de plataforma (HTTP, Stripe, upload, logger) e regras espelhadas do servidor
-│  ├── utils           # Funções puras (erros, formatação, estilos só-web, nomes de ícones)
-│  ├── screens         # Telas e navegação (public / private / admin)
-│  ├── stores          # Estado global (Zustand) e único lugar que fala com a API
-│  └── theme           # Cores e temas (claro, escuro, alto contraste)
-├── patches            # Correções de dependências aplicadas no npm install (patch-package)
-├── docs               # Guias e relatórios
-├── app.json           # Configuração do Expo (plugins, permissões)
-└── .agents/rules      # Regras de arquitetura do projeto (fonte do CLAUDE.md e AGENTS.md)
+│  │  ├── features     # Comportamento de uma parte do produto (pode usar store)
+│  │  ├── layout       # Cabeçalho, navegação, container. Não dispara API
+│  │  └── ui           # Peça visual genérica, só por props
+│  ├── config          # Ambiente do app (src/config/varEnvs.ts)
+│  ├── hooks           # Listener, ciclo de vida ou API de plataforma (voz, socket)
+│  ├── lib             # HTTP, Stripe, mapas, upload, logger, SSE
+│  ├── screens         # public e private (cliente, profissional, admin, chat)
+│  ├── stores          # Zustand. Único lugar que chama a API
+│  ├── theme           # Claro, escuro e alto contraste
+│  └── utils           # Função pura
+├── patches            # Correções aplicadas no npm install (patch-package)
+├── docs               # Arquitetura, contribuição e requisitos
+├── app.json           # Expo: plugins e permissões. Fonte do prebuild
+├── environments       # .env.dev e .env.prod locais (não vão para o git)
+└── scripts            # Android (Gradle) e sincronização de regras
 ```
 
-> As pastas `ios/` e `android/` são **geradas** (`expo prebuild`) e não são versionadas.
-> `npm run ios` / `npm run android` criam a pasta sozinhos; a fonte de verdade é o `app.json`.
+As pastas `ios/` e `android/` são geradas pelo `expo prebuild` e não são versionadas. `npm run ios` e `npm run android` criam a pasta; a fonte é o `app.json`.
 
 ## ⚙️ Installation
 
