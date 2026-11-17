@@ -194,210 +194,122 @@ As pastas `ios/` e `android/` são geradas pelo `expo prebuild` e não são vers
 
 ## ⚙️ Installation
 
+Node 20 (é a versão do CI). O gerenciador é o npm: o lockfile é o `package-lock.json`.
+
 ```bash
-git clone <repository-url>
+git clone https://github.com/fershibli/DelBicosV2.git
 cd DelBicosV2
-npm install          # também aplica os patches de patch-package
-cp .env.example .env # se existir; veja src/config/varEnvs.ts para as variáveis
+npm install
 ```
 
-Qualidade antes de abrir um PR:
+O `postinstall` aplica os patches do `patch-package`.
+
+Não há `.env.example` no repositório. Os arquivos de ambiente ficam em `environments/`, que o git ignora. `npm run set:dev` copia `environments/.env.dev` para `.env`; `npm run set:prod` copia `environments/.env.prod`.
+
+| Variável | Para quê |
+| --- | --- |
+| `EXPO_PUBLIC_ENVIRONMENT` | `development`, `staging` ou `production` |
+| `EXPO_PUBLIC_DOMAIN_ANDROID` | Host da API no Android. No Docker, `host.docker.internal` |
+| `EXPO_PUBLIC_DOMAIN_IOS` | Host da API no iOS |
+| `EXPO_PUBLIC_DOMAIN_WEB` | Host da API na web |
+| `EXPO_PUBLIC_PORT` | Porta da API. No ambiente local, `3000` |
+| `EXPO_PUBLIC_HTTP_PROTOCOL` | `http` em desenvolvimento. Fora dele, o app não sobe sem este valor |
+| `EXPO_PUBLIC_WS_PROTOCOL` | `ws` em desenvolvimento. Fora dele, o app não sobe sem este valor |
+| `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Chave publicável do Stripe |
+| `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` | Mapas |
+| `EXPO_PUBLIC_LOCATIONIQ_API_KEY` | Geocodificação |
+| `EXPO_PUBLIC_UNSPLASH_API_KEY` | Imagens do Unsplash |
+| `EXPO_PUBLIC_GOOGLE_ANALYTICS_ID` | Analytics na web |
+| `EXPO_PUBLIC_CLARITY_ID` | Microsoft Clarity na web |
+
+Em `development`, se o domínio for `localhost` ou estiver vazio, o app usa o host do Metro. No emulador Android sem host configurado, o fallback é `10.0.2.2`.
+
+Antes de abrir um PR:
 
 ```bash
-npx tsc --noEmit     # tipos
-npm run lint         # ESLint + Prettier
-npm test             # Jest
+npm run typecheck
+npm run lint
+npm test
 ```
 
 ## 📚 Documentação
 
-Guias e relatórios em [docs/](docs/): contribuição, requisitos (RF03, RF04), inventário do chatbot e relatório do frontend.
+Guias em [docs/](docs/): [arquitetura](docs/architecture.md), [contribuição](docs/CONTRIBUTING.md), requisitos (RF03, RF04), inventário do chatbot e relatório do frontend.
 
-## Running the Project
+## Execução
 
-To run the project, use the following command:
+`npm start` sobe o Expo com dev client. `npm run web` abre no navegador.
 
-```
-npm start
-```
+### Android
 
-This will start the development server.
+É preciso o Android SDK, um emulador ou aparelho, e um JDK no `PATH` (React Native 0.81 usa o JDK 17). `npm run android:jvm` imprime Java, Node e a versão do Gradle.
 
-### Running on Android Emulator
+`npm run android` e `npm run android:stable` são o mesmo fluxo: instalam o debug e sobem o Metro.
 
-To run the project on an Android emulator, ensure you have the Android SDK and an emulator set up. Use the Android scripts below:
+| Script | O que faz |
+| --- | --- |
+| `npm run android` | `android:install` e, em seguida, `npm start` |
+| `npm run android:expo` | `expo run:android` |
+| `npm run android:install` | Instala o debug com o Gradle, sem o flag `--configure-on-demand` do Expo |
+| `npm run android:assemble:debug` | Gera o APK de debug |
+| `npm run android:assemble:release` | Gera o APK de release |
+| `npm run android:deploy:debug` | `set:dev`, monta o debug e copia o APK para `releases/` |
+| `npm run android:deploy:release` | `set:prod`, monta o release e copia o APK para `releases/` |
+| `npm run android:clean` | Apaga as pastas de build e roda `gradlew clean` |
+| `npm run android:clean:cache` | `expo run:android --no-build-cache` |
+| `npm run android:no-bundler` | Abre o app sem subir o Metro |
+| `npm run android:release` | `expo run:android --variant release` |
+| `npm run android:jvm` | Diagnóstico de Java, Node e Gradle |
 
-Basic Android run (with Metro, stable cross-platform):
+Se o build nativo falhar, rode `npm run android:jvm` e depois `npm run android:clean`.
 
-```
-pnpm android
-```
+### iOS
 
-Stable cross-platform run (same flow as `pnpm android`):
+É preciso o Xcode. Os scripts chamam o Expo direto:
 
-```
-pnpm android:stable
-```
+| Script | O que faz |
+| --- | --- |
+| `npm run ios` | `expo run:ios` |
+| `npm run ios:clean` | `expo run:ios --no-build-cache` |
+| `npm run ios:no-bundler` | `expo run:ios --no-bundler` |
+| `npm run ios:release` | `expo run:ios --configuration Release` |
 
-Assemble debug APK with Gradle wrapper (without Expo `--configure-on-demand`):
+### Web
 
-```
-pnpm android:assemble
-```
-
-Install debug build on emulator/device with Gradle wrapper:
-
-```
-pnpm android:install
-```
-
-Deep clean (remove previous build folders + `gradlew clean`):
-
-```
-pnpm android:clean
-```
-
-Clean rebuild using Expo cache flag:
-
-```
-pnpm android:clean:cache
-```
-
-Install/open app without starting Metro:
-
-```
-pnpm android:no-bundler
-```
-
-Local release build:
-
-```
-pnpm android:release
-```
-
-JVM/Gradle diagnostics (useful for onboarding and troubleshooting):
-
-```
-pnpm android:jvm
-```
-
-If you prefer npm, replace `pnpm` with `npm run`.
-
-Expo direct Android flow (kept as fallback):
-
-```
-pnpm android:expo
-```
-
-Current script mappings in package.json:
-
-```
-android -> pnpm android:stable
-android:expo -> expo run:android
-android:stable -> pnpm android:install && pnpm start
-android:assemble -> node scripts/android/gradlew-runner.mjs app:assembleDebug -x lint -x test --build-cache -PreactNativeDevServerPort=8081
-android:install -> node scripts/android/gradlew-runner.mjs app:installDebug -x lint -x test --build-cache -PreactNativeDevServerPort=8081
-android:clean -> node scripts/android/clean.mjs
-android:clean:cache -> expo run:android --no-build-cache
-android:no-bundler -> expo run:android --no-bundler
-android:release -> expo run:android --variant release
-android:jvm -> node scripts/android/jvm-info.mjs
-```
-
-Android troubleshooting notes:
-
-- If you get `No matching variant ... No variants exist` on Windows, prefer `pnpm android:stable` or `pnpm android:install` instead of `pnpm android`.
-- Run `pnpm android:jvm` and confirm Java is available (recommended JDK 17).
-- Run `pnpm android:clean` before retrying a failed Android build.
-
-### Running on iOS Simulator
-
-To run the project on an iOS simulator, ensure you have Xcode installed. Use the iOS scripts below:
-
-Basic iOS run (with Metro):
-
-```
-pnpm ios
-```
-
-Clean rebuild (when build cache is inconsistent):
-
-```
-pnpm ios:clean
-```
-
-Install/open app without starting Metro:
-
-```
-pnpm ios:no-bundler
-```
-
-Local release build:
-
-```
-pnpm ios:release
-```
-
-If you prefer npm, replace `pnpm` with `npm run`.
-
-Current script mappings in package.json:
-
-```
-ios -> expo run:ios
-ios:clean -> expo run:ios --no-build-cache
-ios:no-bundler -> expo run:ios --no-bundler
-ios:release -> expo run:ios --configuration Release
-```
-
-### Running on Web
-
-To run the project on a web browser, use the following command:
-
-```
+```bash
 npm run web
 ```
 
-## Linting and Formatting
+### Docker
 
-To ensure code quality and consistency, this project uses ESLint and Prettier. You can run the following commands to lint and format your code:
+O Compose usa a rede externa `delbicos-shared-network`, a mesma da API. Crie a rede uma vez, depois suba o app:
 
-### Linting
-
-To check for linting errors, run:
-
-```
-npm run lint
+```bash
+npm run docker:network
+npm run docker:up
+npm run docker:start
 ```
 
-### Fixing Linting Errors
+| Script | O que faz |
+| --- | --- |
+| `npm run docker:build` | Monta a imagem |
+| `npm run docker:up` | Sobe o container `webapp-delbicos` (portas 8081 e 19000) |
+| `npm run docker:start` | Roda `npm start` dentro do container |
+| `npm run docker:logs` | Acompanha os logs |
+| `npm run docker:exec` | Abre um shell no container |
+| `npm run docker:down` | Derruba os containers |
+| `npm run docker:stop` | Para os containers |
+| `npm run docker:rebuild` | Derruba, monta sem cache e sobe de novo |
+| `npm run docker:copy:env` | Copia o `.env` da raiz para o container |
+| `npm run docker:clean` | Derruba os containers, apaga volumes e poda imagens soltas |
 
-To automatically fix linting errors, run:
+## Qualidade
 
-```
-npm run lint --fix
-```
-
-### Formatting
-
-To check for formatting issues, run:
-
-```
-npm run format:check
-```
-
-### Fixing Formatting Issues
-
-To automatically fix formatting issues, run:
-
-```
-npm run format:fix
-```
-
-## Recommended VS Code Extensions
-
-To enhance your development experience with ESLint and Prettier, consider installing the following extensions:
-
-- **ESLint**: Integrates ESLint into your editor for real-time linting.
-- **Prettier - Code formatter**: Automatically formats your code according to Prettier's rules.
-
-By installing these extensions, you can maintain code quality and consistency throughout your project.
+| Script | O que faz |
+| --- | --- |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run lint` | `expo lint` |
+| `npm run format:check` | Prettier em modo de checagem |
+| `npm run format:fix` | Prettier reescreve os arquivos |
+| `npm test` | Jest |
+| `npm run test:coverage` | Jest com cobertura |
