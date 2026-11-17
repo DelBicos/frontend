@@ -152,15 +152,11 @@ O protótipo do DelBicos no Figma serve como uma demonstração visual interativ
 
 ## 👥 Team
 
-|                        Nome                        | Função                      |
-| :------------------------------------------------: | --------------------------- |
-|  [Fernando Chibli](https://github.com/fershibli)   | _Product Owner & FullStack_ |
-| [Douglas Wenzel](https://github.com/douglaswenzel) | _Scrum Master & FullStack_  |
-|    [Eduardo Kamo](https://github.com/edukamoz)     | _Desenvolvedor FullStack_   |
-|  [Gustavo Ferreira](https://github.com/Gspedine)   | _Desenvolvedor FullStack_   |
-|  [Iago Rossan](https://github.com/IagoYuriRossan)  | _Desenvolvedor FullStack_   |
-|   [Isabel Maito](https://github.com/isabelmaito)   | _Desenvolvedora FullStack_  |
-|    [Lucas Consani](https://github.com/konsanii)    | _Desenvolvedor FullStack_   |
+|                        Nome                        | Função                                 |
+| :------------------------------------------------: | -------------------------------------- |
+|  [Fernando Chibli](https://github.com/fershibli)   | _CTO e Desenvolvedor FullStack_        |
+| [Douglas Wenzel](https://github.com/douglaswenzel) | _Scrum Master e Desenvolvedor FullStack_ |
+|   [Isabel Maito](https://github.com/isabelmaito)   | _Designer e Desenvolvedora FullStack_  |
 
 <br>
 
