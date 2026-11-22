@@ -12,12 +12,13 @@ import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
 import { useTicketStore } from '@stores/Ticket/Ticket';
 import { TicketCard } from '@components/features/Tickets';
+import type { AppNavigation } from '@screens/types';
 import { createStyles } from './styles';
 
 export const TicketsListScreen: React.FC = () => {
   const colors = useColors();
   const styles = createStyles(colors);
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<AppNavigation>();
 
   const { tickets, isLoading, fetchTickets } = useTicketStore();
 

@@ -10,11 +10,7 @@ export type TicketCategory =
 export type TicketPriority = 'BAIXA' | 'MEDIA' | 'ALTA' | 'CRITICA';
 
 export type TicketStatus =
-  | 'ABERTO'
-  | 'EM_ANALISE'
-  | 'EM_ATENDIMENTO'
-  | 'RESOLVIDO'
-  | 'FECHADO';
+  'ABERTO' | 'EM_ANALISE' | 'EM_ATENDIMENTO' | 'RESOLVIDO' | 'FECHADO';
 
 export type TicketUserType = 'CLIENTE' | 'PRESTADOR';
 
@@ -64,7 +60,7 @@ export interface TicketMessage {
 export interface TicketState {
   tickets: Ticket[];
   currentTicket: Ticket | null;
-  messages: TicketMessage[];           // ✅ NOVO
+  messages: TicketMessage[]; // ✅ NOVO
   isLoading: boolean;
   isSubmitting: boolean;
   error: string | null;
@@ -73,11 +69,11 @@ export interface TicketState {
 export interface TicketActions {
   fetchTickets: () => Promise<void>;
   fetchTicketById: (id: number) => Promise<Ticket | null>;
-  fetchMessages: (ticketId: number) => Promise<void>;   // ✅ NOVO
+  fetchMessages: (ticketId: number) => Promise<void>; // ✅ NOVO
   createTicket: (payload: CreateTicketPayload) => Promise<Ticket>;
   clearError: () => void;
   clearCurrent: () => void;
-  clearMessages: () => void;            // ✅ NOVO
+  clearMessages: () => void; // ✅ NOVO
 }
 
 export type TicketStore = TicketState & TicketActions;

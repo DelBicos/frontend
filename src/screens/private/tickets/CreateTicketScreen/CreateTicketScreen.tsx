@@ -4,7 +4,7 @@ import { useTicketStore } from '@stores/Ticket/Ticket';
 import { useUserStore } from '@stores/User';
 import { TicketCategory } from '@stores/Ticket/types';
 import { TicketForm, TicketSuccessModal } from '@components/features/Tickets';
-import type { NavigationParams } from '@screens/types';
+import type { AppNavigation, NavigationParams } from '@screens/types';
 
 type CreateTicketRouteProp = RouteProp<NavigationParams, 'CreateTicket'>;
 
@@ -27,7 +27,7 @@ const PROFESSIONAL_CATEGORIES: TicketCategory[] = [
 ];
 
 export const CreateTicketScreen: React.FC = () => {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<AppNavigation>();
   const route = useRoute<CreateTicketRouteProp>();
 
   const appointmentShortId = route.params?.appointmentShortId;

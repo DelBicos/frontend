@@ -116,7 +116,7 @@ export const useTicketStore = create<TicketStore>()(
       clearCurrent: () => set({ currentTicket: null }),
       clearMessages: () => set({ messages: [] }),
     }),
-        {
+    {
       name: 'delbicos-ticket-store',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({

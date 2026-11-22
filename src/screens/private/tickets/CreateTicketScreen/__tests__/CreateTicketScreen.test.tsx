@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import CreateTicketScreen from '../CreateTicketScreen';
+import { CreateTicketScreen } from '../CreateTicketScreen';
 import { useTicketStore } from '@stores/Ticket/Ticket';
 import { useUserStore } from '@stores/User';
 

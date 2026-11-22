@@ -34,8 +34,8 @@ import ChatListScreen from '@screens/private/chat/ChatListScreen';
 import ChatThreadScreen from '@screens/private/chat/ChatThreadScreen';
 import ChatBotScreen from '@screens/private/chatbot/ChatBotScreen';
 import { DeslocamentoScreen } from '@screens/private/professional/Deslocamento';
-import TicketsListScreen from '@screens/private/tickets/TicketsListScreen/TicketsListScreen';
-import CreateTicketScreen from '@screens/private/tickets/CreateTicketScreen/CreateTicketScreen';
+import { TicketsListScreen } from '@screens/private/tickets/TicketsListScreen/TicketsListScreen';
+import { CreateTicketScreen } from '@screens/private/tickets/CreateTicketScreen/CreateTicketScreen';
 import TicketDetailScreen from '@screens/private/tickets/TicketDetailScreen';
 
 const Tab = createBottomTabNavigator();
