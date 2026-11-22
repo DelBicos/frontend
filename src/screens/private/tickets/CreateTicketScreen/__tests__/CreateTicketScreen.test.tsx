@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
+import { render, fireEvent, act } from '@testing-library/react-native';
 import { CreateTicketScreen } from '../CreateTicketScreen';
 import { useTicketStore } from '@stores/Ticket/Ticket';
 import { useUserStore } from '@stores/User';
@@ -237,5 +237,182 @@ describe('CreateTicketScreen', () => {
 
     fireEvent.press(getByText('Cancelar'));
     expect(mockGoBack).toHaveBeenCalledTimes(1);
+  });
+
+  it('deve limpar o erro da store ao cancelar', () => {
+    useTicketStore.setState({ error: 'Erro anterior' });
+    const { getByText } = render(<CreateTicketScreen />);
+
+    fireEvent.press(getByText('Cancelar'));
+    expect(useTicketStore.getState().error).toBeNull();
+  });
+
+  // ─── PAPEL DO USUÁRIO (TICKET-02) ────────────────────
+  it('deve mostrar CLIENTE e esconder PRESTADOR para prestador', () => {
+    useUserStore.setState({
+      user: {
+        id: 7,
+        client_id: 7,
+        professional_id: 3,
+        name: 'Prestador Teste',
+        email: 'prestador@teste.com',
+        phone: '11988888888',
+        cpf: '10987654321',
+      },
+    } as never);
+
+    const { getByText, queryByText } = render(<CreateTicketScreen />);
+
+    expect(getByText('Cliente')).toBeTruthy();
+    expect(queryByText('Prestador')).toBeNull();
+  });
+
+  it('deve esconder CLIENTE para cliente', () => {
+    const { queryByText } = render(<CreateTicketScreen />);
+    expect(queryByText('Cliente')).toBeNull();
+  });
+
+  // ─── CONTEXTO DO AGENDAMENTO (categoria) ─────────────
+  it('deve pré-selecionar Agendamento quando vier do agendamento', () => {
+    mockRouteParams = {
+      appointmentShortId: '6BDOKZ',
+      contextLabel: 'agendamento #6BDOKZ',
+    };
+    const { getByText } = render(<CreateTicketScreen />);
+
+    const chip = getByText('Agendamento').parent?.parent;
+    expect(chip?.props.accessibilityState?.selected).toBe(true);
+  });
+
+  it('deve usar o código no banner quando não houver contextLabel', () => {
+    mockRouteParams = { appointmentShortId: '6BDOKZ' };
+    const { getByText } = render(<CreateTicketScreen />);
+
+    expect(
+      getByText('Chamado relacionado ao agendamento #6BDOKZ'),
+    ).toBeTruthy();
+  });
+
+  it('não deve enviar appointment_short_id quando aberto pela Central', async () => {
+    const mockCreateTicket = jest
+      .fn()
+      .mockResolvedValue({ id: 2, ticket_code: 'TKT-K9M2' });
+    useTicketStore.setState({ createTicket: mockCreateTicket });
+
+    const { getByPlaceholderText, getByText, getByTestId, findByText } = render(
+      <CreateTicketScreen />,
+    );
+
+    fireEvent.changeText(
+      getByPlaceholderText('Resuma o problema em poucas palavras'),
+      'Sugestão de melhoria',
+    );
+    fireEvent.changeText(
+      getByPlaceholderText(/Descreva o que aconteceu/),
+      'Seria ótimo filtrar profissionais por avaliação.',
+    );
+    fireEvent.press(getByText('Sugestão'));
+    fireEvent.press(getByTestId('ticket-priority-BAIXA'));
+    fireEvent.press(getByTestId('ticket-submit-button'));
+
+    await findByText('TKT-K9M2');
+    expect(mockCreateTicket).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category: 'SUGESTAO',
+        priority: 'BAIXA',
+        appointment_short_id: undefined,
+      }),
+    );
+  });
+
+  // ─── PÓS-ENVIO ───────────────────────────────────────
+  const submitValidForm = async (
+    utils: ReturnType<typeof render>,
+    code = 'TKT-B7YS',
+  ) => {
+    fireEvent.changeText(
+      utils.getByPlaceholderText('Resuma o problema em poucas palavras'),
+      'Título válido',
+    );
+    fireEvent.changeText(
+      utils.getByPlaceholderText(/Descreva o que aconteceu/),
+      'Descrição suficientemente longa',
+    );
+    fireEvent.press(utils.getByText('Agendamento'));
+    fireEvent.press(utils.getByTestId('ticket-priority-MEDIA'));
+    fireEvent.press(utils.getByTestId('ticket-submit-button'));
+    await utils.findByText(code);
+  };
+
+  it('deve ir para a lista em "Ver meus chamados"', async () => {
+    useTicketStore.setState({
+      createTicket: jest
+        .fn()
+        .mockResolvedValue({ id: 1, ticket_code: 'TKT-B7YS' }),
+    });
+    const utils = render(<CreateTicketScreen />);
+    await submitValidForm(utils);
+
+    fireEvent.press(utils.getByText('Ver meus chamados'));
+    expect(mockReplace).toHaveBeenCalledWith('TicketsList');
+  });
+
+  it('deve ir para a lista em "Fechar" quando aberto pela Central', async () => {
+    useTicketStore.setState({
+      createTicket: jest
+        .fn()
+        .mockResolvedValue({ id: 1, ticket_code: 'TKT-B7YS' }),
+    });
+    const utils = render(<CreateTicketScreen />);
+    await submitValidForm(utils);
+
+    fireEvent.press(utils.getByText('Fechar'));
+    expect(mockReplace).toHaveBeenCalledWith('TicketsList');
+    expect(mockGoBack).not.toHaveBeenCalled();
+  });
+
+  it('deve voltar ao agendamento em "Fechar" quando veio de um agendamento', async () => {
+    mockRouteParams = {
+      appointmentShortId: '6BDOKZ',
+      contextLabel: 'agendamento #6BDOKZ',
+    };
+    useTicketStore.setState({
+      createTicket: jest
+        .fn()
+        .mockResolvedValue({ id: 1, ticket_code: 'TKT-B7YS' }),
+    });
+    const utils = render(<CreateTicketScreen />);
+    await submitValidForm(utils);
+
+    fireEvent.press(utils.getByText('Fechar'));
+    expect(mockGoBack).toHaveBeenCalledTimes(1);
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  it('não deve abrir o modal quando a criação falhar', async () => {
+    const mockCreateTicket = jest
+      .fn()
+      .mockRejectedValue(new Error('Prioridade inválida ou não informada'));
+    useTicketStore.setState({ createTicket: mockCreateTicket });
+
+    const { getByPlaceholderText, getByText, getByTestId, queryByText } =
+      render(<CreateTicketScreen />);
+
+    fireEvent.changeText(
+      getByPlaceholderText('Resuma o problema em poucas palavras'),
+      'Título válido',
+    );
+    fireEvent.changeText(
+      getByPlaceholderText(/Descreva o que aconteceu/),
+      'Descrição suficientemente longa',
+    );
+    fireEvent.press(getByText('Agendamento'));
+    fireEvent.press(getByTestId('ticket-priority-MEDIA'));
+    await act(async () => {
+      fireEvent.press(getByTestId('ticket-submit-button'));
+    });
+
+    expect(mockCreateTicket).toHaveBeenCalledTimes(1);
+    expect(queryByText('Chamado aberto!')).toBeNull();
   });
 });
