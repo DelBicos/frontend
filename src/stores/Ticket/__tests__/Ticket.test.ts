@@ -39,12 +39,15 @@ describe('useTicketStore', () => {
         data: { ticket: mockTicket },
       });
 
-      const result = await useTicketStore.getState().createTicket({
+      const payload = {
         title: 'Erro ao agendar serviço',
         description: 'Descrição válida com mais de 10 caracteres',
-        category: 'AGENDAMENTO',
-      });
+        category: 'AGENDAMENTO' as const,
+        priority: 'ALTA' as const,
+      };
+      const result = await useTicketStore.getState().createTicket(payload);
 
+      expect(mockedClient.post).toHaveBeenCalledWith('/api/tickets', payload);
       expect(result).toEqual(mockTicket);
       expect(useTicketStore.getState().tickets).toContainEqual(mockTicket);
       expect(useTicketStore.getState().isSubmitting).toBe(false);
@@ -60,11 +63,41 @@ describe('useTicketStore', () => {
           title: 'Teste',
           description: 'Descrição válida com mais de 10 caracteres',
           category: 'AGENDAMENTO',
+          priority: 'BAIXA',
         }),
       ).rejects.toThrow('Erro de teste');
 
       expect(useTicketStore.getState().error).toBe('Erro de teste');
       expect(useTicketStore.getState().isSubmitting).toBe(false);
+    });
+
+    it('deve usar a mensagem de details quando o backend validar o body', async () => {
+      mockedClient.post.mockRejectedValueOnce({
+        response: {
+          data: {
+            error: 'Dados inválidos.',
+            details: [
+              {
+                field: 'priority',
+                message: 'Prioridade inválida ou não informada',
+              },
+            ],
+          },
+        },
+      });
+
+      await expect(
+        useTicketStore.getState().createTicket({
+          title: 'Título válido',
+          description: 'Descrição válida com mais de 10 caracteres',
+          category: 'AGENDAMENTO',
+          priority: 'MEDIA',
+        }),
+      ).rejects.toThrow('Prioridade inválida ou não informada');
+
+      expect(useTicketStore.getState().error).toBe(
+        'Prioridade inválida ou não informada',
+      );
     });
   });
 

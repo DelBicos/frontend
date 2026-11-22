@@ -133,7 +133,16 @@ describe('CreateTicketScreen', () => {
     ).toBe(true);
   });
 
-  it('deve habilitar o botão quando todos os campos estiverem preenchidos', () => {
+  it('deve renderizar as 4 prioridades', () => {
+    const { getByText } = render(<CreateTicketScreen />);
+
+    expect(getByText('Baixa')).toBeTruthy();
+    expect(getByText('Média')).toBeTruthy();
+    expect(getByText('Alta')).toBeTruthy();
+    expect(getByText('Crítica')).toBeTruthy();
+  });
+
+  it('deve manter o botão desabilitado sem prioridade selecionada', () => {
     const { getByPlaceholderText, getByText, getByTestId } = render(
       <CreateTicketScreen />,
     );
@@ -150,7 +159,76 @@ describe('CreateTicketScreen', () => {
 
     expect(
       getByTestId('ticket-submit-button').props.accessibilityState?.disabled,
+    ).toBe(true);
+  });
+
+  it('deve habilitar o botão quando todos os campos estiverem preenchidos', () => {
+    const { getByPlaceholderText, getByText, getByTestId } = render(
+      <CreateTicketScreen />,
+    );
+
+    fireEvent.changeText(
+      getByPlaceholderText('Resuma o problema em poucas palavras'),
+      'Título válido',
+    );
+    fireEvent.changeText(
+      getByPlaceholderText(/Descreva o que aconteceu/),
+      'Descrição suficientemente longa',
+    );
+    fireEvent.press(getByText('Agendamento'));
+    fireEvent.press(getByTestId('ticket-priority-MEDIA'));
+
+    expect(
+      getByTestId('ticket-submit-button').props.accessibilityState?.disabled,
     ).toBe(false);
+  });
+
+  // ─── ENVIO ───────────────────────────────────────────
+  it('deve enviar prioridade e agendamento no payload e mostrar o código', async () => {
+    mockRouteParams = {
+      appointmentShortId: '6BDOKZ',
+      contextLabel: 'agendamento #6BDOKZ',
+    };
+    const mockCreateTicket = jest.fn().mockResolvedValue({
+      id: 1,
+      ticket_code: 'TKT-B7YS',
+    });
+    useTicketStore.setState({ createTicket: mockCreateTicket });
+
+    const { getByPlaceholderText, getByTestId, findByText } = render(
+      <CreateTicketScreen />,
+    );
+
+    fireEvent.changeText(
+      getByPlaceholderText(/Descreva o que aconteceu/),
+      '  O profissional não apareceu no horário.  ',
+    );
+    fireEvent.press(getByTestId('ticket-priority-ALTA'));
+    fireEvent.press(getByTestId('ticket-submit-button'));
+
+    expect(await findByText('TKT-B7YS')).toBeTruthy();
+    expect(mockCreateTicket).toHaveBeenCalledWith({
+      title: 'Problema com agendamento #6BDOKZ',
+      description: 'O profissional não apareceu no horário.',
+      category: 'AGENDAMENTO',
+      priority: 'ALTA',
+      appointment_short_id: '6BDOKZ',
+    });
+  });
+
+  it('deve mostrar o erro do backend sem limpar os campos', () => {
+    useTicketStore.setState({ error: 'Prioridade inválida ou não informada' });
+
+    const { getByText, getByDisplayValue, getByPlaceholderText } = render(
+      <CreateTicketScreen />,
+    );
+    fireEvent.changeText(
+      getByPlaceholderText('Resuma o problema em poucas palavras'),
+      'Título válido',
+    );
+
+    expect(getByText('Prioridade inválida ou não informada')).toBeTruthy();
+    expect(getByDisplayValue('Título válido')).toBeTruthy();
   });
 
   // ─── CANCELAR ────────────────────────────────────────

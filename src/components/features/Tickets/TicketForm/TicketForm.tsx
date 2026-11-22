@@ -10,14 +10,23 @@ import {
   ScrollView,
 } from 'react-native';
 import { useColors } from '@theme/ThemeProvider';
-import { TicketCategory } from '@stores/Ticket/types';
+import { TicketCategory, TicketPriority } from '@stores/Ticket/types';
 import { CategoryPicker } from '../CategoryPicker';
+import { PriorityPicker } from '../PriorityPicker';
 import { createStyles } from './styles';
 
 export interface TicketFormValues {
   title: string;
   description: string;
   category: TicketCategory | null;
+  priority: TicketPriority | null;
+}
+
+export interface TicketFormSubmitValues {
+  title: string;
+  description: string;
+  category: TicketCategory;
+  priority: TicketPriority;
 }
 
 interface TicketFormProps {
@@ -26,11 +35,7 @@ interface TicketFormProps {
   contextBanner?: string | null;
   isSubmitting: boolean;
   externalError?: string | null;
-  onSubmit: (values: {
-    title: string;
-    description: string;
-    category: TicketCategory;
-  }) => void;
+  onSubmit: (values: TicketFormSubmitValues) => void;
   onCancel: () => void;
 }
 
@@ -38,6 +43,7 @@ interface FormErrors {
   title?: string;
   description?: string;
   category?: string;
+  priority?: string;
 }
 
 export const TicketForm: React.FC<TicketFormProps> = ({
@@ -59,6 +65,9 @@ export const TicketForm: React.FC<TicketFormProps> = ({
   const [category, setCategory] = useState<TicketCategory | null>(
     initialValues?.category ?? null,
   );
+  const [priority, setPriority] = useState<TicketPriority | null>(
+    initialValues?.priority ?? null,
+  );
   const [errors, setErrors] = useState<FormErrors>({});
 
   const isSubmitDisabled = useMemo(() => {
@@ -66,9 +75,10 @@ export const TicketForm: React.FC<TicketFormProps> = ({
       isSubmitting ||
       title.trim().length < 5 ||
       description.trim().length < 10 ||
-      !category
+      !category ||
+      !priority
     );
-  }, [isSubmitting, title, description, category]);
+  }, [isSubmitting, title, description, category, priority]);
 
   const validate = (): boolean => {
     const nextErrors: FormErrors = {};
@@ -92,17 +102,22 @@ export const TicketForm: React.FC<TicketFormProps> = ({
       nextErrors.category = 'Selecione uma categoria.';
     }
 
+    if (!priority) {
+      nextErrors.priority = 'Selecione uma prioridade.';
+    }
+
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
 
   const handleSubmit = () => {
-    if (!validate() || !category) return;
+    if (!validate() || !category || !priority) return;
 
     onSubmit({
       title: title.trim(),
       description: description.trim(),
       category,
+      priority,
     });
   };
 
@@ -163,6 +178,13 @@ export const TicketForm: React.FC<TicketFormProps> = ({
           onChange={setCategory}
           availableCategories={availableCategories}
           error={errors.category}
+        />
+
+        <Text style={styles.label}>Prioridade</Text>
+        <PriorityPicker
+          value={priority}
+          onChange={setPriority}
+          error={errors.priority}
         />
 
         {externalError ? (

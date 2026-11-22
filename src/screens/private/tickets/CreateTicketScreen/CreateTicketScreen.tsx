@@ -4,6 +4,7 @@ import { useTicketStore } from '@stores/Ticket/Ticket';
 import { useUserStore } from '@stores/User';
 import { TicketCategory } from '@stores/Ticket/types';
 import { TicketForm, TicketSuccessModal } from '@components/features/Tickets';
+import type { TicketFormSubmitValues } from '@components/features/Tickets';
 import type { AppNavigation, NavigationParams } from '@screens/types';
 
 type CreateTicketRouteProp = RouteProp<NavigationParams, 'CreateTicket'>;
@@ -60,11 +61,7 @@ export const CreateTicketScreen: React.FC = () => {
     ? `Chamado relacionado ao agendamento ${contextLabel ?? `#${appointmentShortId}`}`
     : null;
 
-  const handleSubmit = async (values: {
-    title: string;
-    description: string;
-    category: TicketCategory;
-  }) => {
+  const handleSubmit = async (values: TicketFormSubmitValues) => {
     try {
       const ticket = await createTicket({
         ...values,

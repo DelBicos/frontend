@@ -49,6 +49,7 @@ export const createStyles = (colors: ColorsType) =>
     },
     metaRow: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
       alignItems: 'center',
       gap: 6,
       marginBottom: 24,

@@ -32,6 +32,8 @@ export interface CreateTicketPayload {
   title: string;
   description: string;
   category: TicketCategory;
+  /** Obrigatória no backend: sem ela o POST responde 400. */
+  priority: TicketPriority;
   appointment_short_id?: string;
 }
 
@@ -88,6 +90,29 @@ export const TICKET_CATEGORY_LABELS: Record<TicketCategory, string> = {
   CLIENTE: 'Cliente',
   SUGESTAO: 'Sugestão',
   OUTROS: 'Outros',
+};
+
+/** Ordem de exibição no formulário: da menos para a mais urgente. */
+export const TICKET_PRIORITIES: TicketPriority[] = [
+  'BAIXA',
+  'MEDIA',
+  'ALTA',
+  'CRITICA',
+];
+
+export const TICKET_PRIORITY_LABELS: Record<TicketPriority, string> = {
+  BAIXA: 'Baixa',
+  MEDIA: 'Média',
+  ALTA: 'Alta',
+  CRITICA: 'Crítica',
+};
+
+/** Texto de apoio para o usuário escolher a prioridade certa. */
+export const TICKET_PRIORITY_HINTS: Record<TicketPriority, string> = {
+  BAIXA: 'Dúvida ou sugestão, sem impacto no uso.',
+  MEDIA: 'Atrapalha, mas dá para continuar usando.',
+  ALTA: 'Impede de agendar, atender ou concluir um serviço.',
+  CRITICA: 'Cobrança indevida, risco à segurança ou conta bloqueada.',
 };
 
 export const TICKET_STATUS_LABELS: Record<TicketStatus, string> = {

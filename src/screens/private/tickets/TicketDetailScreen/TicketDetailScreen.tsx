@@ -8,7 +8,10 @@ import {
   TicketStatusBadge,
   TicketMessageBubble,
 } from '@components/features/Tickets';
-import { TICKET_CATEGORY_LABELS } from '@stores/Ticket/types';
+import {
+  TICKET_CATEGORY_LABELS,
+  TICKET_PRIORITY_LABELS,
+} from '@stores/Ticket/types';
 import type { NavigationParams } from '@screens/types';
 import { createStyles } from './styles';
 
@@ -93,6 +96,14 @@ export const TicketDetailScreen: React.FC = () => {
         <Text style={styles.metaText}>
           {TICKET_CATEGORY_LABELS[currentTicket.category]}
         </Text>
+        {currentTicket.priority ? (
+          <>
+            <Text style={styles.metaDot}>•</Text>
+            <Text style={styles.metaText}>
+              Prioridade {TICKET_PRIORITY_LABELS[currentTicket.priority]}
+            </Text>
+          </>
+        ) : null}
         <Text style={styles.metaDot}>•</Text>
         <Text style={styles.metaText}>
           {formatFullDateTime(currentTicket.created_at)}

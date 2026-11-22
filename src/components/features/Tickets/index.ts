@@ -1,7 +1,8 @@
 export { TicketCard } from './TicketCard';
 export { TicketStatusBadge } from './TicketStatusBadge';
 export { CategoryPicker } from './CategoryPicker';
+export { PriorityPicker } from './PriorityPicker';
 export { TicketForm } from './TicketForm';
 export { TicketSuccessModal } from './TicketSuccessModal';
 export { TicketMessageBubble } from './TicketMessageBubble';
-export type { TicketFormValues } from './TicketForm';
+export type { TicketFormValues, TicketFormSubmitValues } from './TicketForm';
