@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { PriorityPicker } from '../PriorityPicker';
-import { TICKET_PRIORITY_HINTS } from '@stores/Ticket/types';
+import { TICKET_PRIORITY_HINTS } from '@stores/Ticket';
 
 describe('PriorityPicker', () => {
   it('deve renderizar as 4 prioridades em ordem de urgência', () => {

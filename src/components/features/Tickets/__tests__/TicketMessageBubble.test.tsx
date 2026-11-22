@@ -2,7 +2,7 @@ import React from 'react';
 import { Image } from 'react-native';
 import { render } from '@testing-library/react-native';
 import { TicketMessageBubble } from '../TicketMessageBubble';
-import { TicketMessage } from '@stores/Ticket/types';
+import { TicketMessage } from '@stores/Ticket';
 
 const baseMessage: TicketMessage = {
   id: 1,

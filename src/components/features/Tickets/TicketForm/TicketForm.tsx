@@ -10,7 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useColors } from '@theme/ThemeProvider';
-import { TicketCategory, TicketPriority } from '@stores/Ticket/types';
+import { TicketCategory, TicketPriority } from '@stores/Ticket';
 import { CategoryPicker } from '../CategoryPicker';
 import { PriorityPicker } from '../PriorityPicker';
 import { createStyles } from './styles';

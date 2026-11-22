@@ -2,8 +2,7 @@ import React from 'react';
 import { ActivityIndicator, RefreshControl } from 'react-native';
 import { render, fireEvent, act } from '@testing-library/react-native';
 import { TicketsListScreen } from '../TicketsListScreen';
-import { useTicketStore } from '@stores/Ticket/Ticket';
-import { Ticket } from '@stores/Ticket/types';
+import { useTicketStore, Ticket } from '@stores/Ticket';
 
 const mockNavigate = jest.fn();
 

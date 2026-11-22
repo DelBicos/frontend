@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { TicketCard } from '../TicketCard';
-import { Ticket } from '@stores/Ticket/types';
+import { Ticket } from '@stores/Ticket';
 
 const mockTicket: Ticket = {
   id: 1,

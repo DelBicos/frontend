@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
-import { Ticket, TICKET_CATEGORY_LABELS } from '@stores/Ticket/types';
+import { Ticket, TICKET_CATEGORY_LABELS } from '@stores/Ticket';
 import { TicketStatusBadge } from '../TicketStatusBadge';
 import { createStyles } from './styles';
 

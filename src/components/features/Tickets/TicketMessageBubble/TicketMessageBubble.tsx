@@ -2,10 +2,7 @@ import React from 'react';
 import { View, Text, Image } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
-import {
-  TicketMessage,
-  TICKET_MESSAGE_AUTHOR_LABELS,
-} from '@stores/Ticket/types';
+import { TicketMessage, TICKET_MESSAGE_AUTHOR_LABELS } from '@stores/Ticket';
 import { createStyles } from './styles';
 
 interface TicketMessageBubbleProps {

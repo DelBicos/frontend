@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet } from 'react-native';
 import { render } from '@testing-library/react-native';
 import { TicketStatusBadge } from '../TicketStatusBadge';
-import { TICKET_STATUS_LABELS, TicketStatus } from '@stores/Ticket/types';
+import { TICKET_STATUS_LABELS, TicketStatus } from '@stores/Ticket';
 import lightColors from '@theme/light';
 
 describe('TicketStatusBadge', () => {

@@ -2,8 +2,7 @@ import React from 'react';
 import { ActivityIndicator } from 'react-native';
 import { render } from '@testing-library/react-native';
 import { TicketDetailScreen } from '../TicketDetailScreen';
-import { useTicketStore } from '@stores/Ticket/Ticket';
-import { Ticket, TicketMessage } from '@stores/Ticket/types';
+import { useTicketStore, Ticket, TicketMessage } from '@stores/Ticket';
 
 let mockRouteParams: { id?: number } = { id: 42 };
 

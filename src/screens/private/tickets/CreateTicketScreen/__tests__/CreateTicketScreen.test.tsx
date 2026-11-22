@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, fireEvent, act } from '@testing-library/react-native';
 import { CreateTicketScreen } from '../CreateTicketScreen';
-import { useTicketStore } from '@stores/Ticket/Ticket';
+import { useTicketStore } from '@stores/Ticket';
 import { useUserStore } from '@stores/User';
 
 const mockReplace = jest.fn();

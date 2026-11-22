@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { useColors } from '@theme/ThemeProvider';
-import { TicketStatus, TICKET_STATUS_LABELS } from '@stores/Ticket/types';
+import { TicketStatus, TICKET_STATUS_LABELS } from '@stores/Ticket';
 import { createStyles } from './styles';
 
 interface TicketStatusBadgeProps {

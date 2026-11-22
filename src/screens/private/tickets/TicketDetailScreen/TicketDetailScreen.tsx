@@ -3,15 +3,15 @@ import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
-import { useTicketStore } from '@stores/Ticket';
+import {
+  useTicketStore,
+  TICKET_CATEGORY_LABELS,
+  TICKET_PRIORITY_LABELS,
+} from '@stores/Ticket';
 import {
   TicketStatusBadge,
   TicketMessageBubble,
 } from '@components/features/Tickets';
-import {
-  TICKET_CATEGORY_LABELS,
-  TICKET_PRIORITY_LABELS,
-} from '@stores/Ticket/types';
 import type { NavigationParams } from '@screens/types';
 import { createStyles } from './styles';
 

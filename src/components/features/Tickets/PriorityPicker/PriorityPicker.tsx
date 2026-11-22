@@ -6,7 +6,7 @@ import {
   TICKET_PRIORITIES,
   TICKET_PRIORITY_HINTS,
   TICKET_PRIORITY_LABELS,
-} from '@stores/Ticket/types';
+} from '@stores/Ticket';
 import { createStyles } from './styles';
 
 interface PriorityPickerProps {

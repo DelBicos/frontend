@@ -10,7 +10,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
-import { useTicketStore } from '@stores/Ticket/Ticket';
+import { useTicketStore } from '@stores/Ticket';
 import { TicketCard } from '@components/features/Tickets';
 import type { AppNavigation } from '@screens/types';
 import { createStyles } from './styles';

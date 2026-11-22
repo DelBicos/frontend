@@ -1,8 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { useTicketStore } from '@stores/Ticket/Ticket';
+import { useTicketStore, TicketCategory } from '@stores/Ticket';
 import { useUserStore } from '@stores/User';
-import { TicketCategory } from '@stores/Ticket/types';
 import { TicketForm, TicketSuccessModal } from '@components/features/Tickets';
 import type { TicketFormSubmitValues } from '@components/features/Tickets';
 import type { AppNavigation, NavigationParams } from '@screens/types';
