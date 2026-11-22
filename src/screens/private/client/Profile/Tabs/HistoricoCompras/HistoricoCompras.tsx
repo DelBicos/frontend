@@ -1,361 +1,317 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { Platform, Pressable, Text, View } from 'react-native';
+import { FontAwesome } from '@expo/vector-icons';
+import { EncodingType } from 'expo-file-system/legacy';
 import { AppointmentDetailsModal } from '@components/features/AppointmentDetailsModal';
 import { RateServiceModal } from '@components/features/RateServiceModal';
-import { FontAwesome } from '@expo/vector-icons';
+import ActionButton from '@components/ui/ActionButton';
+import EmptyState from '@components/ui/EmptyState';
+import InlineAlert from '@components/ui/InlineAlert';
 import {
   generateCSV,
   generateFileURI,
   generateXLSX,
 } from '@lib/helpers/fileGenerator';
 import { downloadFile, shareContent } from '@lib/helpers/shareHelperSimple';
-import { Picker } from '@react-native-picker/picker';
-import { ExportCard } from '@screens/private/client/Profile/Tabs/ExportCard';
+import { appointmentPrice, formatCurrency } from '@lib/appointments';
 import { useAppointmentStore } from '@stores/Appointment';
 import { Appointment } from '@stores/Appointment/types';
 import { useColors } from '@theme/ThemeProvider';
-import { EncodingType } from 'expo-file-system/legacy';
-import React, { useEffect, useState } from 'react';
-import {
-  Alert,
-  Modal,
-  Platform,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import ProfilePage, { ProfileCard } from '../../components/ProfilePage';
 import { createStyles } from './styles';
 
-const getMonthName = (month: number) => {
-  return new Date(2000, month - 1).toLocaleString('pt-BR', { month: 'long' });
+type Role = 'client' | 'professional';
+
+const monthLabel = (month: number, year: number) => {
+  const text = new Date(year, month).toLocaleDateString('pt-BR', {
+    month: 'long',
+    year: 'numeric',
+  });
+  return text.charAt(0).toUpperCase() + text.slice(1);
 };
 
-const HistoryRow = ({
-  id,
-  date,
-  service,
-  price,
-  status,
-  rating,
-  colors,
-  styles,
-  onRate,
-  onDetails,
-}: any) => {
-  const isCompleted = status === 'completed';
+const dayLabel = (iso: string) =>
+  new Date(iso).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'short',
+  });
 
-  const bgColor = isCompleted
-    ? colors.successBackground
-    : colors.errorBackground;
-  const iconColor = isCompleted ? colors.successText : colors.error;
-  const iconName = isCompleted ? 'check' : 'times';
-
-  return (
-    <View style={styles.row}>
-      <View style={styles.rowLeft}>
-        <View style={[styles.iconBox, { backgroundColor: bgColor }]}>
-          <FontAwesome name={iconName} size={12} color={iconColor} />
-        </View>
-        <View>
-          <Text style={styles.serviceText}>{service}</Text>
-          <Text style={styles.dateText}>{date}</Text>
-          <View
-            style={[
-              styles.badgeContainer,
-              {
-                backgroundColor: isCompleted
-                  ? colors.successBackground
-                  : colors.errorBackground,
-              },
-            ]}>
-            <Text
-              style={[
-                styles.badgeText,
-                { color: isCompleted ? colors.successText : colors.error },
-              ]}>
-              {isCompleted ? 'Concluído' : 'Cancelado'}
-            </Text>
-          </View>
-        </View>
-      </View>
-      <View style={{ alignItems: 'flex-end' }}>
-        <Text style={styles.priceText}>
-          {price ? `R$ ${price.toFixed(2).replace('.', ',')}` : '-'}
-        </Text>
-        {isCompleted && (
-          <TouchableOpacity style={styles.detailsButton} onPress={onDetails}>
-            <Text style={styles.detailsButtonText}>Detalhes</Text>
-          </TouchableOpacity>
-        )}
-        {isCompleted && rating == null && onRate && (
-          <TouchableOpacity style={styles.rateButton} onPress={onRate}>
-            <Text style={styles.rateButtonText}>Avaliar Serviço</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    </View>
-  );
-};
-
+/** Atendimentos concluidos/cancelados por mes, com resumo e exportacao. */
 export default function HistoricoCompras({
   role = 'client',
-}: { role?: 'client' | 'professional' } = {}) {
-  const { fetchAppointmentsAsSheet, appointments, fetchAppointments } =
-    useAppointmentStore();
+}: { role?: Role } = {}) {
   const colors = useColors();
   const styles = createStyles(colors);
+  const isClient = role === 'client';
+  const { appointments, fetchAppointments, fetchAppointmentsAsSheet } =
+    useAppointmentStore();
 
-  const [isExporting, setIsExporting] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState<number>(
-    new Date().getMonth() + 1,
-  );
-  const [selectedYear, setSelectedYear] = useState<number>(
-    new Date().getFullYear(),
-  );
-  const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
-  const [tempMonth, setTempMonth] = useState<number>(selectedMonth);
-  const [tempYear, setTempYear] = useState<number>(selectedYear);
-
-  const [isRateModalVisible, setIsRateModalVisible] = useState(false);
-  const [appointmentToRate, setAppointmentToRate] =
-    useState<Appointment | null>(null);
-
-  const [selectedAppointment, setSelectedAppointment] =
-    useState<Appointment | null>(null);
-  const [isDetailsModalVisible, setIsDetailsModalVisible] = useState(false);
-
-  const { width } = useWindowDimensions();
-  const isDesktop = width >= 768;
+  const now = new Date();
+  const [month, setMonth] = useState(now.getMonth());
+  const [year, setYear] = useState(now.getFullYear());
+  const [details, setDetails] = useState<Appointment | null>(null);
+  const [toRate, setToRate] = useState<Appointment | null>(null);
+  const [exporting, setExporting] = useState<'csv' | 'xlsx' | null>(null);
+  const [exportMsg, setExportMsg] = useState<{
+    type: 'success' | 'error' | 'info';
+    text: string;
+  } | null>(null);
 
   useEffect(() => {
     fetchAppointments(role);
   }, [fetchAppointments, role]);
 
-  const recentHistory = appointments
-    .filter((a) => a.status === 'completed' || a.status === 'canceled')
-    .filter((a) => {
-      const date = new Date(a.start_time);
-      return (
-        date.getMonth() + 1 === selectedMonth &&
-        date.getFullYear() === selectedYear
-      );
-    })
-    .sort(
-      (a, b) =>
-        new Date(b.start_time).getTime() - new Date(a.start_time).getTime(),
-    );
+  const items = useMemo(
+    () =>
+      appointments
+        .filter((a) => a.status === 'completed' || a.status === 'canceled')
+        .filter((a) => {
+          const d = new Date(a.start_time);
+          return d.getMonth() === month && d.getFullYear() === year;
+        })
+        .sort(
+          (a, b) =>
+            new Date(b.start_time).getTime() - new Date(a.start_time).getTime(),
+        ),
+    [appointments, month, year],
+  );
 
-  const handleExport = async (type: 'csv' | 'xlsx') => {
-    setIsExporting(true);
+  const completed = items.filter((a) => a.status === 'completed');
+  const total = completed.reduce(
+    (sum, a) => sum + (appointmentPrice(a) ?? 0),
+    0,
+  );
+  const isCurrentMonth = month === now.getMonth() && year === now.getFullYear();
+
+  const shiftMonth = (delta: number) => {
+    const d = new Date(year, month + delta, 1);
+    setMonth(d.getMonth());
+    setYear(d.getFullYear());
+  };
+
+  const exportFile = async (type: 'csv' | 'xlsx') => {
+    setExporting(type);
+    setExportMsg(null);
     try {
       const rows = await fetchAppointmentsAsSheet(role);
       if (rows.length === 0) {
-        Alert.alert('Atenção', 'Nenhum dado para exportar');
+        setExportMsg({
+          type: 'info',
+          text: 'Ainda não há dados para exportar.',
+        });
         return;
       }
-
-      let uri: string | null = null;
+      const table = [Object.keys(rows[0]), ...rows.map(Object.values)];
       const fileName = `historico_delbicos_${new Date().toISOString().split('T')[0]}`;
-
+      let uri: string | null = null;
       if (type === 'csv') {
-        const csvData = [Object.keys(rows[0]), ...rows.map(Object.values)];
-        const content = await generateCSV(csvData);
-        if (content)
+        const content = await generateCSV(table);
+        if (content) {
           uri = await generateFileURI(content, `${fileName}.csv`, 'text/csv');
+        }
       } else {
-        const sheetData = [Object.keys(rows[0]), ...rows.map(Object.values)];
-        const content = await generateXLSX([{ title: 'Histórico', sheetData }]);
-        if (content)
+        const content = await generateXLSX([
+          { title: 'Histórico', sheetData: table },
+        ]);
+        if (content) {
           uri = await generateFileURI(
             content,
             `${fileName}.xlsx`,
             'application/octet-stream',
             EncodingType.Base64,
           );
+        }
       }
-
-      if (!uri) throw new Error('Falha ao gerar arquivo');
-
-      const shareSuccess = await shareContent(uri);
-      if (!shareSuccess && Platform.OS === 'web') {
+      if (!uri) throw new Error('arquivo');
+      const shared = await shareContent(uri);
+      if (!shared && Platform.OS === 'web') {
         await downloadFile(uri, `${fileName}.${type}`);
       }
-    } catch (error) {
-      console.error(error);
-      Alert.alert('Erro', 'Não foi possível exportar o arquivo.');
+      setExportMsg({ type: 'success', text: 'Arquivo gerado.' });
+    } catch {
+      setExportMsg({
+        type: 'error',
+        text: 'Não foi possível gerar o arquivo. Tente de novo.',
+      });
     } finally {
-      setIsExporting(false);
+      setExporting(null);
     }
   };
 
+  const counterpart = (a: Appointment) =>
+    isClient ? a.Professional?.User?.name : a.Client?.User?.name;
+
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.pageTitle}>
-        {role === 'professional'
-          ? 'Histórico de Trabalhos'
-          : 'Histórico e Relatórios'}
-      </Text>
-      <Text style={styles.subtitle}>
-        {role === 'professional'
-          ? 'Visualize os ganhos obtidos nos serviços realizados e exporte o relatório.'
-          : 'Visualize suas últimas transações e exporte o relatório completo.'}
-      </Text>
+    <ProfilePage
+      title="Histórico"
+      subtitle={
+        isClient
+          ? 'Atendimentos concluídos e cancelados, mês a mês.'
+          : 'Seus trabalhos e ganhos, mês a mês.'
+      }>
+      <View style={styles.monthBar}>
+        <Pressable
+          onPress={() => shiftMonth(-1)}
+          style={styles.monthArrow}
+          accessibilityRole="button"
+          accessibilityLabel="Mês anterior">
+          <FontAwesome
+            name="chevron-left"
+            size={16}
+            color={colors.primaryBlack}
+          />
+        </Pressable>
+        <Text style={styles.monthText} accessibilityLiveRegion="polite">
+          {monthLabel(month, year)}
+        </Text>
+        <Pressable
+          onPress={() => shiftMonth(1)}
+          disabled={isCurrentMonth}
+          style={[styles.monthArrow, isCurrentMonth && styles.monthArrowOff]}
+          accessibilityRole="button"
+          accessibilityLabel="Próximo mês"
+          accessibilityState={{ disabled: isCurrentMonth }}>
+          <FontAwesome
+            name="chevron-right"
+            size={16}
+            color={colors.primaryBlack}
+          />
+        </Pressable>
+      </View>
 
-      <View style={styles.contentWrapper}>
-        {/* Seção de Prévia */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Últimas Atividades</Text>
-
-          <TouchableOpacity
-            style={styles.datePickerButton}
-            onPress={() => {
-              setTempMonth(selectedMonth);
-              setTempYear(selectedYear);
-              setIsDatePickerVisible(true);
-            }}>
-            <FontAwesome name="calendar" size={16} color={colors.primaryBlue} />
-            <Text style={styles.datePickerButtonText}>
-              {getMonthName(selectedMonth).toUpperCase()} {selectedYear}
-            </Text>
-          </TouchableOpacity>
-
-          {recentHistory.length > 0 ? (
-            recentHistory.map((item) => (
-              <HistoryRow
-                key={item.id}
-                id={item.id}
-                service={item.Service.title}
-                date={new Date(item.start_time).toLocaleDateString('pt-BR')}
-                price={item.Service.price ? parseFloat(item.Service.price) : 0}
-                status={item.status}
-                rating={item.rating}
-                colors={colors}
-                styles={styles}
-                onDetails={() => {
-                  setSelectedAppointment(item);
-                  setIsDetailsModalVisible(true);
-                }}
-                onRate={
-                  role === 'client'
-                    ? () => {
-                        setAppointmentToRate(item);
-                        setIsRateModalVisible(true);
-                      }
-                    : undefined
-                }
-              />
-            ))
-          ) : (
-            <View style={styles.emptyState}>
-              <Text style={{ color: colors.textTertiary }}>
-                Nenhum histórico recente.
-              </Text>
-            </View>
-          )}
-        </View>
-
-        {/* Seção de Exportação */}
-        <View style={styles.exportSection}>
-          <Text style={[styles.sectionTitle, { marginBottom: 16 }]}>
-            Exportar Relatório
+      <View style={styles.stats}>
+        <View style={styles.stat}>
+          <Text style={styles.statValue}>{formatCurrency(total)}</Text>
+          <Text style={styles.statLabel}>
+            {isClient ? 'gasto no mês' : 'ganho no mês'}
           </Text>
-
-          <View style={[styles.grid, isDesktop && { flexDirection: 'row' }]}>
-            <View style={[styles.gridItem, isDesktop && { width: '48%' }]}>
-              <ExportCard
-                title="Arquivo Excel"
-                description="Relatório completo formatado (.xlsx)"
-                icon="file-excel-o"
-                onPress={() => handleExport('xlsx')}
-                isLoading={isExporting}
-              />
-            </View>
-            <View style={[styles.gridItem, isDesktop && { width: '48%' }]}>
-              <ExportCard
-                title="Arquivo CSV"
-                description="Dados brutos separados por vírgula (.csv)"
-                icon="file-text-o"
-                onPress={() => handleExport('csv')}
-                isLoading={isExporting}
-              />
-            </View>
-          </View>
+        </View>
+        <View style={styles.stat}>
+          <Text style={styles.statValue}>{completed.length}</Text>
+          <Text style={styles.statLabel}>
+            {completed.length === 1 ? 'concluído' : 'concluídos'}
+          </Text>
+        </View>
+        <View style={styles.stat}>
+          <Text style={styles.statValue}>
+            {items.length - completed.length}
+          </Text>
+          <Text style={styles.statLabel}>
+            {items.length - completed.length === 1 ? 'cancelado' : 'cancelados'}
+          </Text>
         </View>
       </View>
 
-      <AppointmentDetailsModal
-        visible={isDetailsModalVisible}
-        onClose={() => setIsDetailsModalVisible(false)}
-        appointment={selectedAppointment}
-      />
-
-      {appointmentToRate && (
-        <RateServiceModal
-          visible={isRateModalVisible}
-          appointmentId={appointmentToRate.id}
-          professionalName={appointmentToRate.Professional.User.name}
-          serviceTitle={appointmentToRate.Service.title}
-          existingRating={appointmentToRate.rating}
-          existingReview={appointmentToRate.review}
-          onClose={() => setIsRateModalVisible(false)}
-          onSuccess={() => fetchAppointments(role)}
+      {items.length === 0 ? (
+        <EmptyState
+          icon="history"
+          title="Nada neste mês"
+          text="Use as setas para ver outros meses."
         />
+      ) : (
+        <View style={styles.list}>
+          {items.map((a, i) => {
+            const done = a.status === 'completed';
+            const price = appointmentPrice(a);
+            return (
+              <View key={a.id} style={[styles.row, i > 0 && styles.rowDivider]}>
+                <View style={styles.date}>
+                  <Text style={styles.dateText}>{dayLabel(a.start_time)}</Text>
+                </View>
+                <View style={styles.rowTexts}>
+                  <Text style={styles.service} numberOfLines={1}>
+                    {a.Service?.title}
+                  </Text>
+                  <Text style={styles.meta} numberOfLines={1}>
+                    {counterpart(a)}
+                  </Text>
+                  <View
+                    style={[
+                      styles.badge,
+                      done ? styles.badgeDone : styles.badgeCanceled,
+                    ]}>
+                    <Text
+                      style={[
+                        styles.badgeText,
+                        { color: done ? colors.successText : colors.errorText },
+                      ]}>
+                      {done ? 'Concluído' : 'Cancelado'}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.rowEnd}>
+                  <Text style={[styles.price, !done && styles.priceCanceled]}>
+                    {price != null ? formatCurrency(price) : '—'}
+                  </Text>
+                  <View style={styles.rowActions}>
+                    <ActionButton
+                      label="Detalhes"
+                      variant="ghost"
+                      size="sm"
+                      onPress={() => setDetails(a)}
+                      accessibilityLabel={`Detalhes de ${a.Service?.title}`}
+                    />
+                    {isClient && done && !a.rating ? (
+                      <ActionButton
+                        label="Avaliar"
+                        size="sm"
+                        onPress={() => setToRate(a)}
+                      />
+                    ) : null}
+                  </View>
+                </View>
+              </View>
+            );
+          })}
+        </View>
       )}
 
-      {/* Date Picker Modal */}
-      <Modal visible={isDatePickerVisible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Filtrar Período</Text>
-
-            <View style={styles.pickerContainer}>
-              <View style={styles.pickerWrapper}>
-                <Picker
-                  selectedValue={tempMonth}
-                  onValueChange={(itemValue) =>
-                    setTempMonth(itemValue as number)
-                  }>
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((m) => (
-                    <Picker.Item
-                      key={m}
-                      label={getMonthName(m)}
-                      value={m}
-                      color={colors.primaryBlack}
-                    />
-                  ))}
-                </Picker>
-              </View>
-
-              <View style={styles.pickerWrapper}>
-                <Picker
-                  selectedValue={tempYear}
-                  onValueChange={(itemValue) =>
-                    setTempYear(itemValue as number)
-                  }>
-                  {[2024, 2025, 2026, 2027].map((y) => (
-                    <Picker.Item
-                      key={y}
-                      label={y.toString()}
-                      value={y}
-                      color={colors.primaryBlack}
-                    />
-                  ))}
-                </Picker>
-              </View>
-            </View>
-
-            <TouchableOpacity
-              style={styles.modalButton}
-              onPress={() => {
-                setSelectedMonth(tempMonth);
-                setSelectedYear(tempYear);
-                setIsDatePickerVisible(false);
-              }}>
-              <Text style={styles.modalButtonText}>Aplicar Filtro</Text>
-            </TouchableOpacity>
+      <View style={styles.exportBlock}>
+        <ProfileCard title="Exportar histórico completo">
+          <Text style={styles.exportText}>
+            Todos os atendimentos, de todos os meses, numa planilha.
+          </Text>
+          {exportMsg ? (
+            <InlineAlert type={exportMsg.type}>{exportMsg.text}</InlineAlert>
+          ) : null}
+          <View style={styles.exportActions}>
+            <ActionButton
+              label="Excel (.xlsx)"
+              icon="file-excel-o"
+              variant="secondary"
+              onPress={() => exportFile('xlsx')}
+              loading={exporting === 'xlsx'}
+              disabled={!!exporting}
+            />
+            <ActionButton
+              label="CSV"
+              icon="file-text-o"
+              variant="secondary"
+              onPress={() => exportFile('csv')}
+              loading={exporting === 'csv'}
+              disabled={!!exporting}
+            />
           </View>
-        </View>
-      </Modal>
-    </ScrollView>
+        </ProfileCard>
+      </View>
+
+      <AppointmentDetailsModal
+        visible={!!details}
+        onClose={() => setDetails(null)}
+        appointment={details}
+      />
+      {toRate ? (
+        <RateServiceModal
+          visible
+          appointmentId={toRate.id}
+          professionalName={toRate.Professional.User.name}
+          serviceTitle={toRate.Service.title}
+          existingRating={toRate.rating}
+          existingReview={toRate.review}
+          onClose={() => setToRate(null)}
+          onSuccess={() => fetchAppointments(role)}
+        />
+      ) : null}
+    </ProfilePage>
   );
 }

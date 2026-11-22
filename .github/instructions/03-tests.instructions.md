@@ -1,0 +1,12 @@
+---
+applyTo: "**/__tests__/**,**/*.test.ts,**/*.test.tsx,jest.config.js"
+---
+<!-- GENERATED from .agents/rules/03-tests.md by scripts/rules/sync.mjs. Do not edit. -->
+
+# Tests
+- Jest with the `jest-expo` preset. Tests sit next to the code
+  (`Name.test.ts`) or in a `__tests__/` folder beside it.
+- Mock the HTTP client and native modules; tests never hit the network.
+- Store tests drive actions and assert state through `use<Domain>Store.getState()`.
+- Never delete, skip or loosen a test to make a change pass. If a test is
+  wrong, say why and ask.

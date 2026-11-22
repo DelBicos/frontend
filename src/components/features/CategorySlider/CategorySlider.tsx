@@ -1,118 +1,117 @@
-import { FontAwesome5 } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useCategoryStore } from '@stores/Category/Category';
 import { Category } from '@stores/Category/types';
 import { ThemeMode, useThemeStore } from '@stores/Theme';
 import { useColors } from '@theme/ThemeProvider';
-import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  ImageBackground,
-  Platform,
-  Pressable,
-  Text,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { useBreakpoint } from '@lib/hooks/useBreakpoint';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { getCategorySvg } from './categorySvgs';
 import { createStyles } from './styles';
-
-// Mantemos os ícones mapeados por enquanto, até que decida trazê-los do banco também!
-const CATEGORY_ICONS: Record<number, string> = {
-  1: 'heartbeat',
-  2: 'cut',
-  3: 'tools',
-  4: 'lightbulb',
-  5: 'home',
-  6: 'paw',
-};
-
-const PLACEHOLDER_IMAGE =
-  'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=800&auto=format&fit=crop';
-
-function getCategoryIconName(id: number) {
-  return CATEGORY_ICONS[id] || 'shapes';
-}
 
 interface CategoryCardProps {
   category: Category;
   onPress: (category: Category) => void;
-  isWebLayout: boolean;
+  /** Versao menor (celular): icone, titulo e cantos reduzidos. */
+  compact?: boolean;
 }
 
-function CategoryCard({ category, onPress, isWebLayout }: CategoryCardProps) {
-  const iconName = getCategoryIconName(category.id);
-
-  // Consome diretamente a propriedade vinda do backend, caindo no placeholder se necessário
-  const imageUrl = category.imageUrl || PLACEHOLDER_IMAGE;
-
-  const [isHovered, setIsHovered] = useState(false);
-  const { theme } = useThemeStore();
+/**
+ * Card de categoria: SVG + titulo. Claro: fundo branco, laranja no repouso;
+ * hover azul com conteudo branco. Escuro: fundo cinza e conteudo branco;
+ * hover laranja com conteudo branco.
+ */
+function CategoryCard({
+  category,
+  onPress,
+  compact = false,
+}: CategoryCardProps) {
   const colors = useColors();
+  const theme = useThemeStore((s) => s.theme);
   const styles = createStyles(colors);
+  const [isHovered, setIsHovered] = useState(false);
   const isDark = theme === ThemeMode.DARK;
+  const isHighContrast = theme === ThemeMode.LIGHT_HI_CONTRAST;
 
-  // --- RENDERING WEB IMAGE CARD ---
-  if (isWebLayout) {
-    return (
-      <Pressable
-        style={[styles.webCard, isHovered && styles.webCardHovered]}
-        onPress={() => onPress(category)}
-        onHoverIn={() => setIsHovered(true)}
-        onHoverOut={() => setIsHovered(false)}
-        accessibilityRole="button">
-        <ImageBackground
-          source={{ uri: imageUrl }}
-          style={styles.webCardImage}
-          imageStyle={{ borderRadius: 16 }}>
-          <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.8)']}
-            style={styles.webCardGradient}>
-            <Text style={styles.webCardTitle} numberOfLines={1}>
-              {category.title}
-            </Text>
-          </LinearGradient>
-        </ImageBackground>
-      </Pressable>
-    );
-  }
+  const svg = getCategorySvg(category.id);
+  const scale = compact ? 0.45 : 0.7;
 
-  // --- RENDERING MOBILE BUBBLE ---
-  const bubbleBgColor = isDark ? '#2C2C2C' : colors.primaryOrange + '15';
+  const cardColors = useMemo(() => {
+    let backgroundColor = colors.cardBackground;
+    let borderColor = colors.borderColor;
+    let contentColor = colors.primaryOrange;
+
+    if (isHighContrast) {
+      contentColor = colors.primaryBlack;
+    }
+
+    if (isDark && !isHovered && !isHighContrast) {
+      backgroundColor = colors.primaryBlue;
+      contentColor = colors.textOnImage;
+      borderColor = colors.primaryBlue;
+    }
+
+    if (isHovered) {
+      if (isHighContrast) {
+        backgroundColor = colors.primaryBlue;
+        contentColor = colors.textOnImage;
+        borderColor = colors.primaryBlue;
+      } else if (isDark) {
+        backgroundColor = colors.primaryOrange;
+        contentColor = colors.textOnImage;
+        borderColor = colors.primaryOrange;
+      } else {
+        backgroundColor = colors.primaryBlue;
+        contentColor = colors.textOnImage;
+        borderColor = colors.primaryBlue;
+      }
+    }
+
+    return { backgroundColor, borderColor, contentColor };
+  }, [isHovered, isDark, isHighContrast, colors]);
+
+  const borderWidth = isHighContrast ? 3 : 1;
 
   return (
     <Pressable
-      style={styles.bubbleCard}
+      style={({ pressed }) => [
+        styles.card,
+        compact && styles.cardCompact,
+        {
+          backgroundColor: cardColors.backgroundColor,
+          borderColor: cardColors.borderColor,
+          borderWidth,
+        },
+        (isHovered || pressed) && styles.cardActive,
+        pressed && styles.cardPressed,
+      ]}
       onPress={() => onPress(category)}
-      accessibilityRole="button">
-      <View
-        style={[
-          styles.bubble,
-          {
-            backgroundColor: isHovered
-              ? colors.primaryOrange + '30'
-              : bubbleBgColor,
-          },
-        ]}>
-        <FontAwesome5
-          name={iconName}
-          size={26}
-          color={isDark ? colors.primaryBlack : colors.primaryOrange}
-          solid
+      onHoverIn={() => setIsHovered(true)}
+      onHoverOut={() => setIsHovered(false)}
+      accessibilityRole="button"
+      accessibilityLabel={`Categoria ${category.title}`}>
+      <View style={[styles.iconBox, compact && styles.iconBoxCompact]}>
+        <svg.IconComponent
+          width={svg.width * scale}
+          height={svg.height * scale}
+          color={cardColors.contentColor}
         />
       </View>
       <Text
         style={[
-          styles.bubbleTitle,
-          { color: isDark ? colors.primaryBlack : colors.primaryBlack },
+          styles.cardTitle,
+          compact && styles.cardTitleCompact,
+          { color: cardColors.contentColor },
         ]}
-        numberOfLines={2}>
+        numberOfLines={3}>
         {category.title}
       </Text>
     </Pressable>
   );
 }
+
+const GAP = 24;
+const GAP_COMPACT = 12;
 
 function CategorySlider() {
   const [isLoading, setIsLoading] = useState(true);
@@ -120,15 +119,11 @@ function CategorySlider() {
   const navigation = useNavigation();
   const colors = useColors();
   const styles = createStyles(colors);
-  const { width } = useWindowDimensions();
-
-  const isWebLayout = Platform.OS === 'web' && width > 768;
+  const { isCompact } = useBreakpoint();
 
   useEffect(() => {
     if (categories.length === 0) {
-      fetchCategories().finally(() => {
-        setIsLoading(false);
-      });
+      fetchCategories().finally(() => setIsLoading(false));
     } else {
       setIsLoading(false);
     }
@@ -142,14 +137,10 @@ function CategorySlider() {
     });
   };
 
-  const ITEM_WIDTH = isWebLayout ? 236 : 96;
-  const contentWidth = categories?.length ? categories.length * ITEM_WIDTH : 0;
-  const shouldCenter = contentWidth < width && contentWidth > 0;
-
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primaryBlue} />
+        <ActivityIndicator size="large" color={colors.primaryOrange} />
       </View>
     );
   }
@@ -162,43 +153,22 @@ function CategorySlider() {
     );
   }
 
+  const columns = isCompact ? 2 : 3;
+  const gap = isCompact ? GAP_COMPACT : GAP;
+
   return (
-    <View style={styles.container}>
-      <View style={styles.sliderWrapper}>
-        {isWebLayout ? (
-          <FlatList
-            data={categories}
-            keyExtractor={(item) => item.id.toString()}
-            initialNumToRender={6}
-            maxToRenderPerBatch={8}
-            windowSize={5}
-            renderItem={({ item }) => (
-              <CategoryCard
-                category={item}
-                onPress={handleCategoryPress}
-                isWebLayout={isWebLayout}
-              />
-            )}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={[
-              styles.listContent,
-              { justifyContent: shouldCenter ? 'center' : 'flex-start' },
-            ]}
+    <View style={[styles.grid, { marginHorizontal: -gap / 2, rowGap: gap }]}>
+      {categories.map((item) => (
+        <View
+          key={item.id}
+          style={{ width: `${100 / columns}%`, paddingHorizontal: gap / 2 }}>
+          <CategoryCard
+            category={item}
+            onPress={handleCategoryPress}
+            compact={isCompact}
           />
-        ) : (
-          <View style={styles.gridContainer}>
-            {categories.map((item) => (
-              <CategoryCard
-                key={item.id.toString()}
-                category={item}
-                onPress={handleCategoryPress}
-                isWebLayout={isWebLayout}
-              />
-            ))}
-          </View>
-        )}
-      </View>
+        </View>
+      ))}
     </View>
   );
 }

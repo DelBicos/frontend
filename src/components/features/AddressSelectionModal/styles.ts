@@ -10,13 +10,16 @@ export const createStyles = (colors: ColorsType) =>
       alignItems: 'center',
       padding: 16,
     },
+    keyboardAvoidingView: {
+      width: '100%',
+      alignItems: 'center',
+    },
     modalContent: {
       backgroundColor: colors.cardBackground,
       width: '100%',
       maxWidth: 500,
       borderRadius: 20,
       padding: 24,
-      maxHeight: '85%',
       ...Platform.select({
         ios: {
           shadowColor: colors.primaryBlack,
@@ -32,6 +35,10 @@ export const createStyles = (colors: ColorsType) =>
         },
       }),
     },
+    modalContentCompact: {
+      padding: 16,
+      borderRadius: 16,
+    },
 
     // --- Header ---
     headerRow: {
@@ -44,9 +51,11 @@ export const createStyles = (colors: ColorsType) =>
       borderBottomColor: colors.divider,
     },
     modalTitle: {
+      flex: 1,
       fontSize: 20,
       fontFamily: 'Afacad-Bold',
       color: colors.primaryBlack,
+      paddingRight: 12,
     },
     closeButton: {
       padding: 4,
@@ -56,13 +65,21 @@ export const createStyles = (colors: ColorsType) =>
     },
 
     listContainer: {
-      flexShrink: 1,
+      width: '100%',
+      minHeight: 84,
       marginBottom: 16,
+    },
+    addressList: {
+      flex: 1,
+    },
+    listContent: {
+      paddingRight: Platform.OS === 'web' ? 8 : 0,
     },
     addressItem: {
       flexDirection: 'row',
       alignItems: 'center',
       padding: 16,
+      minHeight: 76,
       borderRadius: 12,
       borderWidth: 1,
       borderColor: colors.borderColor,
@@ -101,15 +118,18 @@ export const createStyles = (colors: ColorsType) =>
     // Textos do Endereço
     addressInfo: {
       flex: 1,
+      minWidth: 0,
     },
     addressText: {
       fontSize: 16,
+      lineHeight: 20,
       fontFamily: 'Afacad-SemiBold',
       color: colors.primaryBlack,
       marginBottom: 2,
     },
     addressSubtext: {
       fontSize: 14,
+      lineHeight: 18,
       fontFamily: 'Afacad-Regular',
       color: colors.textSecondary,
     },
@@ -129,9 +149,15 @@ export const createStyles = (colors: ColorsType) =>
       gap: 8,
     },
     newAddressButtonText: {
+      flexShrink: 1,
       fontSize: 16,
       fontFamily: 'Afacad-SemiBold',
       color: colors.primaryOrange,
+      textAlign: 'center',
+    },
+
+    actionsContainer: {
+      flexShrink: 0,
     },
 
     // --- Botão "Confirmar" (Fixo no fundo) ---

@@ -1,6 +1,12 @@
 import React, { useEffect } from 'react';
 import { Platform } from 'react-native';
 
+/** Script externo do governo (vlibras.gov.br): so o que usamos. */
+interface VLibrasApi {
+  Widget: new (url: string) => unknown;
+  widget?: { hide?: () => void };
+}
+type VLibrasWindow = Window & { VLibras?: VLibrasApi };
 const VLIBRAS_SCRIPT_URL = 'https://vlibras.gov.br/app/vlibras-plugin.js';
 const VLIBRAS_CONTAINER_ID = 'vlibras-container-manual';
 
@@ -36,10 +42,11 @@ const VLibrasSetup: React.FC = () => {
       script.async = true;
 
       script.onload = () => {
-        if ((window as any).VLibras) {
-          new (window as any).VLibras.Widget('https://vlibras.gov.br/app');
+        const vlibras = (window as VLibrasWindow).VLibras;
+        if (vlibras) {
+          new vlibras.Widget('https://vlibras.gov.br/app');
 
-          const widget = (window as any).VLibras.widget;
+          const widget = vlibras.widget;
           if (widget && widget.hide) {
             widget.hide();
           }

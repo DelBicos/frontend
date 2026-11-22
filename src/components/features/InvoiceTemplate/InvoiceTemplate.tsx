@@ -1,6 +1,7 @@
 import { InvoiceData } from '@stores/Appointment/types';
 import lightColors from '@theme/light';
 
+import { logger } from '@lib/logger';
 /**
  * Sanitiza strings para prevenir injeção de HTML (XSS)
  */
@@ -152,7 +153,7 @@ const getStyles = () => `
 
 const InvoiceTemplate = (invoiceData: InvoiceData): string => {
   if (!validateInvoiceData(invoiceData)) {
-    console.error('Dados inválidos para geração de NF:', invoiceData);
+    logger.error('Dados inválidos para geração de NF:', invoiceData);
     throw new Error('Dados obrigatórios da nota fiscal estão ausentes');
   }
 

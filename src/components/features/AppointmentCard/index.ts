@@ -1,1 +1,0 @@
-export { AppointmentCard } from './AppointmentCard';

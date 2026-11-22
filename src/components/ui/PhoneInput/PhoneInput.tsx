@@ -58,7 +58,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
         value={displayValue}
         onChangeText={handleChangeText}
         onBlur={onBlur}
-        error={error as any}
+        error={typeof error === 'string' ? error : undefined}
         keyboardType="number-pad"
         maxLength={15}
         editable={!disabled}

@@ -1,142 +1,98 @@
-import { StyleSheet, Platform } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { ColorsType } from '@theme/types';
 
 export const createStyles = (
   colors: ColorsType,
   isMobile: boolean,
-  isDark: boolean,
-) =>
-  StyleSheet.create({
-    // --- ESTILOS BASE ---
+  isLightTheme: boolean,
+) => {
+  const shellBackground = isLightTheme
+    ? colors.pageBackground
+    : colors.secondaryGray;
+
+  return StyleSheet.create({
+    // --- WEB (barra lateral + conteudo) ---
     desktopContainer: {
       flex: 1,
-      backgroundColor: isDark ? colors.secondaryGray : colors.primaryWhite,
+      backgroundColor: shellBackground,
       overflow: 'hidden',
     },
     desktopWrapper: {
       flex: 1,
+      minHeight: 0,
       flexDirection: 'row',
-      maxWidth: 1400,
       width: '100%',
       alignSelf: 'center',
-      padding: 24,
-      gap: 24,
+      paddingTop: 32,
+      paddingBottom: 24,
+      gap: 32,
       overflow: 'hidden',
     },
-
-    // --- SIDEBAR (DESKTOP) ---
     desktopSidebar: {
-      width: 300,
-      backgroundColor: colors.cardBackground,
-      borderRadius: 24,
-      paddingVertical: 24,
-      paddingHorizontal: 20,
+      width: 272,
+      alignSelf: 'stretch',
+      minHeight: 0,
+      padding: 12,
+      borderRadius: 16,
       borderWidth: 1,
       borderColor: colors.borderColor,
-      ...Platform.select({
-        web: { boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.03)' },
-        default: { elevation: 2 },
-      }),
-      display: 'flex',
-      flexDirection: 'column',
-      maxHeight:
-        Platform.OS === 'web' ? ('calc(100vh - 195px)' as any) : undefined,
+      backgroundColor: colors.cardBackground,
     },
-
-    // --- CONTEÚDO PRINCIPAL (DESKTOP) ---
+    // As telas trazem seus proprios cartoes; aqui so a area de rolagem.
     desktopMainContent: {
       flex: 1,
-      backgroundColor: colors.cardBackground,
-      borderRadius: 24,
-      borderWidth: 1,
-      borderColor: colors.borderColor,
-      ...Platform.select({
-        web: { boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.03)' },
-        default: { elevation: 2 },
-      }),
-      overflow: 'hidden',
+      minWidth: 0,
+      minHeight: 0,
     },
     desktopMainContentFill: {
+      flex: 1,
       minHeight: 0,
-      ...Platform.select({
-        // 147px = header + pesquisar, 48px = desktopWrapper padding (24px top + 24px bottom)
-        web: {
-          height: 'calc(100vh - 195px)' as any,
-          maxHeight: 'calc(100vh - 195px)' as any,
-        },
-        default: {},
-      }),
     },
     desktopContentScroll: {
-      padding: 40,
-      minHeight: '100%',
+      flexGrow: 1,
+      paddingBottom: 48,
+    },
+    desktopContentScrollView: {
+      flex: 1,
     },
 
-    // --- MOBILE ---
+    // --- CELULAR ---
     mobileContainer: {
       flex: 1,
-      backgroundColor: isDark ? colors.secondaryGray : colors.primaryWhite,
+      backgroundColor: shellBackground,
     },
     mobileHeader: {
-      paddingTop: 16,
-      paddingBottom: 16,
-      paddingHorizontal: 20,
+      minHeight: 56,
+      paddingVertical: 6,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
       backgroundColor: colors.cardBackground,
       borderBottomWidth: 1,
       borderBottomColor: colors.borderColor,
-      flexDirection: 'row',
-      alignItems: 'center',
     },
     backButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-    },
-    backButtonIcon: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: colors.inputBackground,
+      width: 44,
+      height: 44,
+      marginLeft: -10,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    backButtonText: {
-      fontSize: 16,
+    mobileHeaderTitle: {
+      flex: 1,
       fontFamily: 'Afacad-Bold',
+      fontSize: 21,
       color: colors.primaryBlack,
     },
     mobileContentScroll: {
       flexGrow: 1,
-      padding: 20,
+    },
+    mobileContentScrollView: {
+      flex: 1,
     },
     mobileMenuScroll: {
-      padding: 20,
+      paddingTop: 20,
       paddingBottom: 40,
     },
-    mobileMenuHeader: {
-      marginBottom: 24,
-      marginTop: 10,
-    },
-    mobileMenuTitle: {
-      fontSize: 32,
-      fontFamily: 'Afacad-Bold',
-      color: colors.primaryBlue,
-      marginBottom: 8,
-    },
-    mobileMenuSubtitle: {
-      fontSize: 16,
-      fontFamily: 'Afacad-Regular',
-      color: colors.textTertiary,
-    },
-    mobileMenuCard: {
-      backgroundColor: colors.cardBackground,
-      borderRadius: 20,
-      padding: 16,
-      borderWidth: 1,
-      borderColor: colors.borderColor,
-      ...Platform.select({
-        default: { elevation: 2 },
-        web: { boxShadow: '0px 4px 15px rgba(0,0,0,0.05)' },
-      }),
-    },
   });
+};

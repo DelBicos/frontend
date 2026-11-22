@@ -3,60 +3,71 @@ import { ColorsType } from '@theme/types';
 
 export const createStyles = (colors: ColorsType) =>
   StyleSheet.create({
-    container: {
-      flex: 1,
-      padding: 20,
-      backgroundColor: 'transparent',
+    loading: {
+      marginVertical: 48,
     },
-    pageTitle: {
-      fontSize: 24,
-      fontFamily: 'Afacad-Bold',
-      color: colors.primaryBlack,
-      marginBottom: 24,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
+    summary: {
+      flexDirection: 'row',
       alignItems: 'center',
-      padding: 40,
-      minHeight: 300,
+      gap: 16,
+      padding: 20,
+      marginBottom: 16,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+      backgroundColor: colors.cardBackground,
     },
-    loadingText: {
-      marginTop: 16,
+    average: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 44,
+      lineHeight: 48,
+      color: colors.primaryBlack,
+    },
+    summaryTexts: {
+      gap: 4,
+    },
+    summaryText: {
+      fontFamily: 'Afacad-Regular',
       fontSize: 16,
       color: colors.textSecondary,
-      fontFamily: 'Afacad-Regular',
     },
-    emptyContainer: {
-      flex: 1,
-      justifyContent: 'center',
+    pendingRow: {
+      flexDirection: 'row',
       alignItems: 'center',
-      padding: 40,
-      minHeight: 300,
+      gap: 12,
+      paddingVertical: 10,
     },
-    emptyText: {
-      fontSize: 18,
-      fontFamily: 'Afacad-SemiBold',
+    pendingDivider: {
+      borderTopWidth: 1,
+      borderTopColor: colors.divider,
+    },
+    pendingTexts: {
+      flex: 1,
+      minWidth: 0,
+    },
+    pendingName: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 17,
       color: colors.primaryBlack,
-      textAlign: 'center',
-      marginBottom: 8,
     },
-    emptySubtext: {
-      fontSize: 14,
-      color: colors.textTertiary,
-      textAlign: 'center',
-      lineHeight: 20,
+    pendingMeta: {
       fontFamily: 'Afacad-Regular',
+      fontSize: 15,
+      color: colors.textSecondary,
     },
-    scrollContent: {
-      paddingBottom: 40,
+    sectionTitle: {
+      marginTop: 8,
+      marginBottom: 12,
+      fontFamily: 'Afacad-Bold',
+      fontSize: 20,
+      color: colors.primaryBlack,
     },
-    gridContainer: {
+    grid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 16,
+      margin: -6,
     },
-    cardWrapper: {
-      width: '100%',
+    gridItem: {
+      padding: 6,
     },
   });

@@ -1,0 +1,89 @@
+name: Deploy do site no Azure Storage (site estático)
+
+# Publica o site no "Static website" de uma storage account do Azure.
+# Alternativa ao Static Web App, que não está disponível nas regiões
+# permitidas para as assinaturas de estudante.
+#   - main -> produção:    secret AZURE_WEB_STORAGE_CONNECTION_STRING      e variável BACKEND_DOMAIN
+#   - stag -> homologação: secret AZURE_WEB_STORAGE_CONNECTION_STRING_STAG e variável BACKEND_DOMAIN_STAG
+# BACKEND_DOMAIN* é o host do backend no Azure, sem https.
+# Enquanto não houver o ambiente de homologação (_STAG), a stag continua
+# publicando no site de produção, como antes. Sem nada configurado, o job é pulado.
+
+on:
+  push:
+    branches:
+      - main
+      - stag
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build (expo export) e upload para o container $web
+    runs-on: ubuntu-latest
+    env:
+      EXPO_PUBLIC_ENVIRONMENT: production
+      EXPO_PUBLIC_HTTP_PROTOCOL: https
+      EXPO_PUBLIC_WS_PROTOCOL: wss
+      EXPO_PUBLIC_PORT: ""
+      # Chaves públicas (vão para o navegador de qualquer forma); ficam em Variables do repositório.
+      EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ vars.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+      EXPO_PUBLIC_GOOGLE_MAPS_API_KEY: ${{ vars.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY }}
+      EXPO_PUBLIC_LOCATIONIQ_API_KEY: ${{ vars.EXPO_PUBLIC_LOCATIONIQ_API_KEY }}
+      EXPO_PUBLIC_UNSPLASH_API_KEY: ${{ vars.EXPO_PUBLIC_UNSPLASH_API_KEY }}
+      EXPO_PUBLIC_GOOGLE_ANALYTICS_ID: ${{ vars.EXPO_PUBLIC_GOOGLE_ANALYTICS_ID }}
+      EXPO_PUBLIC_CLARITY_ID: ${{ vars.EXPO_PUBLIC_CLARITY_ID }}
+    steps:
+      - name: Escolher o ambiente e conferir a storage
+        id: storage
+        env:
+          CONNECTION_STRING: ${{ secrets.AZURE_WEB_STORAGE_CONNECTION_STRING }}
+          CONNECTION_STRING_STAG: ${{ secrets.AZURE_WEB_STORAGE_CONNECTION_STRING_STAG }}
+          DOMAIN: ${{ vars.BACKEND_DOMAIN }}
+          DOMAIN_STAG: ${{ vars.BACKEND_DOMAIN_STAG }}
+        run: |
+          if [ "$GITHUB_REF_NAME" != "main" ] && [ -n "$CONNECTION_STRING_STAG" ] && [ -n "$DOMAIN_STAG" ]; then
+            echo "Branch $GITHUB_REF_NAME: publicando na homologação."
+            echo "target=stag" >> "$GITHUB_OUTPUT"
+            backend="$DOMAIN_STAG"
+          elif [ -n "$CONNECTION_STRING" ] && [ -n "$DOMAIN" ]; then
+            echo "Branch $GITHUB_REF_NAME: publicando na produção."
+            echo "target=prod" >> "$GITHUB_OUTPUT"
+            backend="$DOMAIN"
+          else
+            echo "Secret AZURE_WEB_STORAGE_CONNECTION_STRING ou variável BACKEND_DOMAIN ausente: pulando."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "configured=true" >> "$GITHUB_OUTPUT"
+          {
+            echo "EXPO_PUBLIC_DOMAIN_WEB=$backend"
+            echo "EXPO_PUBLIC_DOMAIN_ANDROID=$backend"
+            echo "EXPO_PUBLIC_DOMAIN_IOS=$backend"
+          } >> "$GITHUB_ENV"
+
+      - uses: actions/checkout@v4
+        if: steps.storage.outputs.configured == 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.storage.outputs.configured == 'true'
+        with:
+          node-version: "20.x"
+          cache: npm
+
+      - name: Instalar dependências
+        if: steps.storage.outputs.configured == 'true'
+        run: npm ci
+
+      - name: Gerar o site (web)
+        if: steps.storage.outputs.configured == 'true'
+        run: npx expo export --platform web
+
+      - name: Publicar no container $web
+        if: steps.storage.outputs.configured == 'true'
+        env:
+          AZURE_STORAGE_CONNECTION_STRING: ${{ steps.storage.outputs.target == 'stag' && secrets.AZURE_WEB_STORAGE_CONNECTION_STRING_STAG || secrets.AZURE_WEB_STORAGE_CONNECTION_STRING }}
+        run: |
+          az storage blob upload-batch --destination '$web' --source dist --overwrite --only-show-errors
+          # index.html sem cache, para cada deploy aparecer na hora.
+          az storage blob update --container-name '$web' --name index.html \
+            --content-cache-control "no-cache" --content-type "text/html" --only-show-errors

@@ -1,7 +1,9 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
-import { HTTP_DOMAIN } from '@config/varEnvs';
+import { backendHttpClient } from '@lib/helpers/httpClient';
 
+import { logger } from '@lib/logger';
+import type { Notification } from '@stores/Notification/types';
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -55,7 +57,7 @@ export async function scheduleLocalNotification(title: string, body: string) {
       trigger: null,
     });
   } catch (error) {
-    console.error('❌ Erro ao agendar notificação:', error);
+    logger.error('Erro ao agendar notificação:', error);
   }
 }
 
@@ -65,15 +67,12 @@ export async function checkForNewNotifications(
   showLogs: boolean = false,
 ): Promise<boolean> {
   try {
-    const response = await fetch(`${HTTP_DOMAIN}/api/notifications/${userId}`);
+    // backendHttpClient envia o JWT (a rota exige autenticacao).
+    const { data: notifications } = await backendHttpClient.get<Notification[]>(
+      `/api/notifications/${userId}`,
+    );
 
-    if (!response.ok) {
-      throw new Error(`Erro HTTP: ${response.status}`);
-    }
-
-    const notifications = await response.json();
-
-    const newNotifications = notifications.filter((notification: any) => {
+    const newNotifications = notifications.filter((notification) => {
       const notificationDate = new Date(notification.createdAt);
       return !notification.is_read && notificationDate > lastChecked;
     });
@@ -85,7 +84,7 @@ export async function checkForNewNotifications(
     return newNotifications.length > 0;
   } catch (error) {
     if (showLogs) {
-      console.error('❌ Erro ao verificar notificações:', error);
+      logger.error('Erro ao verificar notificações:', error);
     }
     return false;
   }

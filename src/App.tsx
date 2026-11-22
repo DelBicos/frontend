@@ -4,6 +4,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import * as React from 'react';
 import { useFonts } from 'expo-font';
 import { Navigation } from '@screens/NavigationStack';
+import { navigationRef } from '@screens/navigationRef';
 import { LocationProvider } from '@lib/hooks/LocationContext';
 import { MenuProvider } from 'react-native-popup-menu';
 import { ThemeProvider, useColors } from '@theme/ThemeProvider';
@@ -17,12 +18,18 @@ import { initGAWeb } from './utils/ga-web';
 import { initClarityWeb } from './utils/clarity';
 import { GOOGLE_ANALYTICS_ID, CLARITY_ID } from './config/varEnvs';
 import VLibrasSetup from '@components/features/Accessibility/VLibrasSetup';
-import { registerTokenProvider } from '@lib/helpers/httpClient';
+import {
+  registerTokenProvider,
+  registerUnauthorizedHandler,
+} from '@lib/helpers/httpClient';
 import { useUserStore } from '@stores/User';
 import { useThemeStore } from '@stores/Theme';
 import { ThemeMode } from '@stores/Theme/types';
-
 import { AuthProvider } from '@lib/hooks/AuthContext';
+import { ChatWidget } from '@components/features/ChatBot/ChatWidget';
+import BottomNav from '@components/layout/BottomNav';
+import type { NavigationState } from '@react-navigation/native';
+import { ClientProfileSubRoutes } from '@screens/types';
 
 // Pre-carrega assets de navegação com captura de erro resiliente
 Asset.loadAsync([...NavigationAssets]).catch(() => {});
@@ -34,6 +41,7 @@ function NotificationManager() {
 }
 
 registerTokenProvider(() => useUserStore.getState().token);
+registerUnauthorizedHandler(() => useUserStore.getState().signOut());
 
 const styles = StyleSheet.create({
   container: {
@@ -44,10 +52,30 @@ const styles = StyleSheet.create({
   },
 });
 
+/** Telas de conversa: o balão do chatbot cobriria o campo e o botão de enviar. */
+const CHAT_ROUTES = new Set(['ChatBot', 'ChatList', 'ChatThread']);
+
 function AppContent() {
   const theme = useThemeStore((state) => state.theme);
   const colors = useColors();
+  const { user } = useUserStore();
   const isDark = theme === ThemeMode.DARK;
+  const [isChatScreen, setIsChatScreen] = React.useState(false);
+
+  const [rootState, setRootState] = React.useState<NavigationState>();
+
+  const syncCurrentRoute = React.useCallback(() => {
+    const route = navigationRef.getCurrentRoute();
+    const subroute = (route?.params as { subroute?: string } | undefined)
+      ?.subroute;
+    setIsChatScreen(
+      CHAT_ROUTES.has(route?.name ?? '') ||
+        subroute === ClientProfileSubRoutes.Conversas,
+    );
+    if (Platform.OS !== 'web') {
+      setRootState(navigationRef.getRootState());
+    }
+  }, []);
 
   const navTheme = React.useMemo(
     () => ({
@@ -86,16 +114,26 @@ function AppContent() {
         <LocationProvider>
           <VLibrasSetup />
           <NotificationManager />
-          <Navigation
-            theme={navTheme}
-            linking={{
-              enabled: 'auto',
-              prefixes: ['delbicos://'],
-            }}
-            onReady={() => {
-              SplashScreen.hideAsync().catch(() => {});
-            }}
-          />
+          <View style={styles.safeArea}>
+            <Navigation
+              ref={navigationRef}
+              theme={navTheme}
+              linking={{
+                enabled: 'auto',
+                prefixes: ['delbicos://'],
+              }}
+              onReady={() => {
+                syncCurrentRoute();
+                SplashScreen.hideAsync().catch(() => {});
+              }}
+              onStateChange={syncCurrentRoute}
+            />
+            {/* Fora das telas de conversa e da tela dedicada do assistente. */}
+            {!!user && !isChatScreen && (
+              <ChatWidget bottomOffset={Platform.OS === 'web' ? 24 : 16} />
+            )}
+          </View>
+          {Platform.OS !== 'web' && <BottomNav state={rootState} />}
         </LocationProvider>
       </SafeAreaView>
     </View>

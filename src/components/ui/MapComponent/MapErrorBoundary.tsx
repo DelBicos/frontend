@@ -4,6 +4,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
 import { ColorsType } from '@theme/types';
 
+import { logger } from '@lib/logger';
 const MapErrorFallback = () => {
   const colors = useColors();
   const styles = createStyles(colors);
@@ -88,7 +89,7 @@ export class MapErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('[MapErrorBoundary] Erro capturado:', error, errorInfo);
+    logger.error('[MapErrorBoundary] Erro capturado:', error, errorInfo);
   }
 
   render() {

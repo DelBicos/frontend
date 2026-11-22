@@ -30,6 +30,8 @@ export type ChatMessage = {
   created_at: string;
   // Marca mensagens enviadas otimisticamente e ainda não confirmadas pelo servidor
   pending?: boolean;
+  /** O servidor recusou ou não confirmou o envio; pode ser reenviada. */
+  failed?: boolean;
 };
 
 export type FetchMessagesResult = {

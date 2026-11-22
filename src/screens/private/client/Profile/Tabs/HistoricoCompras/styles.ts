@@ -1,193 +1,157 @@
-import { StyleSheet, Platform } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { ColorsType } from '@theme/types';
 
 export const createStyles = (colors: ColorsType) =>
   StyleSheet.create({
-    container: {
-      flex: 1,
-      padding: 20,
-      backgroundColor: 'transparent',
-    },
-    pageTitle: {
-      fontSize: 24,
-      fontFamily: 'Afacad-Bold',
-      color: colors.primaryBlack,
-      marginBottom: 8,
-    },
-    subtitle: {
-      fontSize: 16,
-      fontFamily: 'Afacad-Regular',
-      color: colors.textSecondary,
-      marginBottom: 24,
-    },
-    contentWrapper: {
-      gap: 24,
-      paddingBottom: 40,
-    },
-    section: {
-      borderRadius: 16,
-      padding: 20,
-      backgroundColor: colors.cardBackground,
+    monthBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      alignSelf: 'flex-start',
+      gap: 4,
+      marginBottom: 16,
+      padding: 4,
+      borderRadius: 12,
       borderWidth: 1,
       borderColor: colors.borderColor,
-      ...Platform.select({
-        ios: {
-          shadowColor: colors.primaryBlack,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 4,
-        },
-        android: { elevation: 2 },
-        web: { boxShadow: '0px 4px 12px rgba(0,0,0,0.03)' },
-      }),
+      backgroundColor: colors.cardBackground,
     },
-    sectionTitle: {
-      fontSize: 18,
+    monthArrow: {
+      width: 44,
+      height: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 10,
+      ...Platform.select({ web: { cursor: 'pointer' } as object }),
+    },
+    monthArrowOff: {
+      opacity: 0.3,
+    },
+    monthText: {
+      minWidth: 170,
+      textAlign: 'center',
       fontFamily: 'Afacad-Bold',
+      fontSize: 18,
       color: colors.primaryBlack,
-      marginBottom: 16,
+    },
+    stats: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+      marginBottom: 20,
+    },
+    stat: {
+      flexGrow: 1,
+      flexBasis: 140,
+      padding: 16,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+      backgroundColor: colors.cardBackground,
+    },
+    statValue: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 24,
+      color: colors.primaryBlack,
+    },
+    statLabel: {
+      fontFamily: 'Afacad-Regular',
+      fontSize: 15,
+      color: colors.textSecondary,
+    },
+    list: {
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+      backgroundColor: colors.cardBackground,
+      overflow: 'hidden',
     },
     row: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.divider,
-    },
-    rowLeft: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       gap: 12,
+      padding: 14,
     },
-    iconBox: {
-      width: 32,
-      height: 32,
-      borderRadius: 8,
+    rowDivider: {
+      borderTopWidth: 1,
+      borderTopColor: colors.divider,
+    },
+    date: {
+      width: 56,
+      paddingVertical: 6,
+      borderRadius: 10,
       alignItems: 'center',
-      justifyContent: 'center',
       backgroundColor: colors.inputBackground,
-    },
-    serviceText: {
-      fontSize: 15,
-      fontFamily: 'Afacad-SemiBold',
-      color: colors.primaryBlack,
     },
     dateText: {
-      fontSize: 12,
+      fontFamily: 'Afacad-Bold',
+      fontSize: 14,
+      textAlign: 'center',
+      color: colors.primaryBlack,
+    },
+    rowTexts: {
+      flex: 1,
+      minWidth: 0,
+      gap: 2,
+    },
+    service: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 17,
+      color: colors.primaryBlack,
+    },
+    meta: {
       fontFamily: 'Afacad-Regular',
+      fontSize: 15,
       color: colors.textSecondary,
     },
-    priceText: {
-      fontSize: 15,
-      fontFamily: 'Afacad-Bold',
-      color: colors.primaryBlack,
-    },
-    emptyState: {
-      padding: 20,
-      alignItems: 'center',
-    },
-    exportSection: {
-      marginTop: 8,
-    },
-    grid: {
-      gap: 16,
-      flexDirection: 'column',
-    },
-    gridItem: {
-      width: '100%',
-    },
-    datePickerButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: colors.inputBackground,
-      paddingVertical: 10,
-      paddingHorizontal: 16,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.borderColor,
-      alignSelf: 'flex-start',
-      marginBottom: 20,
-    },
-    datePickerButtonText: {
-      fontSize: 16,
-      fontFamily: 'Afacad-SemiBold',
-      color: colors.primaryBlue,
-      marginLeft: 8,
-    },
-    badgeContainer: {
-      paddingVertical: 4,
-      paddingHorizontal: 8,
-      borderRadius: 12,
+    badge: {
       alignSelf: 'flex-start',
       marginTop: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 999,
+    },
+    badgeDone: {
+      backgroundColor: colors.successBackground,
+    },
+    badgeCanceled: {
+      backgroundColor: colors.errorBackground,
     },
     badgeText: {
-      fontSize: 12,
-      fontFamily: 'Afacad-Medium',
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 13,
     },
-    detailsButton: {
-      marginTop: 8,
-      paddingVertical: 6,
-      paddingHorizontal: 16,
-      backgroundColor: colors.primaryBlue,
-      borderRadius: 12,
-      alignSelf: 'flex-start',
+    rowEnd: {
+      alignItems: 'flex-end',
+      gap: 4,
     },
-    detailsButtonText: {
-      color: colors.primaryWhite,
-      fontFamily: 'Afacad-Medium',
-      fontSize: 12,
-    },
-    rateButton: {
-      marginTop: 8,
-      paddingVertical: 6,
-      paddingHorizontal: 16,
-      backgroundColor: colors.primaryOrange,
-      borderRadius: 12,
-      alignSelf: 'flex-start',
-    },
-    rateButtonText: {
-      color: colors.primaryWhite,
-      fontFamily: 'Afacad-Medium',
-      fontSize: 12,
-    },
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    modalContent: {
-      width: '80%',
-      backgroundColor: colors.cardBackground,
-      borderRadius: 16,
-      padding: 20,
-    },
-    modalTitle: {
-      fontSize: 18,
+    price: {
       fontFamily: 'Afacad-Bold',
+      fontSize: 17,
       color: colors.primaryBlack,
-      marginBottom: 16,
-      textAlign: 'center',
     },
-    pickerContainer: {
+    priceCanceled: {
+      color: colors.textSecondary,
+      textDecorationLine: 'line-through',
+    },
+    rowActions: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
+      flexWrap: 'wrap',
+      justifyContent: 'flex-end',
+      gap: 4,
     },
-    pickerWrapper: {
-      flex: 1,
+    exportBlock: {
+      marginTop: 24,
     },
-    modalButton: {
-      marginTop: 20,
-      backgroundColor: colors.primaryBlue,
-      paddingVertical: 12,
-      borderRadius: 12,
-      alignItems: 'center',
-    },
-    modalButtonText: {
-      color: colors.primaryWhite,
-      fontFamily: 'Afacad-Bold',
+    exportText: {
+      marginTop: -8,
+      marginBottom: 16,
+      fontFamily: 'Afacad-Regular',
       fontSize: 16,
+      color: colors.textSecondary,
+    },
+    exportActions: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
     },
   });

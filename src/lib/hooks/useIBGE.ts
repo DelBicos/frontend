@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Option } from '@components/ui/CustomSelect/CustomSelect';
 
+import { logger } from '@lib/logger';
 const BASE_URL = 'https://servicodados.ibge.gov.br/api/v1/localidades/estados';
 
 export const useIBGE = (selectedState: string) => {
@@ -16,11 +17,14 @@ export const useIBGE = (selectedState: string) => {
         const data = await res.json();
         if (mounted) {
           setStates(
-            data.map((uf: any) => ({ label: uf.sigla, value: uf.sigla })),
+            (data as { sigla: string }[]).map((uf) => ({
+              label: uf.sigla,
+              value: uf.sigla,
+            })),
           );
         }
       } catch (e) {
-        console.error('Erro ao buscar estados:', e);
+        logger.error('Erro ao buscar estados:', e);
       }
     };
     fetchStates();
@@ -39,11 +43,14 @@ export const useIBGE = (selectedState: string) => {
           const data = await res.json();
           if (mounted) {
             setCities(
-              data.map((city: any) => ({ label: city.nome, value: city.nome })),
+              (data as { nome: string }[]).map((city) => ({
+                label: city.nome,
+                value: city.nome,
+              })),
             );
           }
         } catch (e) {
-          console.error('Erro ao buscar cidades:', e);
+          logger.error('Erro ao buscar cidades:', e);
         } finally {
           if (mounted) setLoadingCities(false);
         }

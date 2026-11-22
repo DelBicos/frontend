@@ -5,47 +5,45 @@ export const createStyles = (colors: ColorsType) =>
   StyleSheet.create({
     container: {
       flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      backgroundColor: colors.inputBackground,
       padding: 4,
-      borderRadius: 24,
-      borderWidth: 1,
-      borderColor: colors.borderColor,
-      minWidth: 120,
+      gap: 4,
+      borderRadius: 12,
+      backgroundColor: colors.inputBackground,
+      alignSelf: 'flex-start',
     },
     button: {
-      flex: 1,
-      height: 36,
-      borderRadius: 20,
+      flexDirection: 'row',
       alignItems: 'center',
+      gap: 6,
+      minHeight: 40,
+      paddingHorizontal: 12,
+      borderRadius: 9,
+      ...Platform.select({ web: { cursor: 'pointer' } as object }),
+    },
+    containerFill: {
+      alignSelf: 'stretch',
+    },
+    buttonFill: {
+      flex: 1,
+      flexDirection: 'column',
       justifyContent: 'center',
-      backgroundColor: 'transparent',
-      marginHorizontal: 2,
-      ...Platform.select({
-        web: {
-          cursor: 'pointer',
-          transition: 'all 0.2s ease',
-        } as any,
-      }),
+      gap: 4,
+      minHeight: 60,
+      paddingHorizontal: 4,
+    },
+    labelFill: {
+      fontSize: 14,
+      textAlign: 'center',
     },
     buttonActive: {
-      backgroundColor: colors.cardBackground,
-      borderWidth: 1,
-      borderColor: colors.borderColor,
-      ...Platform.select({
-        ios: {
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.15,
-          shadowRadius: 3,
-        },
-        android: {
-          elevation: 3,
-        },
-        web: {
-          boxShadow: '0px 2px 5px rgba(0,0,0,0.1)',
-        },
-      }),
+      backgroundColor: colors.primaryOrange,
+    },
+    label: {
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 15,
+      color: colors.primaryBlack,
+    },
+    labelActive: {
+      color: '#000000',
     },
   });

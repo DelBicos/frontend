@@ -1,18 +1,22 @@
 import { create } from 'zustand';
+import { isAxiosError } from 'axios';
 import { backendHttpClient } from '@lib/helpers/httpClient';
-import { useUserStore } from '@stores/User';
 
+import { logger } from '@lib/logger';
 export type ServiceItem = {
   id: number;
   title: string;
   description?: string;
   date?: string; // YYYY-MM-DD
   price_cents?: number;
+  price?: number; // fallback float caso price_cents não esteja no banco
   duration?: number; // minutos
   subcategory_id?: number;
   banner_uri?: string | null;
   active?: boolean;
   category_id?: number;
+  /** Pontuação retornada somente pela busca semântica (0 a 1). */
+  relevanceScore?: number;
   availabilities?: {
     day: number; // 0=domingo .. 6=sábado
     start: string; // HH:MM
@@ -20,8 +24,83 @@ export type ServiceItem = {
   }[];
 };
 
+export type SemanticServiceSearchResult = {
+  services: ServiceItem[];
+  total: number;
+  resultsLimited: boolean;
+};
+
+/** Normaliza os formatos históricos e o retorno da busca semântica do backend. */
+/** Servico como a API devolve: formatos historicos + associacoes opcionais. */
+export interface RawService {
+  id: number;
+  title?: string;
+  description?: string;
+  date?: string;
+  price?: number | string | null;
+  price_cents?: number;
+  duration?: number;
+  subcategory_id?: number;
+  banner_uri?: string | null;
+  bannerUrl?: string | null;
+  active?: boolean;
+  category_id?: number;
+  Subcategory?: { category_id?: number };
+  subcategory?: { category_id?: number };
+  category?: { id?: number };
+  relevance_score?: unknown;
+  availabilities?: { day: number; start: string; end: string }[];
+  Availabilities?: {
+    day_of_week?: number;
+    day?: number;
+    start_time?: string;
+    start?: string;
+    end_time?: string;
+    end?: string;
+  }[];
+}
+
+type QueryParams = Record<string, string | number>;
+
+export function normalizeService(raw: RawService): ServiceItem {
+  return {
+    id: raw.id,
+    title: raw.title ?? '',
+    description: raw.description,
+    date: raw.date,
+    price_cents:
+      raw.price_cents ??
+      (raw.price != null ? Math.round(Number(raw.price) * 100) : undefined),
+    duration: raw.duration,
+    subcategory_id: raw.subcategory_id,
+    banner_uri: raw.banner_uri ?? raw.bannerUrl ?? null,
+    active: raw.active,
+    category_id:
+      raw.category_id ??
+      raw.Subcategory?.category_id ??
+      raw.subcategory?.category_id ??
+      raw.category?.id,
+    relevanceScore:
+      typeof raw.relevance_score === 'number' ? raw.relevance_score : undefined,
+    availabilities: Array.isArray(raw.availabilities)
+      ? raw.availabilities.map((availability) => ({
+          day: availability.day,
+          start: availability.start,
+          end: availability.end,
+        }))
+      : Array.isArray(raw.Availabilities)
+        ? raw.Availabilities.map((availability) => ({
+            day: (availability.day_of_week ?? availability.day) as number,
+            start: (availability.start_time ?? availability.start) as string,
+            end: (availability.end_time ?? availability.end) as string,
+          }))
+        : undefined,
+  };
+}
+
 type ServicesState = {
   services: ServiceItem[];
+  myServices: ServiceItem[];
   loading: boolean;
   lastQuery?: {
     day?: number;
@@ -35,6 +114,9 @@ type ServicesState = {
     subcategory_id?: number;
     q?: string;
   }) => Promise<ServiceItem[]>;
+  searchServicesSemantically: (
+    query: string,
+  ) => Promise<SemanticServiceSearchResult>;
   fetchMyServices: (opts?: {
     page?: number;
     limit?: number;
@@ -51,9 +133,8 @@ type ServicesState = {
 
 export const useServicesStore = create<ServicesState>((set, get) => ({
   services: [],
+  myServices: [],
   loading: false,
-
-  // NOTE: normalization removed — backend now returns `price_cents` reliably
 
   fetchServices: async (opts?: {
     day?: number;
@@ -63,107 +144,85 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
   }) => {
     set({ loading: true });
     try {
-      // store last used query to allow reloads with same filters
       set({ lastQuery: opts });
-      const params: any = {};
+      const params: QueryParams = {};
       if (opts?.day !== undefined) params.day = opts.day;
       if (opts?.category_id !== undefined)
         params.category_id = opts.category_id;
       if (opts?.subcategory_id !== undefined)
         params.subcategory_id = opts.subcategory_id;
       if (opts?.q !== undefined) params.q = opts.q;
-      // GET /api/services retorna { total, page, limit, data: [...] }
       const res = await backendHttpClient.get('/api/services', { params });
       const raw = Array.isArray(res.data)
         ? res.data
         : res.data.data || res.data.services || [];
-      const data: ServiceItem[] = (raw as any[]).map((r) => ({
-        id: r.id,
-        title: r.title,
-        description: r.description,
-        date: r.date,
-        price_cents:
-          r.price_cents ??
-          (r.price != null ? Math.round(Number(r.price) * 100) : undefined),
-        duration: r.duration,
-        subcategory_id: r.subcategory_id,
-        banner_uri: r.banner_uri ?? r.bannerUrl ?? null,
-        active: r.active,
-        category_id:
-          r.category_id ??
-          r.Subcategory?.category_id ??
-          r.subcategory?.category_id ??
-          (r.category ? r.category.id : undefined),
-        availabilities: Array.isArray(r.availabilities)
-          ? r.availabilities.map((a: any) => ({
-              day: a.day,
-              start: a.start,
-              end: a.end,
-            }))
-          : Array.isArray(r.Availabilities)
-            ? r.Availabilities.map((a: any) => ({
-                day: a.day_of_week ?? a.day,
-                start: a.start_time ?? a.start,
-                end: a.end_time ?? a.end,
-              }))
-            : undefined,
-      }));
+      const data: ServiceItem[] = (raw as RawService[]).map(normalizeService);
       set({ services: data, loading: false });
       return data;
     } catch (e) {
-      console.error('[Services] fetchServices', e);
+      logger.error('[Services] fetchServices', e);
       set({ loading: false });
       return [];
     }
   },
 
   fetchMyServices: async (opts?: { page?: number; limit?: number }) => {
-    set({ loading: true });
+    set({ myServices: [], loading: true });
     try {
-      const params: any = {};
+      const params: QueryParams = {};
       if (opts?.page !== undefined) params.page = opts.page;
       if (opts?.limit !== undefined) params.limit = opts.limit;
       const res = await backendHttpClient.get('/api/services/my', { params });
       const raw = Array.isArray(res.data)
         ? res.data
         : res.data.data || res.data.services || [];
-      const data: ServiceItem[] = (raw as any[]).map((r) => ({
-        id: r.id,
-        title: r.title,
-        description: r.description,
-        date: r.date,
-        price_cents:
-          r.price_cents ??
-          (r.price != null ? Math.round(Number(r.price) * 100) : undefined),
-        duration: r.duration,
-        subcategory_id: r.subcategory_id,
-        banner_uri: r.banner_uri ?? r.bannerUrl ?? null,
-        active: r.active,
-        category_id:
-          r.category_id ??
-          r.Subcategory?.category_id ??
-          r.subcategory?.category_id ??
-          (r.category ? r.category.id : undefined),
-        availabilities: Array.isArray(r.availabilities)
-          ? r.availabilities.map((a: any) => ({
-              day: a.day,
-              start: a.start,
-              end: a.end,
-            }))
-          : Array.isArray(r.Availabilities)
-            ? r.Availabilities.map((a: any) => ({
-                day: a.day_of_week ?? a.day,
-                start: a.start_time ?? a.start,
-                end: a.end_time ?? a.end,
-              }))
-            : undefined,
-      }));
-      set({ services: data, loading: false });
+      const data: ServiceItem[] = (raw as RawService[]).map(normalizeService);
+      set({ myServices: data, loading: false });
       return data;
     } catch (e) {
-      console.error('[Services] fetchMyServices', e);
-      set({ loading: false });
+      logger.error('[Services] fetchMyServices', e);
+      set({ myServices: [], loading: false });
       return [];
+    }
+  },
+
+  searchServicesSemantically: async (query: string) => {
+    const trimmedQuery = query.trim();
+    if (trimmedQuery.length < 2) {
+      return { services: [], total: 0, resultsLimited: false };
+    }
+
+    try {
+      const res = await backendHttpClient.get('/api/services/search/semantic', {
+        params: { q: trimmedQuery, limit: 20 },
+      });
+      const raw = Array.isArray(res.data)
+        ? res.data
+        : (res.data?.data ?? res.data?.services ?? []);
+
+      return {
+        services: (raw as RawService[]).map(normalizeService),
+        total: Number(res.data?.total ?? raw.length),
+        resultsLimited: res.data?.results_limited === true,
+      };
+    } catch (error) {
+      // Sem o serviço de IA (503), cai para a busca por título do catálogo,
+      // para o usuário não ficar sem resultado.
+      if (isAxiosError(error) && error.response?.status === 503) {
+        const res = await backendHttpClient.get('/api/services', {
+          params: { q: trimmedQuery, limit: 20 },
+        });
+        const raw: RawService[] = Array.isArray(res.data)
+          ? res.data
+          : (res.data?.data ?? []);
+        return {
+          services: raw.map(normalizeService),
+          total: Number(res.data?.total ?? raw.length),
+          resultsLimited: false,
+        };
+      }
+      logger.error('[Services] searchServicesSemantically', error);
+      throw error;
     }
   },
 
@@ -178,45 +237,13 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
 
   createService: async (data) => {
     try {
-      // POST /api/services — rota principal; professional_id resolvido pelo token
       const res = await backendHttpClient.post('/api/services', data);
       const r = res.data && res.data.service ? res.data.service : res.data;
-      const created: ServiceItem = {
-        id: r.id,
-        title: r.title,
-        description: r.description,
-        date: r.date,
-        price_cents:
-          r.price_cents ??
-          (r.price != null ? Math.round(Number(r.price) * 100) : undefined),
-        duration: r.duration,
-        subcategory_id: r.subcategory_id,
-        banner_uri: r.banner_uri ?? r.bannerUrl ?? null,
-        active: r.active,
-        category_id:
-          r.category_id ??
-          r.Subcategory?.category_id ??
-          r.subcategory?.category_id ??
-          (r.category ? r.category.id : undefined),
-        availabilities: Array.isArray(r.availabilities)
-          ? r.availabilities.map((a: any) => ({
-              day: a.day,
-              start: a.start,
-              end: a.end,
-            }))
-          : Array.isArray(r.Availabilities)
-            ? r.Availabilities.map((a: any) => ({
-                day: a.day_of_week ?? a.day,
-                start: a.start_time ?? a.start,
-                end: a.end_time ?? a.end,
-              }))
-            : undefined,
-      };
-      set({ services: [...(get().services || []), created] });
+      const created = normalizeService(r);
+      set({ myServices: [...(get().myServices || []), created] });
       return created;
     } catch (e) {
-      console.error('[Services] createService', e);
-      // Propagate the error so UI can display backend message
+      logger.error('[Services] createService', e);
       throw e;
     }
   },
@@ -225,45 +252,15 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
     try {
       const res = await backendHttpClient.put(`/api/services/${id}`, data);
       const r = res.data && res.data.service ? res.data.service : res.data;
-      const updated: ServiceItem = {
-        id: r.id,
-        title: r.title,
-        description: r.description,
-        date: r.date,
-        price_cents:
-          r.price_cents ??
-          (r.price != null ? Math.round(Number(r.price) * 100) : undefined),
-        duration: r.duration,
-        subcategory_id: r.subcategory_id,
-        banner_uri: r.banner_uri ?? r.bannerUrl ?? null,
-        active: r.active,
-        category_id:
-          r.category_id ??
-          r.Subcategory?.category_id ??
-          r.subcategory?.category_id ??
-          (r.category ? r.category.id : undefined),
-        availabilities: Array.isArray(r.availabilities)
-          ? r.availabilities.map((a: any) => ({
-              day: a.day,
-              start: a.start,
-              end: a.end,
-            }))
-          : Array.isArray(r.Availabilities)
-            ? r.Availabilities.map((a: any) => ({
-                day: a.day_of_week ?? a.day,
-                start: a.start_time ?? a.start,
-                end: a.end_time ?? a.end,
-              }))
-            : undefined,
-      };
+      const updated = normalizeService(r);
       set({
-        services: (get().services || []).map((s) =>
+        myServices: (get().myServices || []).map((s) =>
           s.id === id ? updated : s,
         ),
       });
       return updated;
     } catch (e) {
-      console.error('[Services] updateService', e);
+      logger.error('[Services] updateService', e);
       throw e;
     }
   },
@@ -271,10 +268,10 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
   deleteService: async (id) => {
     try {
       await backendHttpClient.delete(`/api/services/${id}`);
-      set({ services: (get().services || []).filter((s) => s.id !== id) });
+      set({ myServices: (get().myServices || []).filter((s) => s.id !== id) });
       return true;
     } catch (e) {
-      console.error('[Services] deleteService', e);
+      logger.error('[Services] deleteService', e);
       return false;
     }
   },

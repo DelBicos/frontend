@@ -1,204 +1,196 @@
-import { StyleSheet, Platform } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { ColorsType } from '@theme/types';
 
 export const createStyles = (colors: ColorsType) =>
   StyleSheet.create({
     card: {
-      flexDirection: 'column',
+      flexGrow: 1,
+      padding: 16,
+      gap: 12,
       backgroundColor: colors.cardBackground,
       borderRadius: 16,
-      marginBottom: 20,
-      overflow: 'hidden',
       borderWidth: 1,
       borderColor: colors.borderColor,
       ...Platform.select({
-        ios: {
-          shadowColor: colors.primaryBlack,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-        },
-        android: {
-          elevation: 4,
-        },
-        web: {
-          boxShadow: '0px 4px 12px rgba(0,0,0,0.05)',
-        } as any,
+        web: { boxShadow: '0px 2px 8px rgba(0,0,0,0.06)' } as object,
+        default: { elevation: 1 },
       }),
     },
 
-    // --- TOPO (Imagem e Preço) ---
-    imageContainer: {
-      width: '100%',
-      height: 160,
-      justifyContent: 'flex-end',
-      padding: 12,
-    },
-
-    imageOverlay: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(0,0,0,0.2)',
-    },
-
-    tagsRow: {
+    // --- Identidade ---
+    top: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+      alignItems: 'flex-start',
+      gap: 12,
     },
-
-    priceTag: {
-      backgroundColor: colors.primaryBlue,
-      paddingVertical: 6,
-      paddingHorizontal: 12,
-      borderRadius: 8,
-    },
-
-    priceText: {
-      color: colors.primaryWhite,
-      fontSize: 14,
-      fontFamily: 'Afacad-Bold',
-    },
-
-    distanceTag: {
-      backgroundColor: 'rgba(0,0,0,0.6)',
-      paddingVertical: 4,
-      paddingHorizontal: 8,
-      borderRadius: 8,
-    },
-
-    distanceText: {
-      color: colors.primaryWhite,
-      fontSize: 12,
-      fontFamily: 'Afacad-SemiBold',
-    },
-
-    // --- BASE (Detalhes) ---
-    detailsContainer: {
-      padding: 16,
-      paddingBottom: 20,
-    },
-
-    header: {
-      marginBottom: 12,
-    },
-
-    professionalName: {
-      fontSize: 18,
-      fontFamily: 'Afacad-Bold',
-      color: colors.primaryOrange,
-      marginBottom: 2,
-    },
-
-    serviceName: {
-      fontSize: 15,
-      fontFamily: 'Afacad-SemiBold',
-      color: colors.primaryBlack,
-    },
-
-    ratingRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginTop: 6,
-    },
-
-    ratingText: {
-      fontSize: 14,
-      fontFamily: 'Afacad-Bold',
-      color: colors.primaryBlack,
-      marginLeft: 4,
-    },
-
-    ratingCount: {
-      fontSize: 13,
-      fontFamily: 'Afacad-Regular',
-      color: colors.textSecondary,
-      marginLeft: 4,
-    },
-
-    // Horários
-    timesContainer: {
-      marginVertical: 12,
-    },
-
-    timesTitle: {
-      fontSize: 13,
-      fontFamily: 'Afacad-SemiBold',
-      color: colors.textSecondary,
-      marginBottom: 8,
-    },
-
-    timesRow: {
-      flexDirection: 'row',
-      gap: 8,
-    },
-
-    timeSlot: {
-      minWidth: 64,
+    avatar: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
       backgroundColor: colors.inputBackground,
-      borderWidth: 1,
-      borderColor: colors.borderColor,
-      borderRadius: 6,
-      paddingVertical: 6,
-      paddingHorizontal: 8,
+    },
+    avatarFallback: {
       alignItems: 'center',
       justifyContent: 'center',
     },
-
-    timeSlotActive: {
-      backgroundColor: colors.primaryBlue,
-      borderColor: colors.primaryBlue,
+    avatarInitials: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 20,
+      color: colors.primaryBlack,
     },
-
-    timeText: {
-      fontSize: 13,
+    identity: {
+      flex: 1,
+      minWidth: 0,
+      gap: 2,
+    },
+    name: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 19,
+      lineHeight: 23,
+      color: colors.primaryBlack,
+    },
+    service: {
+      fontFamily: 'Afacad-Regular',
+      fontSize: 16,
+      color: colors.textSecondary,
+    },
+    metaRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      columnGap: 12,
+      rowGap: 4,
+      marginTop: 4,
+    },
+    meta: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    metaStrong: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 15,
+      color: colors.primaryBlack,
+    },
+    metaText: {
+      fontFamily: 'Afacad-Regular',
+      fontSize: 15,
+      color: colors.textSecondary,
+    },
+    newBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 999,
+      backgroundColor: colors.inputBackground,
+    },
+    newBadgeText: {
       fontFamily: 'Afacad-SemiBold',
+      fontSize: 13,
+      color: colors.primaryBlack,
+    },
+    priceBox: {
+      alignItems: 'flex-end',
+    },
+    price: {
+      fontFamily: 'Afacad-Bold',
+      fontSize: 20,
       color: colors.primaryBlack,
     },
 
-    timeTextActive: {
-      color: colors.primaryWhite,
-      fontFamily: 'Afacad-Bold',
-    },
-
-    // Serviços (Resumo)
-    servicesContainer: {
-      marginBottom: 12,
-    },
-
-    servicesText: {
-      fontSize: 13,
-      fontFamily: 'Afacad-Regular',
+    // --- Horarios ---
+    timesTitle: {
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 15,
       color: colors.textSecondary,
     },
-
-    // Rodapé (Local e Botão)
-    cardFooter: {
+    times: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    time: {
+      minWidth: 72,
+      minHeight: 44,
+      paddingHorizontal: 12,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+      backgroundColor: colors.inputBackground,
       alignItems: 'center',
+      justifyContent: 'center',
+      ...Platform.select({ web: { cursor: 'pointer' } as object }),
+    },
+    timeHover: {
+      borderColor: colors.primaryBlack,
+    },
+    timeSelected: {
+      backgroundColor: colors.primaryOrange,
+      borderColor: colors.primaryOrange,
+    },
+    timeText: {
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 16,
+      color: colors.primaryBlack,
+    },
+    timeTextOn: {
+      fontFamily: 'Afacad-Bold',
+      color: '#000000',
+    },
+    moreTimes: {
+      minHeight: 44,
+      paddingHorizontal: 12,
+      justifyContent: 'center',
+    },
+    moreTimesText: {
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 16,
+      color: colors.primaryBlack,
+      textDecorationLine: 'underline',
+    },
+
+    // --- Acoes ---
+    actions: {
+      marginTop: 'auto',
       paddingTop: 12,
       borderTopWidth: 1,
       borderTopColor: colors.divider,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 12,
     },
-
-    locationText: {
-      fontSize: 13,
-      fontFamily: 'Afacad-Regular',
-      color: colors.textTertiary,
-      flex: 1,
-      marginRight: 8,
+    profileLink: {
+      minHeight: 44,
+      justifyContent: 'center',
     },
-
-    profileButton: {
+    profileLinkText: {
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 16,
+      color: colors.primaryBlack,
+      textDecorationLine: 'underline',
+    },
+    book: {
+      flexShrink: 1,
+      minHeight: 48,
+      paddingHorizontal: 18,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
       backgroundColor: colors.primaryOrange,
-      paddingVertical: 8,
-      paddingHorizontal: 16,
-      borderRadius: 8,
     },
-
-    profileButtonText: {
-      color: '#FFFFFF',
+    bookHover: {
+      backgroundColor: colors.primaryOrangeHover,
+    },
+    bookDisabled: {
+      backgroundColor: colors.inputBackground,
+    },
+    bookText: {
       fontFamily: 'Afacad-Bold',
-      fontSize: 14,
+      fontSize: 17,
+      color: '#000000',
+    },
+    bookTextOff: {
+      fontFamily: 'Afacad-SemiBold',
+      color: colors.textSecondary,
     },
   });

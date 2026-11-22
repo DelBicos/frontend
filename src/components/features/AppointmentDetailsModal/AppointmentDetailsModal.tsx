@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Modal,
   View,
@@ -6,9 +6,10 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
-  Alert,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
+import { AppointmentManagePanel } from '@components/features/AppointmentManage';
+import { ClientTrackingMapModal } from '@components/features/ClientTrackingMapModal/ClientTrackingMapModal';
 import { useColors } from '@theme/ThemeProvider';
 import { Appointment } from '@stores/Appointment/types';
 import { useUserStore } from '@stores/User';
@@ -18,9 +19,9 @@ interface AppointmentDetailsModalProps {
   visible: boolean;
   onClose: () => void;
   appointment: Appointment | null;
-  onCancel?: () => void;
-  onAccept?: () => void;
-  onReject?: () => void;
+  /** Chamado depois de cancelar, reagendar, registrar falta ou abrir disputa. */
+  onChanged?: () => void;
+  /** Abre um chamado de suporte com o contexto deste agendamento. */
   onOpenHelp?: (apt: Appointment) => void;
 }
 
@@ -28,14 +29,13 @@ export function AppointmentDetailsModal({
   visible,
   onClose,
   appointment,
-  onCancel,
-  onAccept,
-  onReject,
+  onChanged,
   onOpenHelp,
 }: AppointmentDetailsModalProps) {
   const colors = useColors();
   const styles = createStyles(colors);
   const user = useUserStore((state) => state.user);
+  const [showTracking, setShowTracking] = useState(false);
 
   if (!appointment) return null;
 
@@ -77,29 +77,12 @@ export function AppointmentDetailsModal({
     });
   };
 
-  const handleCancelAppointment = () => {
-    Alert.alert(
-      'Cancelar Agendamento',
-      'Tem certeza que deseja cancelar este agendamento?',
-      [
-        { text: 'Não', style: 'cancel' },
-        {
-          text: 'Sim, Cancelar',
-          style: 'destructive',
-          onPress: () => {
-            if (onCancel) onCancel();
-            onClose();
-          },
-        },
-      ],
-    );
-  };
+  const canShowHelp = Boolean(onOpenHelp) && appointment.status !== 'canceled';
 
   const handleOpenHelp = () => {
-    if (onOpenHelp) {
-      onOpenHelp(appointment);
-      onClose();
-    }
+    if (!onOpenHelp) return;
+    onOpenHelp(appointment);
+    onClose();
   };
 
   const getStatusText = (status: string) => {
@@ -108,10 +91,18 @@ export function AppointmentDetailsModal({
         return 'Pendente';
       case 'confirmed':
         return 'Confirmado pelo prestador';
+      case 'in_transit':
+        return 'Profissional a caminho';
+      case 'arrived':
+        return 'Profissional no local';
+      case 'in_progress':
+        return 'Serviço em andamento';
       case 'completed':
         return 'Concluído';
       case 'canceled':
         return 'Cancelado';
+      case 'no_show':
+        return 'Cliente não compareceu';
       default:
         return status;
     }
@@ -122,19 +113,20 @@ export function AppointmentDetailsModal({
       case 'pending':
         return colors.warningText;
       case 'confirmed':
+      case 'in_progress':
         return colors.successText;
+      case 'in_transit':
+      case 'arrived':
+        return colors.primaryOrange;
       case 'completed':
         return colors.primaryBlue;
       case 'canceled':
+      case 'no_show':
         return colors.errorText;
       default:
         return colors.textSecondary;
     }
   };
-
-  const isCompleted = appointment.status === 'completed';
-  const isCanceled = appointment.status === 'canceled';
-  const canShowHelp = Boolean(onOpenHelp) && !isCanceled;
 
   return (
     <Modal
@@ -238,9 +230,7 @@ export function AppointmentDetailsModal({
                 <Text style={styles.infoLabel}>Valor:</Text>
                 <Text style={styles.infoValue}>
                   {appointment.Service?.price
-                    ? `R$ ${parseFloat(appointment.Service.price)
-                        .toFixed(2)
-                        .replace('.', ',')}`
+                    ? `R$ ${parseFloat(appointment.Service.price).toFixed(2).replace('.', ',')}`
                     : 'N/A'}
                 </Text>
               </View>
@@ -257,10 +247,43 @@ export function AppointmentDetailsModal({
               </View>
             </View>
 
-            {/* ✅ NOVO — Botão de ajuda contextual */}
-            {canShowHelp && (
+            {/* Código de início: só o cliente recebe da API, durante o atendimento. */}
+            {!isProfessionalView &&
+            ['in_transit', 'arrived', 'in_progress'].includes(
+              appointment.status,
+            ) ? (
+              <View style={styles.codeBanner}>
+                <Text style={styles.codeTitle}>
+                  CÓDIGO DE INÍCIO DO SERVIÇO
+                </Text>
+                <Text style={styles.codeHint}>
+                  Informe este código ao profissional quando ele chegar.
+                </Text>
+                <View style={styles.codeBox}>
+                  <Text style={styles.codeText}>
+                    {appointment.verification_code || '----'}
+                  </Text>
+                </View>
+              </View>
+            ) : null}
+
+            {!isProfessionalView &&
+            (appointment.status === 'in_transit' ||
+              appointment.status === 'arrived') ? (
               <TouchableOpacity
-                style={[styles.helpButton, { borderTopColor: colors.divider }]}
+                style={styles.trackButton}
+                onPress={() => setShowTracking(true)}
+                activeOpacity={0.8}>
+                <Text style={styles.trackButtonText}>
+                  Acompanhar o profissional no mapa
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+
+            {/* Ajuda contextual: abre um chamado ligado a este agendamento. */}
+            {canShowHelp ? (
+              <TouchableOpacity
+                style={styles.helpButton}
                 onPress={handleOpenHelp}
                 activeOpacity={0.7}
                 accessibilityRole="button"
@@ -269,23 +292,13 @@ export function AppointmentDetailsModal({
                   name="life-ring"
                   size={14}
                   color={colors.primaryOrange}
-                  style={{ marginRight: 8 }}
+                  style={styles.helpButtonIcon}
                 />
-                <Text
-                  style={[
-                    styles.helpButtonText,
-                    { color: colors.primaryOrange },
-                  ]}>
+                <Text style={styles.helpButtonText}>
                   Preciso de ajuda com este agendamento
                 </Text>
-                <FontAwesome
-                  name="chevron-right"
-                  size={12}
-                  color={colors.primaryOrange}
-                  style={{ marginLeft: 8 }}
-                />
               </TouchableOpacity>
-            )}
+            ) : null}
 
             {/* Botões de ação */}
             <View style={styles.buttonContainer}>
@@ -293,54 +306,24 @@ export function AppointmentDetailsModal({
                 style={styles.okButton}
                 onPress={onClose}
                 activeOpacity={0.8}>
-                <Text style={styles.okButtonText}>Ok</Text>
+                <Text style={styles.okButtonText}>Fechar</Text>
               </TouchableOpacity>
-
-              {onAccept && appointment.status === 'pending' ? (
-                <>
-                  <TouchableOpacity
-                    style={[
-                      styles.okButton,
-                      {
-                        backgroundColor: colors.successText,
-                        marginBottom: 10,
-                      },
-                    ]}
-                    onPress={() => {
-                      if (onAccept) onAccept();
-                      onClose();
-                    }}
-                    activeOpacity={0.8}>
-                    <Text style={styles.okButtonText}>Aceitar Serviço</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.cancelButton}
-                    onPress={() => {
-                      if (onReject) onReject();
-                      onClose();
-                    }}
-                    activeOpacity={0.8}>
-                    <Text style={styles.cancelButtonText}>Recusar Serviço</Text>
-                  </TouchableOpacity>
-                </>
-              ) : (
-                !isCompleted &&
-                !isCanceled && (
-                  <TouchableOpacity
-                    style={styles.cancelButton}
-                    onPress={handleCancelAppointment}
-                    activeOpacity={0.8}>
-                    <Text style={styles.cancelButtonText}>
-                      Cancelar Agendamento
-                    </Text>
-                  </TouchableOpacity>
-                )
-              )}
             </View>
+
+            {/* Aceitar/recusar ficam no card da Agenda; aqui ficam as demais acoes. */}
+            <AppointmentManagePanel
+              appointment={appointment}
+              role={isProfessionalView ? 'professional' : 'client'}
+              onChanged={() => onChanged?.()}
+            />
           </ScrollView>
         </View>
       </View>
+      <ClientTrackingMapModal
+        visible={showTracking}
+        onClose={() => setShowTracking(false)}
+        appointment={appointment}
+      />
     </Modal>
   );
 }

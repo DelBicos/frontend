@@ -2,6 +2,7 @@ import { ColorsType } from './types';
 
 const darkColors: ColorsType = {
   primaryBlue: '#545454',
+  brandBlue: '#005A93',
   primaryOrange: '#FC8200',
   primaryBlack: '#F9FAFB',
   primaryGreen: '#4ADE80',
@@ -17,6 +18,9 @@ const darkColors: ColorsType = {
   textSecondary: '#9CA3AF',
   textTertiary: '#6B7280',
   backgroundElevated: '#27272A',
+  pageBackground: '#323232',
+  textOnAccent: '#000000',
+  textOnImage: '#FFFFFF',
 
   successBackground: '#064E3B',
   successText: '#34D399',

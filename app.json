@@ -39,7 +39,14 @@
     "plugins": [
       "expo-font",
       "expo-asset",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "O DelBicos usa o microfone somente para transformar seu comando de voz em uma solicitação de agendamento.",
+          "recordAudioAndroid": true
+        }
+      ]
     ]
   }
 }

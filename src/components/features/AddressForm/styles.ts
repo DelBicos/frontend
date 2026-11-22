@@ -3,9 +3,8 @@ import { ColorsType } from '@theme/types';
 
 export const createStyles = (colors: ColorsType) =>
   StyleSheet.create({
+    // Os campos ja tem espacamento proprio (CustomTextInput).
     container: {
-      marginTop: 16,
-      marginBottom: 16,
       zIndex: 100,
       position: 'relative',
     },
@@ -18,7 +17,6 @@ export const createStyles = (colors: ColorsType) =>
     row: {
       flexDirection: 'row',
       gap: 12,
-      marginBottom: 16,
       alignItems: 'flex-start',
     },
     cityRow: {
@@ -32,7 +30,6 @@ export const createStyles = (colors: ColorsType) =>
     col: {},
     cepContainer: {
       zIndex: 1,
-      marginBottom: 16,
       position: 'relative',
     },
     errorText: {

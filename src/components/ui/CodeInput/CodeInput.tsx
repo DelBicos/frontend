@@ -89,6 +89,9 @@ const CodeInput: React.FC<CodeInputProps> = ({
           selectTextOnFocus={true}
           cursorColor={colors.primaryOrange}
           testID={`code-input-${index}`}
+          accessibilityLabel={`Dígito ${index + 1} de ${length}`}
+          autoComplete={index === 0 ? 'one-time-code' : 'off'}
+          textContentType={index === 0 ? 'oneTimeCode' : 'none'}
         />
       ))}
     </View>

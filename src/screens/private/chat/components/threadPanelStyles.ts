@@ -1,21 +1,36 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { ColorsType } from '@theme/types';
 
 export const createThreadPanelStyles = (colors: ColorsType) =>
   StyleSheet.create({
+    daySeparator: {
+      alignSelf: 'center',
+      marginVertical: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      borderRadius: 999,
+      backgroundColor: colors.inputBackground,
+    },
+    daySeparatorText: {
+      fontFamily: 'Afacad-SemiBold',
+      fontSize: 13,
+      color: colors.textSecondary,
+    },
     container: {
       flex: 1,
-      backgroundColor: colors.primaryWhite,
+      backgroundColor: colors.pageBackground,
       minHeight: 0,
     },
     flex: {
       flex: 1,
       minHeight: 0,
+      backgroundColor: colors.pageBackground,
     },
     centered: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
+      backgroundColor: colors.pageBackground,
     },
     header: {
       flexDirection: 'row',
@@ -24,7 +39,7 @@ export const createThreadPanelStyles = (colors: ColorsType) =>
       paddingVertical: 12,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.divider,
-      backgroundColor: colors.primaryWhite,
+      backgroundColor: colors.cardBackground,
     },
     backButton: {
       padding: 8,
@@ -86,18 +101,18 @@ export const createThreadPanelStyles = (colors: ColorsType) =>
       borderBottomRightRadius: 4,
     },
     bubbleTheirs: {
-      backgroundColor: colors.secondaryGray,
+      backgroundColor: colors.primaryBlue,
       borderBottomLeftRadius: 4,
     },
     bubbleTextMine: {
       fontSize: 15,
       fontFamily: 'Afacad-Regular',
-      color: colors.primaryWhite,
+      color: colors.textOnAccent,
     },
     bubbleTextTheirs: {
       fontSize: 15,
       fontFamily: 'Afacad-Regular',
-      color: colors.primaryBlack,
+      color: colors.textOnImage,
     },
     bubbleTime: {
       fontSize: 11,
@@ -106,48 +121,67 @@ export const createThreadPanelStyles = (colors: ColorsType) =>
       alignSelf: 'flex-end',
     },
     bubbleTimeMine: {
-      color: 'rgba(255,255,255,0.85)',
+      color: colors.textOnAccent,
+      opacity: 0.7,
     },
     bubbleTimeTheirs: {
-      color: colors.textTertiary,
+      color: colors.textOnImage,
+      opacity: 0.85,
     },
     footerLoader: {
       paddingVertical: 12,
     },
     inputBar: {
       flexDirection: 'row',
-      alignItems: 'flex-end',
+      alignItems: 'center',
       paddingHorizontal: 12,
-      paddingVertical: 8,
+      paddingVertical: 4,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: colors.divider,
-      backgroundColor: colors.primaryWhite,
+      backgroundColor: colors.pageBackground,
     },
     input: {
       flex: 1,
-      maxHeight: 120,
-      minHeight: 44,
-      paddingHorizontal: 16,
-      paddingVertical: 10,
-      borderRadius: 22,
+      maxHeight: 80,
+      minHeight: 28,
+      paddingHorizontal: 10,
+      paddingVertical: Platform.OS === 'ios' ? 5 : 2,
+      borderRadius: 14,
       backgroundColor: colors.inputBackground,
-      borderWidth: 1,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderColor,
-      fontSize: 15,
+      fontSize: 14,
+      lineHeight: Platform.OS === 'ios' ? 18 : undefined,
       fontFamily: 'Afacad-Regular',
       color: colors.primaryBlack,
       marginRight: 8,
+      ...Platform.select({
+        web: { outlineStyle: 'none' } as object,
+      }),
     },
     sendButton: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
+      width: 30,
+      height: 30,
+      borderRadius: 15,
       backgroundColor: colors.primaryOrange,
       justifyContent: 'center',
       alignItems: 'center',
     },
     sendButtonDisabled: {
       opacity: 0.5,
+    },
+    historyErrorBar: {
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.divider,
+      backgroundColor: colors.secondaryGray,
+    },
+    historyErrorText: {
+      fontSize: 13,
+      fontFamily: 'Afacad-SemiBold',
+      color: colors.textSecondary,
+      textAlign: 'center',
     },
     archivedBar: {
       paddingHorizontal: 16,

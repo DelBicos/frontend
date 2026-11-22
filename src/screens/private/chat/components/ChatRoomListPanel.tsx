@@ -68,7 +68,7 @@ const ChatRoomListPanel: React.FC<ChatRoomListPanelProps> = ({
             <Image source={{ uri: avatar }} style={styles.avatar} />
           ) : (
             <View style={styles.avatarFallback}>
-              <FontAwesome name="user" size={22} color={colors.primaryWhite} />
+              <FontAwesome name="user" size={22} color="#000000" />
             </View>
           )}
         </View>

@@ -10,6 +10,7 @@ import {
   FetchRoomsOptions,
 } from './types';
 
+import { logger } from '@lib/logger';
 const CHAT_ROOMS_LIMIT = 50;
 const CHAT_ROOMS_TIMEOUT_MS = 20000;
 const CHAT_ROOMS_RETRY_BACKOFF_MS = 400;
@@ -138,7 +139,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
               hasToken,
             );
             set({ error: errorMessage, loadingRooms: false });
-            console.error('Erro ao buscar conversas (retry):', retryError);
+            logger.error('Erro ao buscar conversas (retry):', retryError);
             return;
           }
         }
@@ -147,7 +148,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
         const errorMessage = getFetchRoomsErrorMessage(error, hasToken);
         set({ error: errorMessage, loadingRooms: false });
-        console.error('Erro ao buscar conversas:', error);
+        logger.error('Erro ao buscar conversas:', error);
       } finally {
         if (fetchRoomsController === controller) {
           fetchRoomsController = null;

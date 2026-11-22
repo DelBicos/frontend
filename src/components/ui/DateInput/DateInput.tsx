@@ -50,7 +50,7 @@ const DateInput: React.FC<DateInputProps> = ({
         value={displayValue}
         onChangeText={handleChangeText}
         onBlur={onBlur}
-        error={error as any}
+        error={typeof error === 'string' ? error : undefined}
         keyboardType="number-pad"
         maxLength={10}
         editable={!disabled}

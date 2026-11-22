@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
@@ -19,10 +20,34 @@ import {
   ChatRoomStatus,
   ChatCorrespondent,
 } from '@stores/Chat';
-import { useChatSocket } from '@hooks/useChatSocket';
+import { OptimisticMeta, useChatSocket } from '@hooks/useChatSocket';
 import { createThreadPanelStyles } from './threadPanelStyles';
 
+import { logger } from '@lib/logger';
+
+/** Evento de teclado do react-native-web (tem preventDefault, ausente no tipo nativo). */
+interface WebKeyPressEvent {
+  nativeEvent: { key: string; shiftKey?: boolean };
+  preventDefault: () => void;
+}
 const PAGE_SIZE = 20;
+
+const dayKey = (iso: string) => new Date(iso).toDateString();
+
+/** "Hoje", "Ontem" ou "12 de setembro". */
+function dayLabel(iso: string) {
+  const date = new Date(iso);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+  if (date.toDateString() === today.toDateString()) return 'Hoje';
+  if (date.toDateString() === yesterday.toDateString()) return 'Ontem';
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: 'numeric',
+    month: 'long',
+    ...(date.getFullYear() !== today.getFullYear() ? { year: 'numeric' } : {}),
+  }).format(date);
+}
 
 export type ChatThreadPanelProps = {
   roomId: number;
@@ -52,6 +77,8 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
   const [hasMore, setHasMore] = useState(true);
   const [loadingInitial, setLoadingInitial] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [historyFailed, setHistoryFailed] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [roomStatus, setRoomStatus] =
     useState<ChatRoomStatus>(initialRoomStatus);
   const [input, setInput] = useState('');
@@ -96,6 +123,7 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
       setMessages([]);
       setCursor(null);
       setHasMore(true);
+      setHistoryFailed(false);
       try {
         const result = await fetchMessages(roomId, undefined, PAGE_SIZE);
         if (!mounted) return;
@@ -104,7 +132,9 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
         setHasMore(!!result.nextCursor);
         setRoomStatus(result.roomStatus);
       } catch (err) {
-        console.error('Erro ao carregar histórico do chat:', err);
+        logger.error('Erro ao carregar histórico do chat:', err);
+        // Sem este aviso a conversa parecia vazia quando o histórico falhava.
+        if (mounted) setHistoryFailed(true);
       } finally {
         if (mounted) setLoadingInitial(false);
       }
@@ -113,7 +143,7 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
     return () => {
       mounted = false;
     };
-  }, [roomId, fetchMessages]);
+  }, [roomId, fetchMessages, reloadKey]);
 
   const loadOlder = useCallback(async () => {
     if (loadingMoreRef.current || !hasMore || !cursor || loadingInitial) return;
@@ -129,18 +159,42 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
       setCursor(result.nextCursor);
       setHasMore(!!result.nextCursor);
     } catch (err) {
-      console.error('Erro ao paginar histórico do chat:', err);
+      logger.error('Erro ao paginar histórico do chat:', err);
     } finally {
       loadingMoreRef.current = false;
       setLoadingMore(false);
     }
   }, [hasMore, cursor, loadingInitial, roomId, fetchMessages]);
 
+  const markFailed = useCallback(({ clientMessageUuid }: OptimisticMeta) => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.client_message_uuid === clientMessageUuid && m.pending
+          ? { ...m, pending: false, failed: true }
+          : m,
+      ),
+    );
+  }, []);
+
+  const retrySend = (message: ChatMessage) => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.client_message_uuid === message.client_message_uuid
+          ? { ...m, pending: true, failed: false }
+          : m,
+      ),
+    );
+    sendMessage(message.text, markFailed, {
+      clientMessageUuid: message.client_message_uuid,
+      sentAt: message.sent_at,
+    });
+  };
+
   const handleSend = () => {
     const trimmed = input.trim();
     if (!trimmed || roomStatus === 'archived' || !user) return;
 
-    const meta = sendMessage(trimmed);
+    const meta = sendMessage(trimmed, markFailed);
     if (!meta) return;
 
     const optimistic: ChatMessage = {
@@ -158,34 +212,58 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
     setInput('');
   };
 
-  const renderItem = ({ item }: { item: ChatMessage }) => {
+  const renderItem = ({
+    item,
+    index,
+  }: {
+    item: ChatMessage;
+    index: number;
+  }) => {
     const isMine = item.sender_user_id === user?.id;
+    const older = messages[index + 1];
+    const startsDay = !older || dayKey(older.sent_at) !== dayKey(item.sent_at);
     return (
-      <View
-        style={[
-          styles.bubbleRow,
-          isMine ? styles.bubbleRowMine : styles.bubbleRowTheirs,
-        ]}>
+      <View>
+        {startsDay ? (
+          <View style={styles.daySeparator}>
+            <Text style={styles.daySeparatorText}>
+              {dayLabel(item.sent_at)}
+            </Text>
+          </View>
+        ) : null}
         <View
           style={[
-            styles.bubble,
-            isMine ? styles.bubbleMine : styles.bubbleTheirs,
+            styles.bubbleRow,
+            isMine ? styles.bubbleRowMine : styles.bubbleRowTheirs,
           ]}>
-          <Text
-            style={isMine ? styles.bubbleTextMine : styles.bubbleTextTheirs}>
-            {item.text}
-          </Text>
-          <Text
+          <Pressable
+            disabled={!item.failed}
+            onPress={() => retrySend(item)}
+            accessibilityRole={item.failed ? 'button' : undefined}
+            accessibilityLabel={
+              item.failed ? 'Mensagem não enviada. Tentar de novo' : undefined
+            }
             style={[
-              styles.bubbleTime,
-              isMine ? styles.bubbleTimeMine : styles.bubbleTimeTheirs,
+              styles.bubble,
+              isMine ? styles.bubbleMine : styles.bubbleTheirs,
             ]}>
-            {new Date(item.sent_at).toLocaleTimeString('pt-BR', {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-            {item.pending ? ' · enviando…' : ''}
-          </Text>
+            <Text
+              style={isMine ? styles.bubbleTextMine : styles.bubbleTextTheirs}>
+              {item.text}
+            </Text>
+            <Text
+              style={[
+                styles.bubbleTime,
+                isMine ? styles.bubbleTimeMine : styles.bubbleTimeTheirs,
+              ]}>
+              {new Date(item.sent_at).toLocaleTimeString('pt-BR', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+              {item.pending ? ' · enviando…' : ''}
+              {item.failed ? ' · não enviada, toque para tentar de novo' : ''}
+            </Text>
+          </Pressable>
         </View>
       </View>
     );
@@ -222,7 +300,7 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
           />
         ) : (
           <View style={styles.headerAvatarFallback}>
-            <FontAwesome name="user" size={18} color={colors.primaryWhite} />
+            <FontAwesome name="user" size={18} color={colors.textOnAccent} />
           </View>
         )}
 
@@ -242,6 +320,19 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
+        {historyFailed && !loadingInitial ? (
+          <Pressable
+            style={styles.historyErrorBar}
+            onPress={() => setReloadKey((key) => key + 1)}
+            accessibilityRole="button"
+            accessibilityLabel="Não foi possível carregar as mensagens anteriores. Tentar de novo">
+            <Text style={styles.historyErrorText}>
+              Não foi possível carregar as mensagens anteriores. Toque para
+              tentar de novo.
+            </Text>
+          </Pressable>
+        ) : null}
+
         {loadingInitial ? (
           <View style={styles.centered}>
             <ActivityIndicator size="large" color={colors.primaryOrange} />
@@ -267,7 +358,7 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
         {roomStatus === 'archived' ? (
           <View style={styles.archivedBar}>
             <Text style={styles.archivedBarText}>
-              Esta conversa está arquivada e não aceita novas mensagens.
+              Conversa encerrada: o atendimento foi concluído ou cancelado.
             </Text>
           </View>
         ) : (
@@ -279,6 +370,20 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
               value={input}
               onChangeText={setInput}
               multiline
+              accessibilityLabel="Mensagem"
+              {...(Platform.OS === 'web'
+                ? {
+                    onKeyPress: (e: WebKeyPressEvent) => {
+                      if (
+                        e.nativeEvent.key === 'Enter' &&
+                        !e.nativeEvent.shiftKey
+                      ) {
+                        e.preventDefault();
+                        handleSend();
+                      }
+                    },
+                  }
+                : {})}
             />
             <TouchableOpacity
               style={[
@@ -289,7 +394,7 @@ const ChatThreadPanel: React.FC<ChatThreadPanelProps> = ({
               disabled={!input.trim()}
               accessibilityRole="button"
               accessibilityLabel="Enviar mensagem">
-              <FontAwesome name="send" size={18} color={colors.primaryWhite} />
+              <FontAwesome name="send" size={14} color={colors.textOnAccent} />
             </TouchableOpacity>
           </View>
         )}

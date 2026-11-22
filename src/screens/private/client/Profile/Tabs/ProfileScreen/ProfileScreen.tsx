@@ -4,14 +4,22 @@ import { useUserStore } from '@stores/User';
 import ProfileWrapper from '@screens/private/client/Profile/Tabs/ProfileWrapper';
 import { UnauthenticatedProfileView } from './UnauthenticatedProfileView';
 
+import { logger } from '@lib/logger';
 const UserProfileScreen: React.FC = () => {
   const [uploading, setUploading] = useState<boolean>(false);
-  const { user, avatarBase64, uploadAvatar, removeAvatar, fetchCurrentUser } =
-    useUserStore();
+  const {
+    user,
+    token,
+    avatarBase64,
+    uploadAvatar,
+    removeAvatar,
+    fetchCurrentUser,
+  } = useUserStore();
 
+  // So atualiza os dados quando ha sessao (evita 401 para quem nao entrou).
   useEffect(() => {
-    fetchCurrentUser();
-  }, [fetchCurrentUser]);
+    if (token) fetchCurrentUser();
+  }, [token, fetchCurrentUser]);
 
   const handleAvatarChange = useCallback(
     async (base64Image: string | null) => {
@@ -30,11 +38,9 @@ const UserProfileScreen: React.FC = () => {
 
         if (response.erro) {
           Alert.alert('Erro', response.mensagem);
-        } else {
-          Alert.alert('Sucesso', response.mensagem);
         }
       } catch (error) {
-        console.error('Erro ao processar avatar:', error);
+        logger.error('Erro ao processar avatar:', error);
         Alert.alert('Erro', 'Erro inesperado ao processar avatar.');
       } finally {
         setUploading(false);

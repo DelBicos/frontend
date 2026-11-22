@@ -110,6 +110,52 @@ export const createStyles = (colors: ColorsType) =>
       fontSize: 14,
       fontFamily: 'Afacad-SemiBold',
     },
+    // Atendimento em domicílio: código de início e acompanhamento no mapa
+    codeBanner: {
+      borderWidth: 2,
+      borderColor: colors.primaryOrange,
+      borderRadius: 16,
+      padding: 16,
+      marginBottom: 16,
+      alignItems: 'center',
+    },
+    codeTitle: {
+      fontSize: 13,
+      color: colors.primaryOrange,
+      fontFamily: 'Afacad-Bold',
+      letterSpacing: 1,
+      marginBottom: 4,
+    },
+    codeHint: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginBottom: 12,
+    },
+    codeBox: {
+      backgroundColor: colors.primaryOrange,
+      paddingHorizontal: 28,
+      paddingVertical: 10,
+      borderRadius: 14,
+    },
+    codeText: {
+      fontSize: 32,
+      fontFamily: 'Afacad-Bold',
+      color: colors.primaryWhite,
+      letterSpacing: 6,
+    },
+    trackButton: {
+      backgroundColor: colors.primaryBlue,
+      paddingVertical: 14,
+      borderRadius: 14,
+      marginBottom: 16,
+      alignItems: 'center',
+    },
+    trackButtonText: {
+      color: colors.primaryWhite,
+      fontSize: 15,
+      fontFamily: 'Afacad-SemiBold',
+    },
     helpButton: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -119,11 +165,15 @@ export const createStyles = (colors: ColorsType) =>
       marginTop: 8,
       marginHorizontal: 16,
       borderTopWidth: 1,
+      borderTopColor: colors.divider,
+    },
+    helpButtonIcon: {
+      marginRight: 8,
     },
     helpButtonText: {
+      color: colors.primaryOrange,
       fontSize: 13,
       fontWeight: '500',
-      flex: 1,
       textAlign: 'center',
     },
   });

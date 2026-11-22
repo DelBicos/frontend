@@ -5,7 +5,6 @@ import {
   View,
   Platform,
   Text,
-  useWindowDimensions,
   ListRenderItem,
   StyleProp,
   ViewStyle,
@@ -18,17 +17,20 @@ import { usePagination } from '@lib/hooks/usePagination';
 import { useColors } from '@theme/ThemeProvider';
 import { createStyles } from './styles';
 import { useLocation } from '@lib/hooks/LocationContext';
+import { useWebScrollGutter } from '@components/layout/PageContainer';
+import { CONTENT_MAX_WIDTH, useBreakpoint } from '@lib/hooks/useBreakpoint';
 
-const useResponsiveColumns = () => {
-  const { width } = useWindowDimensions();
+import type { DimensionValue } from 'react-native';
+/** Margem externa do ProfessionalCard (compensada no container para alinhar as bordas). */
+const CARD_MARGIN = 8;
 
-  if (Platform.OS === 'web') {
-    if (width > 1200) return 4;
-    if (width > 900) return 3;
-    if (width > 600) return 2;
-  }
+/** Colunas pela largura util do conteudo (vale para web e tablets). */
+export function getProfessionalColumns(contentWidth: number) {
+  if (contentWidth >= 1100) return 4;
+  if (contentWidth >= 800) return 3;
+  if (contentWidth >= 520) return 2;
   return 1;
-};
+}
 
 interface ListProfessionalsProps {
   listHeader?: React.ReactElement;
@@ -39,7 +41,9 @@ const ListProfessionals = ({ listHeader, style }: ListProfessionalsProps) => {
   const colors = useColors();
   const styles = createStyles(colors);
   const { fetchProfessionals } = useProfessionalStore();
-  const numColumns = useResponsiveColumns();
+  const { gutter, contentWidth } = useBreakpoint();
+  const scrollGutter = useWebScrollGutter();
+  const numColumns = getProfessionalColumns(contentWidth);
   const { address } = useLocation();
 
   const fetcher = useCallback(
@@ -68,7 +72,8 @@ const ListProfessionals = ({ listHeader, style }: ListProfessionalsProps) => {
       const itemWidth = numColumns > 1 ? `${100 / numColumns}%` : '100%';
 
       return (
-        <View style={[styles.cardWrapper, { width: itemWidth as any }]}>
+        <View
+          style={[styles.cardWrapper, { width: itemWidth as DimensionValue }]}>
           <ProfessionalCard professional={item} />
         </View>
       );
@@ -114,16 +119,28 @@ const ListProfessionals = ({ listHeader, style }: ListProfessionalsProps) => {
   return (
     <View style={[styles.container, style]}>
       <FlatList
+        style={scrollGutter}
         data={professionals}
         keyExtractor={(item) => item.id.toString()}
         numColumns={numColumns}
         key={`cols-${numColumns}`}
         columnWrapperStyle={numColumns > 1 ? styles.columnWrapper : undefined}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContent,
+          {
+            // Conteudo centralizado com largura maxima em telas grandes.
+            paddingHorizontal: gutter - CARD_MARGIN,
+            maxWidth: CONTENT_MAX_WIDTH + gutter * 2,
+          },
+        ]}
         renderItem={renderItem}
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
-        ListHeaderComponent={listHeader}
+        ListHeaderComponent={
+          listHeader ? (
+            <View style={{ paddingHorizontal: CARD_MARGIN }}>{listHeader}</View>
+          ) : undefined
+        }
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
         removeClippedSubviews={Platform.OS !== 'web'}
