@@ -2,7 +2,7 @@ import React from 'react';
 import { render } from '@testing-library/react-native';
 import { TypingIndicator } from '../TypingIndicator';
 
-const CAPTION = "O assistente da Delbicos está digitando";
+const CAPTION = 'O assistente da Delbicos está digitando';
 
 describe('TypingIndicator', () => {
   it('deve exibir a legenda abaixo dos pontos quando informada', () => {
