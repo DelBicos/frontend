@@ -46,22 +46,14 @@ export const MessageBubble: React.FC<MessageBubbleProps> = React.memo(
           <View
             style={[
               styles.bubble,
-              isUser
-                ? [styles.bubbleUser, { backgroundColor: colors.primaryOrange }]
-                : [
-                    styles.bubbleBot,
-                    {
-                      backgroundColor: colors.cardBackground,
-                      borderColor: colors.borderColor,
-                    },
-                  ],
+              isUser ? styles.bubbleUser : styles.bubbleBot,
             ]}
             accessibilityRole="text"
             accessibilityLabel={`${isUser ? 'Você' : 'Assistente'}: ${message.text}`}>
             <Text
               style={[
                 styles.bubbleText,
-                { color: isUser ? colors.primaryWhite : colors.primaryBlack },
+                isUser ? styles.bubbleTextUser : styles.bubbleTextBot,
               ]}>
               {message.text}
             </Text>
