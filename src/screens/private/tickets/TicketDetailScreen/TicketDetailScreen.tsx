@@ -1,6 +1,13 @@
-import React, { useEffect } from 'react';
-import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
-import { useRoute, RouteProp } from '@react-navigation/native';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
+import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
 import {
@@ -11,8 +18,10 @@ import {
 import {
   TicketStatusBadge,
   TicketMessageBubble,
+  TicketMessageComposer,
 } from '@components/features/Tickets';
-import type { NavigationParams } from '@screens/types';
+import { FeedbackModal } from '@components/ui/FeedbackModal';
+import type { AppNavigation, NavigationParams } from '@screens/types';
 import { createStyles } from './styles';
 
 type TicketDetailRouteProp = RouteProp<NavigationParams, 'TicketDetail'>;
@@ -32,7 +41,12 @@ export const TicketDetailScreen: React.FC = () => {
   const colors = useColors();
   const styles = createStyles(colors);
   const route = useRoute<TicketDetailRouteProp>();
+  const navigation = useNavigation<AppNavigation>();
   const ticketId = route.params?.id;
+  const scrollRef = useRef<ScrollView>(null);
+  // Scroll only after the new message is laid out, not before.
+  const scrollToEndOnResize = useRef(false);
+  const [notFoundMessage, setNotFoundMessage] = useState<string | null>(null);
 
   const {
     currentTicket,
@@ -79,65 +93,102 @@ export const TicketDetailScreen: React.FC = () => {
     );
   }
 
+  const handleBackToList = () => {
+    setNotFoundMessage(null);
+    navigation.navigate('TicketsList');
+  };
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Cabeçalho: código + status */}
-      <View style={styles.header}>
-        <Text style={styles.code}>{currentTicket.ticket_code}</Text>
-        <TicketStatusBadge status={currentTicket.status} />
-      </View>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}>
+      <ScrollView
+        ref={scrollRef}
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        onContentSizeChange={() => {
+          if (!scrollToEndOnResize.current) return;
+          scrollToEndOnResize.current = false;
+          scrollRef.current?.scrollToEnd({ animated: true });
+        }}>
+        {/* Cabeçalho: código + status */}
+        <View style={styles.header}>
+          <Text style={styles.code}>{currentTicket.ticket_code}</Text>
+          <TicketStatusBadge status={currentTicket.status} />
+        </View>
 
-      {/* Título */}
-      <Text style={styles.title}>{currentTicket.title}</Text>
+        {/* Título */}
+        <Text style={styles.title}>{currentTicket.title}</Text>
 
-      {/* Meta: categoria + data */}
-      <View style={styles.metaRow}>
-        <FontAwesome name="tag" size={12} color={colors.textTertiary} />
-        <Text style={styles.metaText}>
-          {TICKET_CATEGORY_LABELS[currentTicket.category]}
-        </Text>
-        {currentTicket.priority ? (
-          <>
-            <Text style={styles.metaDot}>•</Text>
-            <Text style={styles.metaText}>
-              Prioridade {TICKET_PRIORITY_LABELS[currentTicket.priority]}
-            </Text>
-          </>
-        ) : null}
-        <Text style={styles.metaDot}>•</Text>
-        <Text style={styles.metaText}>
-          {formatFullDateTime(currentTicket.created_at)}
-        </Text>
-      </View>
+        {/* Meta: categoria + data */}
+        <View style={styles.metaRow}>
+          <FontAwesome name="tag" size={12} color={colors.textTertiary} />
+          <Text style={styles.metaText}>
+            {TICKET_CATEGORY_LABELS[currentTicket.category]}
+          </Text>
+          {currentTicket.priority ? (
+            <>
+              <Text style={styles.metaDot}>•</Text>
+              <Text style={styles.metaText}>
+                Prioridade {TICKET_PRIORITY_LABELS[currentTicket.priority]}
+              </Text>
+            </>
+          ) : null}
+          <Text style={styles.metaDot}>•</Text>
+          <Text style={styles.metaText}>
+            {formatFullDateTime(currentTicket.created_at)}
+          </Text>
+        </View>
 
-      {/* Descrição */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Descrição</Text>
-        <Text style={styles.description}>{currentTicket.description}</Text>
-      </View>
+        {/* Descrição */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Descrição</Text>
+          <Text style={styles.description}>{currentTicket.description}</Text>
+        </View>
 
-      {/* Histórico de interações */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Histórico de interações</Text>
+        {/* Histórico de interações */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Histórico de interações</Text>
 
-        {messages.length === 0 ? (
-          <View style={styles.emptyMessages}>
-            <FontAwesome
-              name="comments-o"
-              size={32}
-              color={colors.textTertiary}
-            />
-            <Text style={styles.emptyMessagesText}>
-              Nenhuma interação ainda. Nossa equipe responderá em breve.
-            </Text>
-          </View>
-        ) : (
-          messages.map((message) => (
-            <TicketMessageBubble key={message.id} message={message} />
-          ))
-        )}
-      </View>
-    </ScrollView>
+          {messages.length === 0 ? (
+            <View style={styles.emptyMessages}>
+              <FontAwesome
+                name="comments-o"
+                size={32}
+                color={colors.textTertiary}
+              />
+              <Text style={styles.emptyMessagesText}>
+                Nenhuma interação ainda. Nossa equipe responderá em breve.
+              </Text>
+            </View>
+          ) : (
+            messages.map((message) => (
+              <TicketMessageBubble key={message.id} message={message} />
+            ))
+          )}
+        </View>
+
+        <TicketMessageComposer
+          ticketId={currentTicket.id}
+          status={currentTicket.status}
+          onSent={() => {
+            scrollToEndOnResize.current = true;
+          }}
+          onTicketNotFound={setNotFoundMessage}
+        />
+      </ScrollView>
+
+      <FeedbackModal
+        visible={notFoundMessage !== null}
+        type="error"
+        title="Chamado indisponível"
+        message={notFoundMessage ?? ''}
+        buttonText="Voltar para meus chamados"
+        onClose={handleBackToList}
+      />
+    </KeyboardAvoidingView>
   );
 };
 

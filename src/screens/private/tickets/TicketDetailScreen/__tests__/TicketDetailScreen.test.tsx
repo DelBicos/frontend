@@ -1,14 +1,28 @@
 import React from 'react';
-import { ActivityIndicator } from 'react-native';
-import { render } from '@testing-library/react-native';
+import { ActivityIndicator, ScrollView } from 'react-native';
+import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { TicketDetailScreen } from '../TicketDetailScreen';
 import { useTicketStore, Ticket, TicketMessage } from '@stores/Ticket';
+import { backendHttpClient } from '@lib/helpers/httpClient';
 
 let mockRouteParams: { id?: number } = { id: 42 };
+const mockNavigate = jest.fn();
 
 jest.mock('@react-navigation/native', () => ({
   useRoute: () => ({ params: mockRouteParams }),
+  useNavigation: () => ({ navigate: mockNavigate }),
 }));
+
+jest.mock('@lib/helpers/httpClient', () => ({
+  backendHttpClient: {
+    get: jest.fn(),
+    post: jest.fn(),
+  },
+}));
+
+const mockedClient = backendHttpClient as jest.Mocked<typeof backendHttpClient>;
+const CLOSED_NOTICE =
+  'Este chamado foi encerrado e não aceita novas mensagens.';
 
 const mockTicket: Ticket = {
   id: 42,
@@ -160,5 +174,167 @@ describe('TicketDetailScreen', () => {
     expect(getByText('Suporte DelBicos')).toBeTruthy();
     expect(getByText('Estamos verificando o seu agendamento.')).toBeTruthy();
     expect(queryByText(/Nenhuma interação ainda/)).toBeNull();
+  });
+
+  // ─── NOVA MENSAGEM (TICKET-05) ───────────────────────
+  describe('nova mensagem', () => {
+    const sentMessage: TicketMessage = {
+      id: 3,
+      ticket_id: 42,
+      author: {
+        id: 31,
+        type: 'CLIENTE',
+        name: 'Maria Souza',
+        avatar_uri: null,
+      },
+      content: 'O prestador ainda não respondeu.',
+      attachment_url: null,
+      created_at: '2026-11-23T14:05:00.000Z',
+    };
+
+    it('deve mostrar o campo abaixo do aviso de histórico vazio', () => {
+      const { getByText, getByPlaceholderText } = render(
+        <TicketDetailScreen />,
+      );
+
+      expect(getByText(/Nenhuma interação ainda/)).toBeTruthy();
+      expect(getByPlaceholderText('Escreva uma mensagem')).toBeTruthy();
+    });
+
+    it.each(['RESOLVIDO', 'FECHADO'] as const)(
+      'deve mostrar o aviso de encerrado e manter o histórico para %s',
+      (status) => {
+        useTicketStore.setState({
+          currentTicket: { ...mockTicket, status },
+          messages: [mockMessage],
+        });
+        const { getByText, queryByPlaceholderText } = render(
+          <TicketDetailScreen />,
+        );
+
+        expect(getByText(CLOSED_NOTICE)).toBeTruthy();
+        expect(queryByPlaceholderText('Escreva uma mensagem')).toBeNull();
+        expect(
+          getByText('Estamos verificando o seu agendamento.'),
+        ).toBeTruthy();
+      },
+    );
+
+    it('deve anexar a mensagem enviada ao fim do histórico com o nome do autor', async () => {
+      useTicketStore.setState({ messages: [mockMessage] });
+      mockedClient.post.mockResolvedValueOnce({
+        data: { ticket_message: sentMessage },
+      });
+      const { getByTestId, findByText, getAllByText } = render(
+        <TicketDetailScreen />,
+      );
+
+      fireEvent.changeText(
+        getByTestId('ticket-message-input'),
+        'O prestador ainda não respondeu.',
+      );
+      fireEvent.press(getByTestId('ticket-message-send-button'));
+
+      expect(await findByText('Maria Souza')).toBeTruthy();
+      const contents = getAllByText(
+        /Estamos verificando|O prestador ainda não respondeu/,
+      ).map((node) => node.props.children);
+      expect(contents).toEqual([
+        'Estamos verificando o seu agendamento.',
+        'O prestador ainda não respondeu.',
+      ]);
+      expect(getByTestId('ticket-message-input').props.value).toBe('');
+    });
+
+    it('deve mostrar o aviso de encerrado abaixo do histórico vazio', () => {
+      useTicketStore.setState({
+        currentTicket: { ...mockTicket, status: 'RESOLVIDO' },
+      });
+      const { getByText } = render(<TicketDetailScreen />);
+
+      expect(getByText(/Nenhuma interação ainda/)).toBeTruthy();
+      expect(getByText(CLOSED_NOTICE)).toBeTruthy();
+    });
+
+    it('não deve rolar a tela ao carregar o histórico', () => {
+      useTicketStore.setState({ messages: [mockMessage] });
+      const { UNSAFE_getByType } = render(<TicketDetailScreen />);
+      const scrollView = UNSAFE_getByType(ScrollView);
+      const scrollToEnd = scrollView.instance.scrollToEnd as jest.Mock;
+      scrollToEnd.mockClear();
+
+      fireEvent(scrollView, 'contentSizeChange', 360, 800);
+
+      expect(scrollToEnd).not.toHaveBeenCalled();
+    });
+
+    it('deve rolar até a mensagem nova depois do envio', async () => {
+      mockedClient.post.mockResolvedValueOnce({
+        data: { ticket_message: sentMessage },
+      });
+      const { getByTestId, findByText, UNSAFE_getByType } = render(
+        <TicketDetailScreen />,
+      );
+      const scrollView = UNSAFE_getByType(ScrollView);
+      const scrollToEnd = scrollView.instance.scrollToEnd as jest.Mock;
+      scrollToEnd.mockClear();
+
+      fireEvent.changeText(getByTestId('ticket-message-input'), 'Olá');
+      fireEvent.press(getByTestId('ticket-message-send-button'));
+      await findByText('Maria Souza');
+      fireEvent(scrollView, 'contentSizeChange', 360, 1200);
+
+      expect(scrollToEnd).toHaveBeenCalledWith({ animated: true });
+
+      // Only once: later layout changes must not keep pulling the user down.
+      scrollToEnd.mockClear();
+      fireEvent(scrollView, 'contentSizeChange', 360, 1300);
+      expect(scrollToEnd).not.toHaveBeenCalled();
+    });
+
+    it('404: deve mostrar a mensagem e voltar para a lista de chamados', async () => {
+      mockedClient.post.mockRejectedValueOnce({
+        response: { status: 404, data: { error: 'Chamado não encontrado.' } },
+      });
+      const { getByTestId, findByText, getByText } = render(
+        <TicketDetailScreen />,
+      );
+
+      fireEvent.changeText(getByTestId('ticket-message-input'), 'Olá');
+      fireEvent.press(getByTestId('ticket-message-send-button'));
+
+      expect(await findByText('Chamado não encontrado.')).toBeTruthy();
+      fireEvent.press(getByText('Voltar para meus chamados'));
+
+      await waitFor(() =>
+        expect(mockNavigate).toHaveBeenCalledWith('TicketsList'),
+      );
+    });
+
+    it('409: deve recarregar o detalhe do chamado', async () => {
+      mockedClient.post.mockRejectedValueOnce({
+        response: {
+          status: 409,
+          data: {
+            error: 'Chamado encerrado não aceita novas mensagens.',
+            code: 'TICKET_CLOSED',
+          },
+        },
+      });
+      const { getByTestId, findByText, getByText } = render(
+        <TicketDetailScreen />,
+      );
+      mockFetchTicketById.mockClear();
+
+      fireEvent.changeText(getByTestId('ticket-message-input'), 'Olá');
+      fireEvent.press(getByTestId('ticket-message-send-button'));
+
+      expect(
+        await findByText('Chamado encerrado não aceita novas mensagens.'),
+      ).toBeTruthy();
+      expect(mockFetchTicketById).toHaveBeenCalledWith(42);
+      expect(getByText(CLOSED_NOTICE)).toBeTruthy();
+      expect(getByTestId('ticket-message-input').props.value).toBe('Olá');
+    });
   });
 });

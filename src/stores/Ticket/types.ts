@@ -57,6 +57,20 @@ export interface TicketMessage {
   created_at: string;
 }
 
+/** Maximum message length accepted by the server (after trim). */
+export const TICKET_MESSAGE_MAX_LENGTH = 2000;
+
+/** Why sending a message failed, so the UI can react to each case. */
+export type SendTicketMessageFailure =
+  | 'INVALID_CONTENT' // 400 with field details
+  | 'TICKET_CLOSED' // 409 code TICKET_CLOSED
+  | 'NOT_FOUND' // 404
+  | 'UNKNOWN'; // 500, network or anything else
+
+export type SendTicketMessageResult =
+  | { ok: true; message: TicketMessage }
+  | { ok: false; reason: SendTicketMessageFailure; error: string };
+
 // ─── STORE ────────────────────────────────────────────────────
 
 export interface TicketState {
@@ -73,6 +87,10 @@ export interface TicketActions {
   fetchTicketById: (id: number) => Promise<Ticket | null>;
   fetchMessages: (ticketId: number) => Promise<void>; // ✅ NOVO
   createTicket: (payload: CreateTicketPayload) => Promise<Ticket>;
+  sendMessage: (
+    ticketId: number,
+    content: string,
+  ) => Promise<SendTicketMessageResult>;
   clearError: () => void;
   clearCurrent: () => void;
   clearMessages: () => void; // ✅ NOVO
