@@ -7,6 +7,7 @@ import {
   Image,
   ScrollView,
 } from 'react-native';
+import { FontAwesome } from '@expo/vector-icons';
 import { AppointmentManagePanel } from '@components/features/AppointmentManage';
 import { ClientTrackingMapModal } from '@components/features/ClientTrackingMapModal/ClientTrackingMapModal';
 import { useColors } from '@theme/ThemeProvider';
@@ -20,6 +21,8 @@ interface AppointmentDetailsModalProps {
   appointment: Appointment | null;
   /** Chamado depois de cancelar, reagendar, registrar falta ou abrir disputa. */
   onChanged?: () => void;
+  /** Abre um chamado de suporte com o contexto deste agendamento. */
+  onOpenHelp?: (apt: Appointment) => void;
 }
 
 export function AppointmentDetailsModal({
@@ -27,6 +30,7 @@ export function AppointmentDetailsModal({
   onClose,
   appointment,
   onChanged,
+  onOpenHelp,
 }: AppointmentDetailsModalProps) {
   const colors = useColors();
   const styles = createStyles(colors);
@@ -71,6 +75,14 @@ export function AppointmentDetailsModal({
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  const canShowHelp = Boolean(onOpenHelp) && appointment.status !== 'canceled';
+
+  const handleOpenHelp = () => {
+    if (!onOpenHelp) return;
+    onOpenHelp(appointment);
+    onClose();
   };
 
   const getStatusText = (status: string) => {
@@ -264,6 +276,26 @@ export function AppointmentDetailsModal({
                 activeOpacity={0.8}>
                 <Text style={styles.trackButtonText}>
                   Acompanhar o profissional no mapa
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+
+            {/* Ajuda contextual: abre um chamado ligado a este agendamento. */}
+            {canShowHelp ? (
+              <TouchableOpacity
+                style={styles.helpButton}
+                onPress={handleOpenHelp}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel="Preciso de ajuda com este agendamento">
+                <FontAwesome
+                  name="life-ring"
+                  size={14}
+                  color={colors.primaryOrange}
+                  style={styles.helpButtonIcon}
+                />
+                <Text style={styles.helpButtonText}>
+                  Preciso de ajuda com este agendamento
                 </Text>
               </TouchableOpacity>
             ) : null}

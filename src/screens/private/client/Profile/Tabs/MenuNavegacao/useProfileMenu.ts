@@ -127,6 +127,11 @@ export function useProfileMenu() {
           label: 'Histórico',
           icon: 'history',
         },
+        {
+          id: ClientProfileSubRoutes.Ajuda,
+          label: 'Central de Ajuda',
+          icon: 'help-outline',
+        },
       ],
     },
     { title: 'Colaborador', items: [partnerItem] },
@@ -162,6 +167,10 @@ export function useProfileMenu() {
       // Conversas no celular: telas proprias (lista -> conversa).
       if (id === ClientProfileSubRoutes.Conversas && !isWebDesktop) {
         navigation.navigate('ChatList');
+        return;
+      }
+      if (id === ClientProfileSubRoutes.Ajuda) {
+        navigation.navigate('TicketsList');
         return;
       }
       navigation.setParams({ subroute: id });
