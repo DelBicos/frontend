@@ -47,6 +47,26 @@ const lightContrastColors: ColorsType = {
     cardBackground: '#FFFFFF',
     modalBackground: '#FFFFFF',
   },
+
+  chat: {
+    backgroundTop: '#FFFFFF',
+    backgroundMid: '#F2F5FA',
+    glow: 'rgba(214,90,0,0.10)',
+    glowFade: 'rgba(214,90,0,0)',
+    glassBorder: '#000000',
+    glassFill: '#FFFFFF',
+    surface: '#E6ECF5',
+    micSurface: '#003366',
+    micIcon: '#FFFFFF',
+    accent: '#D65A00',
+    accentText: '#A34500',
+    textOnAccent: '#000000',
+    iconOnAccent: '#FFFFFF',
+    textPrimary: '#000000',
+    textSecondary: '#222222',
+    placeholder: '#444444',
+    typingDot: '#003366',
+  },
 };
 
 export default lightContrastColors;

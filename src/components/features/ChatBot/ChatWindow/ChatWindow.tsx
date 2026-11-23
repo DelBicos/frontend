@@ -12,7 +12,9 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  StyleSheet,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome } from '@expo/vector-icons';
 import { useColors } from '@theme/ThemeProvider';
 import { useChatSession } from '@hooks/useChatSession';
@@ -29,10 +31,15 @@ import { ChatHeader } from './ChatHeader';
 import { ChatInputBar } from './ChatInputBar';
 import { ChatErrorBanner } from './ChatErrorBanner';
 import { AppointmentStatusBanner } from './AppointmentStatusBanner';
+import { TicketCreatedBanner } from './TicketCreatedBanner';
 import { useAppointmentPolling } from './hooks/useAppointmentPolling';
 import { useRateLimitCountdown } from './hooks/useRateLimitCountdown';
 import { useSilenceDetection } from './hooks/useSilenceDetection';
 import { createStyles } from './styles';
+
+/** Explains, while the bot is typing, that it only asks for what is missing. */
+export const TYPING_CAPTION =
+  'O assistente entende e pergunta só o que falta...';
 
 interface ChatWindowProps {
   /** Callback para fechar o painel (mobile/web). */
@@ -307,6 +314,27 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      {/* Navy gradient (top → middle) with a soft orange glow from the
+          bottom-right corner, as if light came from outside the card. */}
+      <LinearGradient
+        pointerEvents="none"
+        colors={[
+          colors.chat.backgroundTop,
+          colors.chat.backgroundMid,
+          colors.chat.backgroundMid,
+        ]}
+        locations={[0, 0.5, 1]}
+        style={StyleSheet.absoluteFill}
+      />
+      <LinearGradient
+        pointerEvents="none"
+        colors={[colors.chat.glowFade, colors.chat.glowFade, colors.chat.glow]}
+        locations={[0, 0.6, 1]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+
       <ChatHeader
         onClear={restartConversation}
         restartDisabled={isRestarting || isRecording || isVoicePreparing}
@@ -324,11 +352,11 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <FontAwesome
-              name="commenting-o"
-              size={40}
-              color={colors.textTertiary}
+              name="comment-o"
+              size={36}
+              color={colors.chat.textSecondary}
             />
-            <Text style={[styles.emptyText, { color: colors.textTertiary }]}>
+            <Text style={styles.emptyText}>
               Olá! Como posso ajudar com seus agendamentos?
             </Text>
           </View>
@@ -336,7 +364,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         renderItem={renderItem}
       />
 
-      {loading && <TypingIndicator />}
+      {loading && <TypingIndicator caption={TYPING_CAPTION} />}
 
       {error && (
         <ChatErrorBanner
@@ -382,6 +410,14 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           appointmentStatus={appointmentStatus}
           appointmentPaid={appointmentPaid}
           conversationContext={conversationContext}
+          onClose={onClose}
+        />
+      )}
+
+      {conversationContext?.ticketId && (
+        <TicketCreatedBanner
+          ticketId={conversationContext.ticketId}
+          ticketCode={conversationContext.ticketCode}
           onClose={onClose}
         />
       )}

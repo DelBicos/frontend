@@ -46,6 +46,26 @@ const darkColors: ColorsType = {
     cardBackground: '#1E1E1E',
     modalBackground: '#27272A',
   },
+
+  chat: {
+    backgroundTop: '#1E2A44',
+    backgroundMid: '#2A3550',
+    glow: 'rgba(255,138,0,0.22)',
+    glowFade: 'rgba(255,138,0,0)',
+    glassBorder: 'rgba(255,255,255,0.09)',
+    glassFill: 'rgba(255,255,255,0.06)',
+    surface: '#1A2540',
+    micSurface: '#22304D',
+    micIcon: '#D6DEEE',
+    accent: '#FF8A00',
+    accentText: '#FF8A00',
+    textOnAccent: '#111111',
+    iconOnAccent: '#FFFFFF',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#97A1B4',
+    placeholder: '#97A1B4',
+    typingDot: 'rgba(200,214,240,0.75)',
+  },
 };
 
 export default darkColors;

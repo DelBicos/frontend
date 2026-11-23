@@ -32,7 +32,7 @@ const ChatBotScreen: React.FC = () => {
       edges={['left', 'right']}
       style={[
         styles.container,
-        { backgroundColor: colors.backgroundElevated },
+        { backgroundColor: colors.chat.backgroundTop },
       ]}>
       <ChatWindow onClose={closeChat} closeLabel="Fechar" />
     </SafeAreaView>

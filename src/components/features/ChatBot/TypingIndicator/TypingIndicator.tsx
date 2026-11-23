@@ -1,21 +1,12 @@
 import React, { useEffect, useRef, useMemo } from 'react';
-import { View, Animated, StyleSheet } from 'react-native';
+import { View, Text, Animated } from 'react-native';
 import { useColors } from '@theme/ThemeProvider';
 import { createStyles } from './styles';
 
-const DOT_SIZE = 8;
+const BOUNCE_HEIGHT = 4;
 const ANIMATION_DURATION = 400;
 
-/** Estilo estático do ponto — não depende de tema, definido uma vez fora do componente. */
-const dotStyle = StyleSheet.create({
-  dot: {
-    width: DOT_SIZE,
-    height: DOT_SIZE,
-    borderRadius: DOT_SIZE / 2,
-  },
-});
-
-const Dot: React.FC<{ delay: number; color: string }> = ({ delay, color }) => {
+const Dot: React.FC<{ delay: number; style: object }> = ({ delay, style }) => {
   const anim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -23,7 +14,7 @@ const Dot: React.FC<{ delay: number; color: string }> = ({ delay, color }) => {
       Animated.sequence([
         Animated.delay(delay),
         Animated.timing(anim, {
-          toValue: -6,
+          toValue: -BOUNCE_HEIGHT,
           duration: ANIMATION_DURATION,
           useNativeDriver: true,
         }),
@@ -39,24 +30,40 @@ const Dot: React.FC<{ delay: number; color: string }> = ({ delay, color }) => {
   }, [anim, delay]);
 
   return (
-    <Animated.View
-      style={[
-        dotStyle.dot,
-        { backgroundColor: color, transform: [{ translateY: anim }] },
-      ]}
-    />
+    <Animated.View style={[style, { transform: [{ translateY: anim }] }]} />
   );
 };
 
-export const TypingIndicator: React.FC = () => {
+interface TypingIndicatorProps {
+  /** Texto curto abaixo do balão explicando o que o assistente está fazendo. */
+  caption?: string;
+}
+
+export const TypingIndicator: React.FC<TypingIndicatorProps> = ({
+  caption,
+}) => {
   const colors = useColors();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
-    <View style={styles.bubble}>
-      <Dot delay={0} color={colors.textTertiary} />
-      <Dot delay={160} color={colors.textTertiary} />
-      <Dot delay={320} color={colors.textTertiary} />
+    <View
+      style={styles.container}
+      accessible
+      accessibilityLabel={
+        caption ? `Assistente digitando. ${caption}` : 'Assistente digitando'
+      }
+      accessibilityLiveRegion="polite"
+      testID="chat-typing-indicator">
+      <View style={styles.bubble}>
+        <Dot delay={0} style={styles.dot} />
+        <Dot delay={160} style={styles.dot} />
+        <Dot delay={320} style={styles.dot} />
+      </View>
+      {caption ? (
+        <Text style={styles.caption} numberOfLines={1} ellipsizeMode="tail">
+          {caption}
+        </Text>
+      ) : null}
     </View>
   );
 };

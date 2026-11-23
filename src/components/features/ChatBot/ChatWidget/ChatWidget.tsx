@@ -217,13 +217,13 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
             edges={['bottom']}
             style={[
               styles.modalContainer,
-              { backgroundColor: colors.backgroundElevated },
+              { backgroundColor: colors.chat.backgroundTop },
             ]}>
             <View style={styles.sheetHandleContainer}>
               <View
                 style={[
                   styles.sheetHandle,
-                  { backgroundColor: colors.borderColor },
+                  { backgroundColor: colors.chat.textSecondary },
                 ]}
               />
             </View>
