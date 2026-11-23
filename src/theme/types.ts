@@ -48,4 +48,38 @@ export type ColorsType = {
     cardBackground: string;
     modalBackground: string;
   };
+
+  /** Assistente (chatbot): superficie propria, com gradiente e efeito de vidro. */
+  chat: {
+    /** Topo do gradiente do fundo. */
+    backgroundTop: string;
+    /** Meio e base do gradiente do fundo. */
+    backgroundMid: string;
+    /** Brilho laranja no canto inferior direito. */
+    glow: string;
+    /** Mesmo tom do brilho, transparente (fim do gradiente sem acinzentar). */
+    glowFade: string;
+    /** Borda e divisoria sutis do efeito de vidro. */
+    glassBorder: string;
+    /** Preenchimento translucido (campo de texto, botoes secundarios). */
+    glassFill: string;
+    /** Superficie escura: balao do bot e indicador de digitacao. */
+    surface: string;
+    /** Circulo do microfone. */
+    micSurface: string;
+    micIcon: string;
+    /** Avatar e balao do usuario. */
+    accent: string;
+    /** Laranja para texto e borda sobre o fundo do chat (contraste AA). */
+    accentText: string;
+    /** Texto sobre `accent`. */
+    textOnAccent: string;
+    /** Icone sobre `accent` (avatar). */
+    iconOnAccent: string;
+    textPrimary: string;
+    textSecondary: string;
+    placeholder: string;
+    /** Pontos do indicador de digitacao. */
+    typingDot: string;
+  };
 };
