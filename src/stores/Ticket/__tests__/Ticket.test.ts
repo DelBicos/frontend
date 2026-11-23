@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useTicketStore } from '../Ticket';
+import { useTicketStore, isTicketOpen } from '../Ticket';
 import { backendHttpClient } from '@lib/helpers/httpClient';
 import { Ticket, TicketMessage } from '../types';
 
@@ -422,6 +422,250 @@ describe('useTicketStore', () => {
       useTicketStore.getState().clearMessages();
       expect(useTicketStore.getState().messages).toEqual([]);
     });
+  });
+
+  // ─── SEND MESSAGE (TICKET-05) ────────────────────────
+  describe('sendMessage', () => {
+    const sentMessage: TicketMessage = {
+      id: 11,
+      ticket_id: 42,
+      author: {
+        id: 31,
+        type: 'CLIENTE',
+        name: 'Maria Souza',
+        avatar_uri: null,
+      },
+      content: 'O prestador ainda não respondeu.',
+      attachment_url: null,
+      created_at: '2026-11-23T14:05:00.000Z',
+    };
+
+    const httpError = (status: number, data: unknown) => ({
+      response: { status, data },
+    });
+
+    it('deve enviar só o conteúdo aparado e anexar a mensagem ao fim', async () => {
+      useTicketStore.setState({ messages: [mockMessage] });
+      mockedClient.post.mockResolvedValueOnce({
+        data: {
+          message: 'Mensagem adicionada com sucesso.',
+          ticket_message: sentMessage,
+        },
+      });
+
+      const result = await useTicketStore
+        .getState()
+        .sendMessage(42, '  O prestador ainda não respondeu.  ');
+
+      expect(mockedClient.post).toHaveBeenCalledWith(
+        '/api/tickets/42/messages',
+        { content: 'O prestador ainda não respondeu.' },
+      );
+      expect(result).toEqual({ ok: true, message: sentMessage });
+      expect(useTicketStore.getState().messages).toEqual([
+        mockMessage,
+        sentMessage,
+      ]);
+      expect(useTicketStore.getState().isSubmitting).toBe(false);
+    });
+
+    it('deve atualizar updated_at e levar o chamado ao topo da lista', async () => {
+      const other = { ...mockTicket, id: 7 };
+      useTicketStore.setState({
+        tickets: [other, mockDetailedTicket],
+        currentTicket: mockDetailedTicket,
+      });
+      mockedClient.post.mockResolvedValueOnce({
+        data: { ticket_message: sentMessage },
+      });
+
+      await useTicketStore.getState().sendMessage(42, 'Olá');
+
+      const { tickets, currentTicket } = useTicketStore.getState();
+      expect(tickets.map((t) => t.id)).toEqual([42, 7]);
+      expect(tickets[0].updated_at).toBe(sentMessage.created_at);
+      expect(currentTicket?.updated_at).toBe(sentMessage.created_at);
+    });
+
+    it('deve marcar isSubmitting durante o envio', async () => {
+      let resolvePost: (value: unknown) => void = () => undefined;
+      mockedClient.post.mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolvePost = resolve;
+        }) as never,
+      );
+
+      const pending = useTicketStore.getState().sendMessage(42, 'Olá');
+      expect(useTicketStore.getState().isSubmitting).toBe(true);
+
+      resolvePost({ data: { ticket_message: sentMessage } });
+      await pending;
+      expect(useTicketStore.getState().isSubmitting).toBe(false);
+    });
+
+    it('não deve mexer na lista quando o chamado não estiver nela', async () => {
+      useTicketStore.setState({ tickets: [mockTicket] });
+      mockedClient.post.mockResolvedValueOnce({
+        data: { ticket_message: sentMessage },
+      });
+
+      await useTicketStore.getState().sendMessage(42, 'Olá');
+
+      expect(useTicketStore.getState().tickets).toEqual([mockTicket]);
+    });
+
+    it('não deve alterar o chamado aberto quando for de outro id', async () => {
+      const other = { ...mockDetailedTicket, id: 7 };
+      useTicketStore.setState({ currentTicket: other });
+      mockedClient.post.mockResolvedValueOnce({
+        data: { ticket_message: sentMessage },
+      });
+
+      await useTicketStore.getState().sendMessage(42, 'Olá');
+
+      expect(useTicketStore.getState().currentTicket).toEqual(other);
+    });
+
+    it('não deve alterar histórico nem lista quando o envio falhar', async () => {
+      useTicketStore.setState({
+        tickets: [mockDetailedTicket],
+        currentTicket: mockDetailedTicket,
+        messages: [mockMessage],
+      });
+      mockedClient.post.mockRejectedValueOnce(
+        httpError(500, { error: 'Erro ao adicionar mensagem.' }),
+      );
+
+      await useTicketStore.getState().sendMessage(42, 'Olá');
+
+      const { tickets, currentTicket, messages } = useTicketStore.getState();
+      expect(messages).toEqual([mockMessage]);
+      expect(tickets).toEqual([mockDetailedTicket]);
+      expect(currentTicket).toEqual(mockDetailedTicket);
+    });
+
+    it('deve tratar 400 sem detalhes como UNKNOWN', async () => {
+      mockedClient.post.mockRejectedValueOnce(
+        httpError(400, { error: 'ID inválido.' }),
+      );
+
+      const result = await useTicketStore.getState().sendMessage(42, 'Olá');
+
+      expect(result).toEqual({
+        ok: false,
+        reason: 'UNKNOWN',
+        error: 'ID inválido.',
+      });
+    });
+
+    it('deve retornar INVALID_CONTENT com a mensagem do campo no 400', async () => {
+      mockedClient.post.mockRejectedValueOnce(
+        httpError(400, {
+          error: 'Dados inválidos.',
+          details: [
+            { field: 'content', message: 'Mensagem não pode ficar vazia' },
+          ],
+        }),
+      );
+
+      const result = await useTicketStore.getState().sendMessage(42, 'x');
+
+      expect(result).toEqual({
+        ok: false,
+        reason: 'INVALID_CONTENT',
+        error: 'Mensagem não pode ficar vazia',
+      });
+      expect(useTicketStore.getState().messages).toEqual([]);
+    });
+
+    it('deve retornar TICKET_CLOSED no 409 e recarregar o chamado', async () => {
+      const closed = { ...mockDetailedTicket, status: 'FECHADO' as const };
+      mockedClient.post.mockRejectedValueOnce(
+        httpError(409, {
+          error: 'Chamado encerrado não aceita novas mensagens.',
+          code: 'TICKET_CLOSED',
+        }),
+      );
+      mockedClient.get.mockResolvedValueOnce({ data: { ticket: closed } });
+
+      const result = await useTicketStore.getState().sendMessage(42, 'Olá');
+
+      expect(result).toEqual({
+        ok: false,
+        reason: 'TICKET_CLOSED',
+        error: 'Chamado encerrado não aceita novas mensagens.',
+      });
+      expect(mockedClient.get).toHaveBeenCalledWith('/api/tickets/42');
+      expect(useTicketStore.getState().currentTicket?.status).toBe('FECHADO');
+    });
+
+    it('não deve tratar como encerrado um 409 sem o código TICKET_CLOSED', async () => {
+      mockedClient.post.mockRejectedValueOnce(
+        httpError(409, { error: 'Conflito.' }),
+      );
+
+      const result = await useTicketStore.getState().sendMessage(42, 'Olá');
+
+      expect(result).toMatchObject({ ok: false, reason: 'UNKNOWN' });
+      expect(mockedClient.get).not.toHaveBeenCalled();
+    });
+
+    it('deve retornar NOT_FOUND no 404', async () => {
+      mockedClient.post.mockRejectedValueOnce(
+        httpError(404, { error: 'Chamado não encontrado.' }),
+      );
+
+      const result = await useTicketStore.getState().sendMessage(42, 'Olá');
+
+      expect(result).toEqual({
+        ok: false,
+        reason: 'NOT_FOUND',
+        error: 'Chamado não encontrado.',
+      });
+    });
+
+    it('deve retornar UNKNOWN com a mensagem do servidor no 500', async () => {
+      mockedClient.post.mockRejectedValueOnce(
+        httpError(500, { error: 'Erro ao adicionar mensagem.' }),
+      );
+
+      const result = await useTicketStore.getState().sendMessage(42, 'Olá');
+
+      expect(result).toEqual({
+        ok: false,
+        reason: 'UNKNOWN',
+        error: 'Erro ao adicionar mensagem.',
+      });
+      expect(useTicketStore.getState().isSubmitting).toBe(false);
+    });
+
+    it('deve avisar sobre a conexão quando não houver resposta', async () => {
+      mockedClient.post.mockRejectedValueOnce(new Error('Network Error'));
+
+      const result = await useTicketStore.getState().sendMessage(42, 'Olá');
+
+      expect(result).toEqual({
+        ok: false,
+        reason: 'UNKNOWN',
+        error: 'Não foi possível enviar a mensagem. Verifique sua conexão.',
+      });
+    });
+  });
+
+  describe('isTicketOpen', () => {
+    it.each(['ABERTO', 'EM_ANALISE', 'EM_ATENDIMENTO'] as const)(
+      'deve aceitar mensagens com status %s',
+      (status) => {
+        expect(isTicketOpen(status)).toBe(true);
+      },
+    );
+
+    it.each(['RESOLVIDO', 'FECHADO'] as const)(
+      'não deve aceitar mensagens com status %s',
+      (status) => {
+        expect(isTicketOpen(status)).toBe(false);
+      },
+    );
   });
 
   // ─── PERSIST ─────────────────────────────────────────
