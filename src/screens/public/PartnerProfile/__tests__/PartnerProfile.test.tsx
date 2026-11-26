@@ -7,6 +7,8 @@ import { useUserStore } from '@stores/User';
 import { Professional } from '@stores/Professional/types';
 import { User } from '@stores/User/types';
 
+type TestNode = ReturnType<typeof render>['UNSAFE_root'];
+
 const mockNavigate = jest.fn();
 const mockGoBack = jest.fn();
 const mockCanGoBack = jest.fn(() => true);
@@ -358,7 +360,7 @@ describe('PartnerProfileScreen', () => {
 
     fireEvent.press(await findByLabelText('Galeria, 2'));
     const withLayout = UNSAFE_root.findAll(
-      (node) => typeof node.props.onLayout === 'function',
+      (node: TestNode) => typeof node.props.onLayout === 'function',
     );
     fireEvent(withLayout[withLayout.length - 1], 'layout', {
       nativeEvent: { layout: { width: 400 } },
