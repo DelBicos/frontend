@@ -156,4 +156,24 @@ export const createStyles = (colors: ColorsType) =>
       fontSize: 15,
       fontFamily: 'Afacad-SemiBold',
     },
+    helpButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+      marginTop: 8,
+      marginHorizontal: 16,
+      borderTopWidth: 1,
+      borderTopColor: colors.divider,
+    },
+    helpButtonIcon: {
+      marginRight: 8,
+    },
+    helpButtonText: {
+      color: colors.primaryOrange,
+      fontSize: 13,
+      fontWeight: '500',
+      textAlign: 'center',
+    },
   });

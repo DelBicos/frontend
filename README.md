@@ -17,12 +17,13 @@
   <a href="#-team">Team</a> |
   <a href="#-project-structure">Project Structure</a> |
   <a href="#️-installation">Installation</a> |
-  <a href="https://github.com/fershibli/DelBicosBackend">Backend Project</a>
+  <a href="https://github.com/DelBicos/backend">Backend</a> |
+  <a href="https://github.com/DelBicos/docs">Docs</a>
 </p>
 
 # 💻 About
 
-DelBicos - Delivery de Bicos, é um projeto que propõe conectar clientes e trabalhadores informais na mesma vizinhança, garantindo demanda local, qualidade e segurança e será projetado através de um website.
+DelBicos (Delivery de Bicos) conecta clientes e trabalhadores informais da mesma vizinhança. O produto é um aplicativo [Expo](https://expo.dev) (React Native) para Android, iOS e web. A API fica no repositório [DelBicos/backend](https://github.com/DelBicos/backend).
 
 Profissionais informais, de diversas vertentes, têm muita dificuldade para adquirir clientes na sua região de atuação, muitas vezes tendo que se deslocar por longas distâncias para chegar aos seus clientes, quando não o inverso. Enquanto que na outra ponta, clientes que se mudaram há pouco tempo para a região encontram muita dificuldade e insegurança ao procurar por profissionais confiáveis para realizar tarefas em suas residências.
 
@@ -146,257 +147,169 @@ O protótipo do DelBicos no Figma serve como uma demonstração visual interativ
 
 ## 🛠️ Tecnologies
 
-![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white) ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white) ![Javascript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black) ![Git](https://img.shields.io/badge/GIT-E44C30?style=for-the-badge&logo=git&logoColor=white) ![Typescript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white) ![Swift](https://img.shields.io/badge/swift-F54A2A?style=for-the-badge&logo=swift&logoColor=white) ![Objective-C](https://img.shields.io/badge/OBJECTIVE--C-%233A95E3.svg?style=for-the-badge&logo=apple&logoColor=white) ![Java](https://img.shields.io/badge/java-%23ED8B00.svg?style=for-the-badge&logo=openjdk&logoColor=white) ![Kotlin](https://img.shields.io/badge/Kotlin-0095D5?&style=for-the-badge&logo=kotlin&logoColor=white) ![Express](https://img.shields.io/badge/Express%20js-000000?style=for-the-badge&logo=express&logoColor=white) ![MaterialUI](https://img.shields.io/badge/Material%20UI-007FFF?style=for-the-badge&logo=mui&logoColor=white) ![Node](https://img.shields.io/badge/Node%20js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white) ![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white) ![Postman](https://img.shields.io/badge/Postman-FF6C37?style=for-the-badge&logo=Postman&logoColor=white) ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB) ![React Native](https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB) ![Zustand](https://img.shields.io/badge/Zustand-007ACC?style=for-the-badge&logo=React&logoColor=white) ![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white) ![Figma](https://img.shields.io/badge/Figma-F24E1E?style=for-the-badge&logo=figma&logoColor=white) ![Penpot](https://img.shields.io/badge/Penpot-000000?style=for-the-badge&logo=penpot&logoColor=white) ![Gimp](https://img.shields.io/badge/gimp-5C5543?style=for-the-badge&logo=gimp&logoColor=white) ![Inkscape](https://img.shields.io/badge/Inkscape-000000?style=for-the-badge&logo=Inkscape&logoColor=white) ![Vscode](https://img.shields.io/badge/Vscode-007ACC?style=for-the-badge&logo=visual-studio-code&logoColor=white) ![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white) ![iOS](https://img.shields.io/badge/iOS-000000?style=for-the-badge&logo=ios&logoColor=white)
+O app é Expo 54, React Native 0.81 e React 19, em TypeScript. O estado e as chamadas HTTP ficam nas stores Zustand. Navegação com React Navigation. Pagamentos com Stripe, chat com Socket.io e mapas com Google Maps.
+
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white) ![Expo](https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white) ![React Native](https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB) ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB) ![Zustand](https://img.shields.io/badge/Zustand-443E38?style=for-the-badge) ![Stripe](https://img.shields.io/badge/Stripe-635BFF?style=for-the-badge&logo=stripe&logoColor=white) ![Socket.io](https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socketdotio&logoColor=white) ![Jest](https://img.shields.io/badge/Jest-C21325?style=for-the-badge&logo=jest&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
 <br>
 
 ## 👥 Team
 
-|                        Nome                        | Função                      |
-| :------------------------------------------------: | --------------------------- |
-|  [Fernando Chibli](https://github.com/fershibli)   | _Product Owner & FullStack_ |
-| [Douglas Wenzel](https://github.com/douglaswenzel) | _Scrum Master & FullStack_  |
-|    [Eduardo Kamo](https://github.com/edukamoz)     | _Desenvolvedor FullStack_   |
-|  [Gustavo Ferreira](https://github.com/Gspedine)   | _Desenvolvedor FullStack_   |
-|  [Iago Rossan](https://github.com/IagoYuriRossan)  | _Desenvolvedor FullStack_   |
-|   [Isabel Maito](https://github.com/isabelmaito)   | _Desenvolvedora FullStack_  |
-|    [Lucas Consani](https://github.com/konsanii)    | _Desenvolvedor FullStack_   |
+|                        Nome                        | Função                                 |
+| :------------------------------------------------: | -------------------------------------- |
+|  [Fernando Chibli](https://github.com/fershibli)   | _CTO e Desenvolvedor FullStack_        |
+| [Douglas Wenzel](https://github.com/douglaswenzel) | _Scrum Master e Desenvolvedor FullStack_ |
+|   [Isabel Maito](https://github.com/isabelmaito)   | _Designer e Desenvolvedora FullStack_  |
 
 <br>
 
 ## 📝 Project Structure
 
+A tela compõe layout, feature e UI. Só uma store fala com a API: componente não chama HTTP, e componente de UI não lê store. `src/lib` guarda integração de plataforma (cliente HTTP, Stripe, mapas, upload, logger, SSE). `src/utils` guarda função pura, sem interpretar campo do backend. A regra de negócio da API continua no servidor; o que o app repete é só espelho para a experiência. O porquê de cada camada está em [docs/architecture.md](docs/architecture.md).
+
 ```
 DelBicosV2
 ├── src
-│  ├── api             # Legado (auth, chatbot, pagamentos). Chamadas novas vão para as stores
+│  ├── api             # Legado. Chamada nova fica na store
 │  ├── assets          # Imagens e fontes
 │  ├── components
-│  │  ├── features     # Componentes com regra de negócio (agenda, gestão do agendamento...)
-│  │  ├── layout       # Cabeçalho, navegação inferior, container de página
-│  │  └── ui           # Peças reutilizáveis (botão, campos, selo de verificado...)
-│  ├── config          # Variáveis de ambiente do app
-│  ├── hooks           # Hooks reutilizáveis (voz, sockets, sessão do chatbot)
-│  ├── lib             # Integrações de plataforma (HTTP, Stripe, upload, logger) e regras espelhadas do servidor
-│  ├── utils           # Funções puras (erros, formatação, estilos só-web, nomes de ícones)
-│  ├── screens         # Telas e navegação (public / private / admin)
-│  ├── stores          # Estado global (Zustand) e único lugar que fala com a API
-│  └── theme           # Cores e temas (claro, escuro, alto contraste)
-├── patches            # Correções de dependências aplicadas no npm install (patch-package)
-├── docs               # Guias e relatórios
-├── app.json           # Configuração do Expo (plugins, permissões)
-└── .agents/rules      # Regras de arquitetura do projeto (fonte do CLAUDE.md e AGENTS.md)
+│  │  ├── features     # Comportamento de uma parte do produto (pode usar store)
+│  │  ├── layout       # Cabeçalho, navegação, container. Não dispara API
+│  │  └── ui           # Peça visual genérica, só por props
+│  ├── config          # Ambiente do app (src/config/varEnvs.ts)
+│  ├── hooks           # Listener, ciclo de vida ou API de plataforma (voz, socket)
+│  ├── lib             # HTTP, Stripe, mapas, upload, logger, SSE
+│  ├── screens         # public e private (cliente, profissional, admin, chat)
+│  ├── stores          # Zustand. Único lugar que chama a API
+│  ├── theme           # Claro, escuro e alto contraste
+│  └── utils           # Função pura
+├── patches            # Correções aplicadas no npm install (patch-package)
+├── docs               # Arquitetura, contribuição e requisitos
+├── app.json           # Expo: plugins e permissões. Fonte do prebuild
+├── environments       # .env.dev e .env.prod locais (não vão para o git)
+└── scripts            # Android (Gradle) e sincronização de regras
 ```
 
-> As pastas `ios/` e `android/` são **geradas** (`expo prebuild`) e não são versionadas.
-> `npm run ios` / `npm run android` criam a pasta sozinhos; a fonte de verdade é o `app.json`.
+As pastas `ios/` e `android/` são geradas pelo `expo prebuild` e não são versionadas. `npm run ios` e `npm run android` criam a pasta; a fonte é o `app.json`.
 
 ## ⚙️ Installation
 
+Node 20 (é a versão do CI). O gerenciador é o npm: o lockfile é o `package-lock.json`.
+
 ```bash
-git clone <repository-url>
+git clone https://github.com/fershibli/DelBicosV2.git
 cd DelBicosV2
-npm install          # também aplica os patches de patch-package
-cp .env.example .env # se existir; veja src/config/varEnvs.ts para as variáveis
+npm install
 ```
 
-Qualidade antes de abrir um PR:
+O `postinstall` aplica os patches do `patch-package`.
+
+Não há `.env.example` no repositório. Os arquivos de ambiente ficam em `environments/`, que o git ignora. `npm run set:dev` copia `environments/.env.dev` para `.env`; `npm run set:prod` copia `environments/.env.prod`.
+
+| Variável | Para quê |
+| --- | --- |
+| `EXPO_PUBLIC_ENVIRONMENT` | `development`, `staging` ou `production` |
+| `EXPO_PUBLIC_DOMAIN_ANDROID` | Host da API no Android. No Docker, `host.docker.internal` |
+| `EXPO_PUBLIC_DOMAIN_IOS` | Host da API no iOS |
+| `EXPO_PUBLIC_DOMAIN_WEB` | Host da API na web |
+| `EXPO_PUBLIC_PORT` | Porta da API. No ambiente local, `3000` |
+| `EXPO_PUBLIC_HTTP_PROTOCOL` | `http` em desenvolvimento. Fora dele, o app não sobe sem este valor |
+| `EXPO_PUBLIC_WS_PROTOCOL` | `ws` em desenvolvimento. Fora dele, o app não sobe sem este valor |
+| `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Chave publicável do Stripe |
+| `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` | Mapas |
+| `EXPO_PUBLIC_LOCATIONIQ_API_KEY` | Geocodificação |
+| `EXPO_PUBLIC_UNSPLASH_API_KEY` | Imagens do Unsplash |
+| `EXPO_PUBLIC_GOOGLE_ANALYTICS_ID` | Analytics na web |
+| `EXPO_PUBLIC_CLARITY_ID` | Microsoft Clarity na web |
+
+Em `development`, se o domínio for `localhost` ou estiver vazio, o app usa o host do Metro. No emulador Android sem host configurado, o fallback é `10.0.2.2`.
+
+Antes de abrir um PR:
 
 ```bash
-npx tsc --noEmit     # tipos
-npm run lint         # ESLint + Prettier
-npm test             # Jest
+npm run typecheck
+npm run lint
+npm test
 ```
 
 ## 📚 Documentação
 
-Guias e relatórios em [docs/](docs/): contribuição, requisitos (RF03, RF04), inventário do chatbot e relatório do frontend.
+Guias em [docs/](docs/): [arquitetura](docs/architecture.md), [contribuição](docs/CONTRIBUTING.md), requisitos (RF03, RF04), inventário do chatbot e relatório do frontend.
 
-## Running the Project
+## Execução
 
-To run the project, use the following command:
+`npm start` sobe o Expo com dev client. `npm run web` abre no navegador.
 
-```
-npm start
-```
+### Android
 
-This will start the development server.
+É preciso o Android SDK, um emulador ou aparelho, e um JDK no `PATH` (React Native 0.81 usa o JDK 17). `npm run android:jvm` imprime Java, Node e a versão do Gradle.
 
-### Running on Android Emulator
+`npm run android` e `npm run android:stable` são o mesmo fluxo: instalam o debug e sobem o Metro.
 
-To run the project on an Android emulator, ensure you have the Android SDK and an emulator set up. Use the Android scripts below:
+| Script | O que faz |
+| --- | --- |
+| `npm run android` | `android:install` e, em seguida, `npm start` |
+| `npm run android:expo` | `expo run:android` |
+| `npm run android:install` | Instala o debug com o Gradle, sem o flag `--configure-on-demand` do Expo |
+| `npm run android:assemble:debug` | Gera o APK de debug |
+| `npm run android:assemble:release` | Gera o APK de release |
+| `npm run android:deploy:debug` | `set:dev`, monta o debug e copia o APK para `releases/` |
+| `npm run android:deploy:release` | `set:prod`, monta o release e copia o APK para `releases/` |
+| `npm run android:clean` | Apaga as pastas de build e roda `gradlew clean` |
+| `npm run android:clean:cache` | `expo run:android --no-build-cache` |
+| `npm run android:no-bundler` | Abre o app sem subir o Metro |
+| `npm run android:release` | `expo run:android --variant release` |
+| `npm run android:jvm` | Diagnóstico de Java, Node e Gradle |
 
-Basic Android run (with Metro, stable cross-platform):
+Se o build nativo falhar, rode `npm run android:jvm` e depois `npm run android:clean`.
 
-```
-pnpm android
-```
+### iOS
 
-Stable cross-platform run (same flow as `pnpm android`):
+É preciso o Xcode. Os scripts chamam o Expo direto:
 
-```
-pnpm android:stable
-```
+| Script | O que faz |
+| --- | --- |
+| `npm run ios` | `expo run:ios` |
+| `npm run ios:clean` | `expo run:ios --no-build-cache` |
+| `npm run ios:no-bundler` | `expo run:ios --no-bundler` |
+| `npm run ios:release` | `expo run:ios --configuration Release` |
 
-Assemble debug APK with Gradle wrapper (without Expo `--configure-on-demand`):
+### Web
 
-```
-pnpm android:assemble
-```
-
-Install debug build on emulator/device with Gradle wrapper:
-
-```
-pnpm android:install
-```
-
-Deep clean (remove previous build folders + `gradlew clean`):
-
-```
-pnpm android:clean
-```
-
-Clean rebuild using Expo cache flag:
-
-```
-pnpm android:clean:cache
-```
-
-Install/open app without starting Metro:
-
-```
-pnpm android:no-bundler
-```
-
-Local release build:
-
-```
-pnpm android:release
-```
-
-JVM/Gradle diagnostics (useful for onboarding and troubleshooting):
-
-```
-pnpm android:jvm
-```
-
-If you prefer npm, replace `pnpm` with `npm run`.
-
-Expo direct Android flow (kept as fallback):
-
-```
-pnpm android:expo
-```
-
-Current script mappings in package.json:
-
-```
-android -> pnpm android:stable
-android:expo -> expo run:android
-android:stable -> pnpm android:install && pnpm start
-android:assemble -> node scripts/android/gradlew-runner.mjs app:assembleDebug -x lint -x test --build-cache -PreactNativeDevServerPort=8081
-android:install -> node scripts/android/gradlew-runner.mjs app:installDebug -x lint -x test --build-cache -PreactNativeDevServerPort=8081
-android:clean -> node scripts/android/clean.mjs
-android:clean:cache -> expo run:android --no-build-cache
-android:no-bundler -> expo run:android --no-bundler
-android:release -> expo run:android --variant release
-android:jvm -> node scripts/android/jvm-info.mjs
-```
-
-Android troubleshooting notes:
-
-- If you get `No matching variant ... No variants exist` on Windows, prefer `pnpm android:stable` or `pnpm android:install` instead of `pnpm android`.
-- Run `pnpm android:jvm` and confirm Java is available (recommended JDK 17).
-- Run `pnpm android:clean` before retrying a failed Android build.
-
-### Running on iOS Simulator
-
-To run the project on an iOS simulator, ensure you have Xcode installed. Use the iOS scripts below:
-
-Basic iOS run (with Metro):
-
-```
-pnpm ios
-```
-
-Clean rebuild (when build cache is inconsistent):
-
-```
-pnpm ios:clean
-```
-
-Install/open app without starting Metro:
-
-```
-pnpm ios:no-bundler
-```
-
-Local release build:
-
-```
-pnpm ios:release
-```
-
-If you prefer npm, replace `pnpm` with `npm run`.
-
-Current script mappings in package.json:
-
-```
-ios -> expo run:ios
-ios:clean -> expo run:ios --no-build-cache
-ios:no-bundler -> expo run:ios --no-bundler
-ios:release -> expo run:ios --configuration Release
-```
-
-### Running on Web
-
-To run the project on a web browser, use the following command:
-
-```
+```bash
 npm run web
 ```
 
-## Linting and Formatting
+### Docker
 
-To ensure code quality and consistency, this project uses ESLint and Prettier. You can run the following commands to lint and format your code:
+O Compose usa a rede externa `delbicos-shared-network`, a mesma da API. Crie a rede uma vez, depois suba o app:
 
-### Linting
-
-To check for linting errors, run:
-
-```
-npm run lint
+```bash
+npm run docker:network
+npm run docker:up
+npm run docker:start
 ```
 
-### Fixing Linting Errors
+| Script | O que faz |
+| --- | --- |
+| `npm run docker:build` | Monta a imagem |
+| `npm run docker:up` | Sobe o container `webapp-delbicos` (portas 8081 e 19000) |
+| `npm run docker:start` | Roda `npm start` dentro do container |
+| `npm run docker:logs` | Acompanha os logs |
+| `npm run docker:exec` | Abre um shell no container |
+| `npm run docker:down` | Derruba os containers |
+| `npm run docker:stop` | Para os containers |
+| `npm run docker:rebuild` | Derruba, monta sem cache e sobe de novo |
+| `npm run docker:copy:env` | Copia o `.env` da raiz para o container |
+| `npm run docker:clean` | Derruba os containers, apaga volumes e poda imagens soltas |
 
-To automatically fix linting errors, run:
+## Qualidade
 
-```
-npm run lint --fix
-```
-
-### Formatting
-
-To check for formatting issues, run:
-
-```
-npm run format:check
-```
-
-### Fixing Formatting Issues
-
-To automatically fix formatting issues, run:
-
-```
-npm run format:fix
-```
-
-## Recommended VS Code Extensions
-
-To enhance your development experience with ESLint and Prettier, consider installing the following extensions:
-
-- **ESLint**: Integrates ESLint into your editor for real-time linting.
-- **Prettier - Code formatter**: Automatically formats your code according to Prettier's rules.
-
-By installing these extensions, you can maintain code quality and consistency throughout your project.
+| Script | O que faz |
+| --- | --- |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run lint` | `expo lint` |
+| `npm run format:check` | Prettier em modo de checagem |
+| `npm run format:fix` | Prettier reescreve os arquivos |
+| `npm test` | Jest |
+| `npm run test:coverage` | Jest com cobertura |

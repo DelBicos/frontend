@@ -133,8 +133,13 @@ export interface ChatBotContext {
   /** URL do avatar do profissional — optional, melhora visual do AppointmentCard */
   professionalAvatarUri?: string | null;
   appointmentId?: number;
+  /** Código público do agendamento (short_id), exibido no lugar do id numérico. */
+  appointmentShortId?: string;
   appointmentStatus?: 'pending' | 'confirmed' | 'completed' | 'canceled';
   appointmentPaid?: boolean;
+  /** Chamado de suporte aberto pelo chatbot; habilita o atalho "Ver chamado". */
+  ticketId?: number;
+  ticketCode?: string;
   pendingService?: ChatBotServiceOption | null;
   matchedServiceIds?: number[];
 }

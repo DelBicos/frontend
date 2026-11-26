@@ -97,6 +97,14 @@ export type NavigationParams = {
     startTime?: string;
     status?: string;
   };
+  TicketsList: undefined;
+  CreateTicket:
+    | {
+        appointmentShortId?: string;
+        contextLabel?: string;
+      }
+    | undefined;
+  TicketDetail: { id: number };
 };
 
 /**

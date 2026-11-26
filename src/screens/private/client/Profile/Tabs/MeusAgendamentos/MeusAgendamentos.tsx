@@ -283,6 +283,12 @@ function MeusAgendamentos({ role = 'client' }: MeusAgendamentosProps) {
         onClose={() => setDetailsId(null)}
         appointment={details}
         onChanged={refresh}
+        onOpenHelp={(apt) =>
+          navigation.navigate('CreateTicket', {
+            appointmentShortId: String(apt.id),
+            contextLabel: `agendamento #${apt.id}`,
+          })
+        }
       />
 
       {toRate && (
