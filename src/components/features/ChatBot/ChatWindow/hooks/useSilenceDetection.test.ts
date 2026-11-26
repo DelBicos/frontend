@@ -100,7 +100,12 @@ describe('useSilenceDetection no app nativo', () => {
 
 describe('useSilenceDetection na web', () => {
   const originalOS = Platform.OS;
-  const originalMediaDevices = navigator.mediaDevices;
+  // O Node 20 (usado no CI) nao tem navigator global; o 21+ tem.
+  const globalScope = globalThis as { navigator?: object };
+  const originalNavigator = Object.getOwnPropertyDescriptor(
+    globalScope,
+    'navigator',
+  );
   const originalAudioContext = (globalThis as { AudioContext?: unknown })
     .AudioContext;
 
@@ -127,9 +132,10 @@ describe('useSilenceDetection na web', () => {
   const stream = { getTracks: () => [{ stop: stopTrack }] };
 
   const setMediaDevices = (value: unknown) =>
-    Object.defineProperty(navigator, 'mediaDevices', {
-      value,
+    Object.defineProperty(globalScope, 'navigator', {
+      value: { mediaDevices: value },
       configurable: true,
+      writable: true,
     });
 
   beforeAll(() => {
@@ -141,7 +147,11 @@ describe('useSilenceDetection na web', () => {
     Platform.OS = originalOS;
     (globalThis as { AudioContext?: unknown }).AudioContext =
       originalAudioContext;
-    setMediaDevices(originalMediaDevices);
+    if (originalNavigator) {
+      Object.defineProperty(globalScope, 'navigator', originalNavigator);
+    } else {
+      delete globalScope.navigator;
+    }
   });
 
   beforeEach(() => {
