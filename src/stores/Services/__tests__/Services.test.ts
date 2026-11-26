@@ -161,4 +161,62 @@ describe('ServicesStore', () => {
       '400',
     );
   });
+
+  it('envia filtros de categoria e subcategoria e aceita a chave services', async () => {
+    http.get.mockResolvedValue({ data: { services: [{ id: 5, title: 'C' }] } });
+
+    const result = await useServicesStore
+      .getState()
+      .fetchServices({ category_id: 2, subcategory_id: 3 });
+
+    expect(http.get).toHaveBeenCalledWith('/api/services', {
+      params: { category_id: 2, subcategory_id: 3 },
+    });
+    expect(result.map((s) => s.id)).toEqual([5]);
+  });
+
+  it('servicos do profissional aceitam lista direta e limpam em caso de erro', async () => {
+    http.get.mockResolvedValueOnce({ data: [{ id: 1, title: 'A' }] });
+    await useServicesStore.getState().fetchMyServices({ page: 2, limit: 10 });
+    expect(http.get).toHaveBeenCalledWith('/api/services/my', {
+      params: { page: 2, limit: 10 },
+    });
+    expect(useServicesStore.getState().myServices).toHaveLength(1);
+
+    http.get.mockRejectedValueOnce(new Error('offline'));
+    await expect(
+      useServicesStore.getState().reloadMyServices(),
+    ).resolves.toEqual([]);
+    expect(useServicesStore.getState().myServices).toEqual([]);
+    expect(useServicesStore.getState().loading).toBe(false);
+  });
+
+  it('busca semantica aceita lista direta e propaga erros que nao sao 503', async () => {
+    http.get.mockResolvedValueOnce({ data: [{ id: 1 }, { id: 2 }] });
+    await expect(
+      useServicesStore.getState().searchServicesSemantically('pintura'),
+    ).resolves.toMatchObject({ total: 2, resultsLimited: false });
+
+    const falha = { isAxiosError: true, response: { status: 500 } };
+    http.get.mockRejectedValueOnce(falha);
+    await expect(
+      useServicesStore.getState().searchServicesSemantically('pintura'),
+    ).rejects.toBe(falha);
+  });
+
+  it('busca por titulo de reserva aceita lista direta', async () => {
+    http.get
+      .mockRejectedValueOnce({ isAxiosError: true, response: { status: 503 } })
+      .mockResolvedValueOnce({ data: [{ id: 4 }, { id: 5 }] });
+    await expect(
+      useServicesStore.getState().searchServicesSemantically('tomada'),
+    ).resolves.toMatchObject({ total: 2, resultsLimited: false });
+  });
+
+  it('propaga erro na atualizacao', async () => {
+    http.put.mockRejectedValue(new Error('409'));
+    await expect(
+      useServicesStore.getState().updateService(1, {}),
+    ).rejects.toThrow('409');
+  });
 });
