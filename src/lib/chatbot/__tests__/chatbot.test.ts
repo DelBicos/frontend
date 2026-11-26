@@ -230,6 +230,15 @@ describe('erros', () => {
     expect(resolveVoiceError(429)).toMatch(/Limite/);
     expect(resolveVoiceError(500)).toBe(resolveGenericError(500));
   });
+
+  it('mensagens de voz para sessao, formato e indisponibilidade', () => {
+    expect(resolveVoiceError(401)).toMatch(/comandos de voz/);
+    expect(resolveVoiceError(403)).toMatch(/comandos de voz/);
+    expect(resolveVoiceError(415)).toMatch(/formato de áudio/);
+    expect(resolveVoiceError(422)).toMatch(/entender o áudio/);
+    expect(resolveVoiceError(502)).toMatch(/não respondeu/);
+    expect(resolveVoiceError(503)).toMatch(/temporariamente indisponível/);
+  });
 });
 
 describe('conversationRequest', () => {

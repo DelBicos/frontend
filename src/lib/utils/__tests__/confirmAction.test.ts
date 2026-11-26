@@ -90,4 +90,24 @@ describe('confirmAction', () => {
       value: previousWindow,
     });
   });
+
+  it('resolve falso ao tocar em cancelar', async () => {
+    Object.defineProperty(Platform, 'OS', {
+      configurable: true,
+      get: () => 'ios',
+    });
+    jest
+      .spyOn(Alert, 'alert')
+      .mockImplementation((_title, _message, buttons) => {
+        buttons?.[0]?.onPress?.();
+      });
+
+    await expect(
+      confirmAction({
+        title: 'Sair',
+        message: 'Tem certeza?',
+        confirmLabel: 'Ok',
+      }),
+    ).resolves.toBe(false);
+  });
 });
