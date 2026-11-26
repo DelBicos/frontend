@@ -1,8 +1,9 @@
 import React from 'react';
 import { Keyboard, Platform } from 'react-native';
 import { render, fireEvent } from '@testing-library/react-native';
-import type { ReactTestInstance } from 'react-test-renderer';
 import Autocomplete from '..';
+
+type TestNode = ReturnType<typeof render>['UNSAFE_root'];
 
 const data = [
   { label: 'São Paulo', value: 'SP' },
@@ -86,7 +87,7 @@ describe('Autocomplete', () => {
     fireEvent(getByLabelText('Cidade'), 'focus');
     expect(queryByText('Campinas')).toBeTruthy();
     const overlay = UNSAFE_root.findAll(
-      (n: ReactTestInstance) => typeof n.props.onPress === 'function' && n.props.activeOpacity === 1,
+      (n: TestNode) => typeof n.props.onPress === 'function' && n.props.activeOpacity === 1,
     )[0];
     fireEvent.press(overlay);
     expect(queryByText('Campinas')).toBeNull();

@@ -1,10 +1,11 @@
 import React from 'react';
 import { Text } from 'react-native';
 import { render, fireEvent } from '@testing-library/react-native';
-import type { ReactTestInstance } from 'react-test-renderer';
 import { Button } from '..';
 import { Styled } from '../styled';
 import lightScheme from '@theme/light';
+
+type TestNode = ReturnType<typeof render>['UNSAFE_root'];
 
 describe('Button', () => {
   it('mostra o texto e chama onPress', () => {
@@ -60,7 +61,7 @@ describe('Button', () => {
       <Button onPress={jest.fn()}>Hover</Button>,
     );
     const pressable = UNSAFE_root.findAll(
-      (n: ReactTestInstance) => typeof n.props.onHoverIn === 'function',
+      (n: TestNode) => typeof n.props.onHoverIn === 'function',
     )[0];
     const before = getByText('Hover').props.style;
     fireEvent(pressable, 'hoverIn');
@@ -76,7 +77,7 @@ describe('Button', () => {
       </Button>,
     );
     const pressable = UNSAFE_root.findAll(
-      (n: ReactTestInstance) => typeof n.props.onHoverIn === 'function',
+      (n: TestNode) => typeof n.props.onHoverIn === 'function',
     )[0];
     const before = getByText('Hover').props.style;
     fireEvent(pressable, 'hoverIn');

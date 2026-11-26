@@ -1,8 +1,9 @@
 import React from 'react';
 import { Text } from 'react-native';
 import { render, fireEvent } from '@testing-library/react-native';
-import type { ReactTestInstance } from 'react-test-renderer';
 import ChartCard from '..';
+
+type TestNode = ReturnType<typeof render>['UNSAFE_root'];
 
 describe('ChartCard', () => {
   it('so desenha o grafico depois de medir a largura', () => {
@@ -20,7 +21,7 @@ describe('ChartCard', () => {
     expect(getByLabelText('Receita. Subiu 10%')).toBeTruthy();
     expect(queryByText(/largura/)).toBeNull();
 
-    const card = UNSAFE_root.findAll((n: ReactTestInstance) => typeof n.props.onLayout === 'function')[0];
+    const card = UNSAFE_root.findAll((n: TestNode) => typeof n.props.onLayout === 'function')[0];
     fireEvent(card, 'layout', { nativeEvent: { layout: { width: 500.7 } } });
     expect(getByText('largura 460')).toBeTruthy();
 
