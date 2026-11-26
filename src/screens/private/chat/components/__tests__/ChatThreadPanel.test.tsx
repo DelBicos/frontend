@@ -3,7 +3,8 @@ import { ActivityIndicator, FlatList } from 'react-native';
 import { render, fireEvent, act, waitFor } from '@testing-library/react-native';
 import ChatThreadPanel from '../ChatThreadPanel';
 import { useChatStore, ChatMessage, FetchMessagesResult } from '@stores/Chat';
-import { useUserStore, User } from '@stores/User';
+import { useUserStore } from '@stores/User';
+import type { User } from '@stores/User/types';
 import type { OptimisticMeta } from '@hooks/useChatSocket';
 import { logger } from '@lib/logger';
 

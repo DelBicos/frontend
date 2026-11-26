@@ -1,7 +1,6 @@
 import React from 'react';
 import { ActivityIndicator } from 'react-native';
 import { render, fireEvent, act } from '@testing-library/react-native';
-import type { ReactTestInstance } from 'react-test-renderer';
 import AdminAnalytics from '../AdminAnalytics';
 import { useAdminStore, AdminStats } from '@stores/Admin';
 
@@ -73,14 +72,21 @@ const makeStats = (): AdminStats => ({
   },
 });
 
+/** No da arvore renderizada, so com o que este teste usa. */
+interface RenderedNode {
+  type: unknown;
+  props: { onLayout?: (e: unknown) => void };
+  findAll: (predicate: (node: RenderedNode) => boolean) => RenderedNode[];
+}
+
 /** Os cartoes so desenham o grafico depois de medir a propria largura. */
-const layoutCharts = (root: ReactTestInstance) => {
+const layoutCharts = (root: RenderedNode) => {
   const cards = root.findAll(
     (node) => typeof node.type === 'string' && !!node.props.onLayout,
   );
   act(() => {
     cards.forEach((card) =>
-      card.props.onLayout({ nativeEvent: { layout: { width: 600 } } }),
+      card.props.onLayout?.({ nativeEvent: { layout: { width: 600 } } }),
     );
   });
 };
@@ -146,7 +152,7 @@ describe('AdminAnalytics', () => {
     expect(getByLabelText(/Novos usuários\. 24 no ano/)).toBeTruthy();
     expect(getByLabelText(/Concluídos: 4\. Cancelados: 5/)).toBeTruthy();
 
-    layoutCharts(UNSAFE_root);
+    layoutCharts(UNSAFE_root as unknown as RenderedNode);
 
     expect(getByText(`barras:${months(50).join(',')}`)).toBeTruthy();
     expect(getByText(`barras:${months(2).join(',')}`)).toBeTruthy();
