@@ -1,7 +1,7 @@
 # Plano de testes — App
 
 > App do DelBicos: Expo 54 + React Native (web, Android e iOS), TypeScript, Zustand e React Navigation.
-> Versão de 26/11/2026, escrita sobre a `stag` daquele dia. O plano da API fica em `DelBicos/backend`, no mesmo caminho.
+> Versão de 26/11/2026, escrita sobre a `stag` daquele dia. O plano da API fica em `DelBicos/backend`, em `docs/qualidade-e-testes.md`.
 
 ## 1. Origem e o que mudou
 
@@ -100,7 +100,7 @@ Os casos de tipo e tamanho do lado do servidor estão no plano do backend.
 
 ## 8. Roteiro manual (sistema)
 
-Em `https://azure.delbicos.com.br` e no Android, com `fernando@delbicos.com.br` (cliente) e `isabel@delbicos.com.br` (profissional):
+Em `https://azure.delbicos.com.br` e no Android, com a conta de teste de cliente e a de profissional (credenciais com o analista de testes, fora do repositório):
 
 1. Login, busca, perfil do profissional, agendamento e pagamento com cartão de teste do Stripe.
 2. Chat: mensagens nos dois lados, histórico ao reabrir, reenvio de mensagem que falhou.
