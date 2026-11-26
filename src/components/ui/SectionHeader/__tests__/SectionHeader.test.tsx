@@ -15,7 +15,10 @@ describe('SectionHeader', () => {
   it('mostra a acao e chama onPress', () => {
     const onPress = jest.fn();
     const { getByRole, getByText } = render(
-      <SectionHeader title="Categorias" action={{ label: 'Ver todas', onPress }} />,
+      <SectionHeader
+        title="Categorias"
+        action={{ label: 'Ver todas', onPress }}
+      />,
     );
     expect(getByText('Ver todas')).toBeTruthy();
     fireEvent.press(getByRole('link'));

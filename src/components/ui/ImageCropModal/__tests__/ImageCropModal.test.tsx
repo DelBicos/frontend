@@ -25,7 +25,9 @@ class FakeImage {
 
 const loadImages = () =>
   act(() => {
-    FakeImage.all.forEach((img) => (FakeImage.fail ? img.onerror?.() : img.onload?.()));
+    FakeImage.all.forEach((img) =>
+      FakeImage.fail ? img.onerror?.() : img.onload?.(),
+    );
   });
 
 let toBlobResult: Blob | null = new Blob(['x']);
@@ -61,15 +63,19 @@ beforeEach(() => {
   hasContext = true;
   context.drawImage.mockClear();
   const realCreate = PanResponder.create.bind(PanResponder);
-  createSpy = jest.spyOn(PanResponder, 'create').mockImplementation((config) => {
-    handlers = config as Handlers;
-    return realCreate(config);
-  });
+  createSpy = jest
+    .spyOn(PanResponder, 'create')
+    .mockImplementation((config) => {
+      handlers = config as Handlers;
+      return realCreate(config);
+    });
 });
 
 afterEach(() => createSpy.mockRestore());
 
-const renderWeb = (props: Partial<React.ComponentProps<typeof ImageCropModalWeb>> = {}) => {
+const renderWeb = (
+  props: Partial<React.ComponentProps<typeof ImageCropModalWeb>> = {},
+) => {
   const onCancel = jest.fn();
   const onConfirm = jest.fn();
   const utils = render(
@@ -85,13 +91,18 @@ const renderWeb = (props: Partial<React.ComponentProps<typeof ImageCropModalWeb>
 };
 
 const gesture = (dx: number, dy: number) =>
-  ({ dx, dy } as unknown as Parameters<Handlers['onPanResponderMove']>[1]);
+  ({ dx, dy }) as unknown as Parameters<Handlers['onPanResponderMove']>[1];
 const evt = {} as unknown as Parameters<Handlers['onPanResponderMove']>[0];
 
 describe('ImageCropModal (nativo)', () => {
   it('nao renderiza nada no app', () => {
     const { toJSON } = render(
-      <ImageCropModal visible imageUri="x" onCancel={jest.fn()} onConfirm={jest.fn()} />,
+      <ImageCropModal
+        visible
+        imageUri="x"
+        onCancel={jest.fn()}
+        onConfirm={jest.fn()}
+      />,
     );
     expect(toJSON()).toBeNull();
   });
@@ -99,7 +110,8 @@ describe('ImageCropModal (nativo)', () => {
 
 describe('ImageCropModal (web)', () => {
   it('mostra a foto depois de carregar e recorta ao confirmar', () => {
-    const { getByText, getByLabelText, queryByLabelText, onConfirm } = renderWeb();
+    const { getByText, getByLabelText, queryByLabelText, onConfirm } =
+      renderWeb();
     expect(getByText('Ajustar foto')).toBeTruthy();
     expect(queryByLabelText('Foto escolhida')).toBeNull();
 
@@ -132,7 +144,10 @@ describe('ImageCropModal (web)', () => {
     const { getByLabelText } = renderWeb();
     loadImages();
     const position = () =>
-      Object.assign({}, ...[getByLabelText('Foto escolhida').props.style].flat(3));
+      Object.assign(
+        {},
+        ...[getByLabelText('Foto escolhida').props.style].flat(3),
+      );
     expect(position().left).toBe(-160);
     act(() => {
       handlers?.onPanResponderGrant(evt, gesture(0, 0));
@@ -164,7 +179,9 @@ describe('ImageCropModal (web)', () => {
     const { getByText, onConfirm } = renderWeb();
     loadImages();
     fireEvent.press(getByText('Usar foto'));
-    expect(getByText('Não foi possível recortar a imagem neste navegador.')).toBeTruthy();
+    expect(
+      getByText('Não foi possível recortar a imagem neste navegador.'),
+    ).toBeTruthy();
     expect(onConfirm).not.toHaveBeenCalled();
   });
 
@@ -178,7 +195,10 @@ describe('ImageCropModal (web)', () => {
   });
 
   it('cancela e nao carrega quando fechado', () => {
-    const { getByText, onCancel } = renderWeb({ visible: true, imageUri: null });
+    const { getByText, onCancel } = renderWeb({
+      visible: true,
+      imageUri: null,
+    });
     expect(FakeImage.all).toHaveLength(0);
     fireEvent.press(getByText('Cancelar'));
     expect(onCancel).toHaveBeenCalled();

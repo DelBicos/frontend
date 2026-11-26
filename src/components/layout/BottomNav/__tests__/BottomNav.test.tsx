@@ -35,7 +35,11 @@ const stateWith = (names: string[], nestedTab = 'FeedTab') =>
     index: names.length - 1,
     routes: names.map((name) =>
       name === 'MainTabs' || name === 'Home'
-        ? { name, key: name, state: { index: 0, routes: [{ name: nestedTab }] } }
+        ? {
+            name,
+            key: name,
+            state: { index: 0, routes: [{ name: nestedTab }] },
+          }
         : { name, key: name },
     ),
   }) as unknown as NavigationState;
@@ -74,7 +78,9 @@ describe('BottomNav', () => {
     const { getByLabelText } = render(<BottomNav state={state} />);
     fireEvent.press(getByLabelText('Agenda'));
     expect(ref.dispatch).not.toHaveBeenCalled();
-    expect(ref.navigate).toHaveBeenCalledWith('MainTabs', { screen: 'SchedulesTab' });
+    expect(ref.navigate).toHaveBeenCalledWith('MainTabs', {
+      screen: 'SchedulesTab',
+    });
   });
 
   it('fecha as telas empilhadas antes de trocar de aba', () => {
@@ -83,7 +89,9 @@ describe('BottomNav', () => {
     const { getByLabelText } = render(<BottomNav state={state} />);
     fireEvent.press(getByLabelText('Buscar'));
     expect(ref.dispatch).toHaveBeenCalled();
-    expect(ref.navigate).toHaveBeenCalledWith('MainTabs', { screen: 'CategoryTab' });
+    expect(ref.navigate).toHaveBeenCalledWith('MainTabs', {
+      screen: 'CategoryTab',
+    });
   });
 
   it('nao navega quando a navegacao nao esta pronta ou sem estado raiz', () => {
@@ -126,7 +134,9 @@ describe('BottomNav', () => {
         listeners[event] = cb;
         return { remove } as unknown as ReturnType<typeof Keyboard.addListener>;
       });
-    const { toJSON, unmount } = render(<BottomNav state={stateWith(['MainTabs'])} />);
+    const { toJSON, unmount } = render(
+      <BottomNav state={stateWith(['MainTabs'])} />,
+    );
     expect(toJSON()).not.toBeNull();
     act(() => listeners.keyboardDidShow(keyboardEvent));
     expect(toJSON()).toBeNull();

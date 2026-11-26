@@ -79,7 +79,11 @@ describe('useWebScrollGutter', () => {
 describe('PageHeader', () => {
   it('mostra rotulo, titulo, subtitulo e conteudo extra', () => {
     const { getByText, getByRole } = render(
-      <PageHeader title="Ajuda" subtitle="Tire suas duvidas" eyebrow="Suporte" align="center">
+      <PageHeader
+        title="Ajuda"
+        subtitle="Tire suas duvidas"
+        eyebrow="Suporte"
+        align="center">
         <Text>busca</Text>
       </PageHeader>,
     );

@@ -3,7 +3,12 @@ import { logger } from '@lib/logger';
 import type { InvoiceData } from '@stores/Appointment/types';
 
 jest.mock('@lib/logger', () => ({
-  logger: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
+  logger: {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  },
 }));
 
 const baseInvoice: InvoiceData = {

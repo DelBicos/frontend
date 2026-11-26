@@ -113,7 +113,11 @@ describe('Styled.fromVariants', () => {
   it('usa cores padrao quando faltam hover e disabled', () => {
     const styles = Styled.createButton({
       defaultColors: { backgroundColor: '#111', color: '#fff' },
-      defaultSize: { borderRadius: 1, paddingVertical: 1, paddingHorizontal: 1 },
+      defaultSize: {
+        borderRadius: 1,
+        paddingVertical: 1,
+        paddingHorizontal: 1,
+      },
       defaultFont: { fontSize: 10, fontFamily: 'x' },
       variant: 'outlined',
     });
@@ -132,6 +136,8 @@ describe('Styled.fromVariants', () => {
       'AfacadRegular20',
       'outlined',
     );
-    expect(styles.state.hover.container.borderColor).toBe(lightScheme.primaryWhite);
+    expect(styles.state.hover.container.borderColor).toBe(
+      lightScheme.primaryWhite,
+    );
   });
 });

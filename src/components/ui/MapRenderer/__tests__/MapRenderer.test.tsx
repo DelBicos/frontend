@@ -21,15 +21,26 @@ jest.mock('react-native-maps', () => {
   return { __esModule: true, default: MockMapView, Marker: MockMarker };
 });
 
-const region = { latitude: -23, longitude: -46, latitudeDelta: 1, longitudeDelta: 1 };
-const pressEvent = { nativeEvent: { coordinate: { latitude: -22, longitude: -45 } } };
+const region = {
+  latitude: -23,
+  longitude: -46,
+  latitudeDelta: 1,
+  longitudeDelta: 1,
+};
+const pressEvent = {
+  nativeEvent: { coordinate: { latitude: -22, longitude: -45 } },
+};
 
 describe('MapRenderer (nativo)', () => {
   beforeEach(() => mockAnimateCamera.mockClear());
 
   it('mostra carregando ate o mapa ficar pronto', () => {
     const { getByText, queryByText, getByTestId } = render(
-      <MapRenderer region={region} markerCoords={null} onMapPress={jest.fn()} />,
+      <MapRenderer
+        region={region}
+        markerCoords={null}
+        onMapPress={jest.fn()}
+      />,
     );
     expect(getByText('Carregando mapa...')).toBeTruthy();
     act(() => {
@@ -41,7 +52,11 @@ describe('MapRenderer (nativo)', () => {
   it('move a camera e avisa o toque no mapa', () => {
     const onMapPress = jest.fn();
     const { getByTestId } = render(
-      <MapRenderer region={region} markerCoords={null} onMapPress={onMapPress} />,
+      <MapRenderer
+        region={region}
+        markerCoords={null}
+        onMapPress={onMapPress}
+      />,
     );
     fireEvent.press(getByTestId('map-view'), pressEvent);
     expect(mockAnimateCamera).toHaveBeenCalledWith(
@@ -80,6 +95,8 @@ describe('MapRenderer (nativo)', () => {
         onMapPress={jest.fn()}
       />,
     );
-    expect(getByTestId('map-marker').props.description).toBe('Clique para selecionar');
+    expect(getByTestId('map-marker').props.description).toBe(
+      'Clique para selecionar',
+    );
   });
 });

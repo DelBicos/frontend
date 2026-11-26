@@ -7,7 +7,12 @@ import { logger } from '@lib/logger';
 jest.mock('@expo/vector-icons', () => ({ FontAwesome: () => null }));
 
 jest.mock('@lib/logger', () => ({
-  logger: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
+  logger: {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  },
 }));
 
 jest.mock('@components/ui/MapComponent/MapComponent', () => {
@@ -31,9 +36,7 @@ jest.mock('@components/ui/MapComponent/MapComponent', () => {
             nativeEvent: { coordinate: { latitude: -10, longitude: -20 } },
           })
         }>
-        <Text>
-          {`regiao:${region?.latitude}/${region?.latitudeDelta}`}
-        </Text>
+        <Text>{`regiao:${region?.latitude}/${region?.latitudeDelta}`}</Text>
         <Text>{`marcador:${markerCoords?.latitude},${markerCoords?.longitude}`}</Text>
       </Pressable>
     ),

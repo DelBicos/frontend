@@ -18,10 +18,18 @@ describe('ActionButton', () => {
   it('carregando fica ocupado e desabilitado', () => {
     const onPress = jest.fn();
     const { getByRole, UNSAFE_getByType } = render(
-      <ActionButton label="Salvar" onPress={onPress} loading variant="danger" />,
+      <ActionButton
+        label="Salvar"
+        onPress={onPress}
+        loading
+        variant="danger"
+      />,
     );
     const button = getByRole('button');
-    expect(button.props.accessibilityState).toEqual({ disabled: true, busy: true });
+    expect(button.props.accessibilityState).toEqual({
+      disabled: true,
+      busy: true,
+    });
     expect(UNSAFE_getByType(ActivityIndicator)).toBeTruthy();
     fireEvent.press(button);
     expect(onPress).not.toHaveBeenCalled();
@@ -48,14 +56,21 @@ describe('ActionButton', () => {
   it('desabilitado nao chama onPress', () => {
     const onPress = jest.fn();
     const { getByRole } = render(
-      <ActionButton label="Ok" onPress={onPress} disabled variant="secondary" />,
+      <ActionButton
+        label="Ok"
+        onPress={onPress}
+        disabled
+        variant="secondary"
+      />,
     );
     fireEvent.press(getByRole('button'));
     expect(onPress).not.toHaveBeenCalled();
   });
 
   it('aplica estilo de hover e pressionado no web', () => {
-    const { getByRole } = render(<ActionButton label="Ok" onPress={jest.fn()} />);
+    const { getByRole } = render(
+      <ActionButton label="Ok" onPress={jest.fn()} />,
+    );
     const style = getByRole('button').props.style;
     expect(style).toBeTruthy();
   });

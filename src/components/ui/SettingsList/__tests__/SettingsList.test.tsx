@@ -42,18 +42,29 @@ describe('SettingsRow', () => {
   it('com onPress chama a acao e mostra a seta', () => {
     const onPress = jest.fn();
     const { getByRole, UNSAFE_getAllByType } = render(
-      <SettingsRow icon="person" label="Perfil" hint="Seus dados" onPress={onPress} />,
+      <SettingsRow
+        icon="person"
+        label="Perfil"
+        hint="Seus dados"
+        onPress={onPress}
+      />,
     );
     fireEvent.press(getByRole('button'));
     expect(onPress).toHaveBeenCalled();
-    expect(UNSAFE_getAllByType(MaterialIcons).map((i) => i.props.name)).toContain(
-      'chevron-right',
-    );
+    expect(
+      UNSAFE_getAllByType(MaterialIcons).map((i) => i.props.name),
+    ).toContain('chevron-right');
   });
 
   it('linha de perigo nao mostra seta e aceita papel de link', () => {
     const { getByRole, UNSAFE_getAllByType } = render(
-      <SettingsRow icon="logout" label="Sair" onPress={jest.fn()} danger accessibilityRole="link" />,
+      <SettingsRow
+        icon="logout"
+        label="Sair"
+        onPress={jest.fn()}
+        danger
+        accessibilityRole="link"
+      />,
     );
     expect(getByRole('link')).toBeTruthy();
     expect(UNSAFE_getAllByType(MaterialIcons)).toHaveLength(1);

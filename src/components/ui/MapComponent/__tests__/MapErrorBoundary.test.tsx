@@ -4,7 +4,12 @@ import { render } from '@testing-library/react-native';
 import MapErrorBoundary from '../MapErrorBoundary';
 
 jest.mock('@lib/logger', () => ({
-  logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() },
+  logger: {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  },
 }));
 
 const Boom = () => {

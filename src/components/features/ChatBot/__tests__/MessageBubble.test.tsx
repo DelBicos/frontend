@@ -12,7 +12,9 @@ const appointment = {
   price: 'R$ 150,00',
 };
 
-const botMessage = (overrides: Partial<ChatBotMessage> = {}): ChatBotMessage => ({
+const botMessage = (
+  overrides: Partial<ChatBotMessage> = {},
+): ChatBotMessage => ({
   id: '1',
   role: 'bot',
   text: 'Agendamento criado',

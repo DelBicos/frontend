@@ -73,7 +73,7 @@ describe('AppointmentManagePanel', () => {
       cancelAppointment: jest.fn(),
       getRescheduleSlots: jest.fn(() => Promise.resolve([])),
       requestReschedule: jest.fn(),
-      openDispute: jest.fn(() => Promise.resolve()),
+      openDispute: jest.fn(() => Promise.resolve(buildDispute())),
     });
   });
 
@@ -132,9 +132,7 @@ describe('AppointmentManagePanel', () => {
     );
 
     expect(
-      getByText(
-        'Cancelado automaticamente (sem resposta do profissional).',
-      ),
+      getByText('Cancelado automaticamente (sem resposta do profissional).'),
     ).toBeTruthy();
   });
 
@@ -273,9 +271,7 @@ describe('AppointmentManagePanel', () => {
       fireEvent.press(getByText('Enviar disputa'));
     });
 
-    expect(
-      await findByText('Disputa: Serviço com problemas'),
-    ).toBeTruthy();
+    expect(await findByText('Disputa: Serviço com problemas')).toBeTruthy();
     expect(getByText('Em análise pela equipe DelBicos.')).toBeTruthy();
     expect(queryByText('Abrir disputa')).toBeNull();
   });

@@ -58,9 +58,17 @@ describe('AppointmentStatusBanner', () => {
   });
 
   it.each<[string, string, boolean]>([
-    ['pending', 'Agendamento criado! Efetue o pagamento para prosseguir.', false],
+    [
+      'pending',
+      'Agendamento criado! Efetue o pagamento para prosseguir.',
+      false,
+    ],
     ['pending', 'Pagamento efetuado! Aguardando aceite do prestador...', true],
-    ['confirmed', 'Agendamento aceito! Efetue o pagamento para finalizar.', false],
+    [
+      'confirmed',
+      'Agendamento aceito! Efetue o pagamento para finalizar.',
+      false,
+    ],
     ['confirmed', '🎉 Tudo pronto! Agendamento pago e confirmado.', true],
     ['canceled', 'Este agendamento foi cancelado ou recusado.', false],
   ])('deve mostrar o status %s (pago: %s)', (status, text, paid) => {
@@ -100,7 +108,11 @@ describe('AppointmentStatusBanner', () => {
 
   it('deve priorizar a nova data do reagendamento no checkout', () => {
     const { getByLabelText } = renderBanner({
-      conversationContext: { ...context, newDate: '2026-12-05', newTime: '09:30' },
+      conversationContext: {
+        ...context,
+        newDate: '2026-12-05',
+        newTime: '09:30',
+      },
     });
 
     fireEvent.press(getByLabelText('Pagar agendamento'));
@@ -130,7 +142,10 @@ describe('AppointmentStatusBanner', () => {
     );
     onlyDate.unmount();
 
-    const empty = renderBanner({ conversationContext: null, onClose: undefined });
+    const empty = renderBanner({
+      conversationContext: null,
+      onClose: undefined,
+    });
     fireEvent.press(empty.getByLabelText('Pagar agendamento'));
     jest.runAllTimers();
     expect(mockNavigate).toHaveBeenLastCalledWith(

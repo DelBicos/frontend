@@ -31,7 +31,12 @@ describe('Chip', () => {
 
   it('fica desmarcado quando selected e falso', () => {
     const { getByRole } = render(
-      <Chip label="Diarista" selected={false} onPress={jest.fn()} icon="home" />,
+      <Chip
+        label="Diarista"
+        selected={false}
+        onPress={jest.fn()}
+        icon="home"
+      />,
     );
     expect(getByRole('button').props.accessibilityState).toEqual({
       selected: false,

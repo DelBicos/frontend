@@ -56,7 +56,9 @@ jest.mock('@components/ui/MapComponent/MapComponent', () => {
 jest.mock('react-native-popup-menu', () => {
   const { Pressable, View } = jest.requireActual('react-native');
   return {
-    Menu: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
+    Menu: ({ children }: { children: React.ReactNode }) => (
+      <View>{children}</View>
+    ),
     MenuTrigger: ({ children }: { children: React.ReactNode }) => (
       <View>{children}</View>
     ),
@@ -120,7 +122,9 @@ const user = {
 const renderHeader = (routeName = 'Feed') =>
   render(
     <HeaderWeb
-      {...({ route: { name: routeName, key: routeName } } as unknown as NativeStackHeaderProps)}
+      {...({
+        route: { name: routeName, key: routeName },
+      } as unknown as NativeStackHeaderProps)}
     />,
   );
 
@@ -136,7 +140,11 @@ describe('Header (web)', () => {
       loading: false,
     };
     useThemeStore.setState({ theme: ThemeMode.LIGHT });
-    useUserStore.setState({ user: null, avatarBase64: null, signOut: mockSignOut });
+    useUserStore.setState({
+      user: null,
+      avatarBase64: null,
+      signOut: mockSignOut,
+    });
   });
 
   it('visitante ve links, entrar e criar conta', () => {
@@ -173,7 +181,9 @@ describe('Header (web)', () => {
 
     fireEvent.changeText(getByLabelText('Buscar serviço'), '  pintor ');
     fireEvent(getByLabelText('Buscar serviço'), 'submitEditing');
-    expect(mockNavigate).toHaveBeenCalledWith('SearchResult', { query: 'pintor' });
+    expect(mockNavigate).toHaveBeenCalledWith('SearchResult', {
+      query: 'pintor',
+    });
 
     fireEvent.press(getByLabelText('Limpar busca'));
     expect(queryByLabelText('Limpar busca')).toBeNull();
@@ -194,7 +204,9 @@ describe('Header (web)', () => {
     fireEvent.press(getByText('Meus agendamentos'));
     expect(mockNavigate).toHaveBeenCalledWith('MySchedules', undefined);
     fireEvent.press(getByText('Conversas'));
-    expect(mockNavigate).toHaveBeenCalledWith('ClientProfile', { subroute: 'Conversas' });
+    expect(mockNavigate).toHaveBeenCalledWith('ClientProfile', {
+      subroute: 'Conversas',
+    });
     fireEvent.press(getByText('Painel do colaborador'));
     expect(mockNavigate).toHaveBeenCalledWith('ProfessionalTabs', undefined);
 
@@ -262,7 +274,9 @@ describe('Header (web)', () => {
   });
 
   it('usa a posicao do aparelho e permite ajustar no mapa', async () => {
-    location.requestForegroundPermissionsAsync.mockResolvedValue({ status: 'granted' });
+    location.requestForegroundPermissionsAsync.mockResolvedValue({
+      status: 'granted',
+    });
     location.getCurrentPositionAsync.mockResolvedValue({
       coords: { latitude: -10, longitude: -20 },
     });
@@ -284,13 +298,17 @@ describe('Header (web)', () => {
   });
 
   it('sem permissao usa Sao Paulo e pede para marcar no mapa', async () => {
-    location.requestForegroundPermissionsAsync.mockResolvedValue({ status: 'denied' });
+    location.requestForegroundPermissionsAsync.mockResolvedValue({
+      status: 'denied',
+    });
     const { getByLabelText, getByText } = renderHeader();
     await act(async () => {
       fireEvent.press(getByLabelText('Definir local'));
     });
     expect(
-      getByText('Sem permissão de localização. Toque no mapa para marcar onde você está.'),
+      getByText(
+        'Sem permissão de localização. Toque no mapa para marcar onde você está.',
+      ),
     ).toBeTruthy();
     expect(getByText('regiao -23.5505')).toBeTruthy();
     fireEvent.press(getByText('Usar este local'));
@@ -298,19 +316,25 @@ describe('Header (web)', () => {
   });
 
   it('quando a localizacao falha avisa e usa Sao Paulo', async () => {
-    location.requestForegroundPermissionsAsync.mockRejectedValue(new Error('x'));
+    location.requestForegroundPermissionsAsync.mockRejectedValue(
+      new Error('x'),
+    );
     const { getByLabelText, getByText } = renderHeader();
     await act(async () => {
       fireEvent.press(getByLabelText('Definir local'));
     });
     await waitFor(() =>
-      expect(getByText('Toque no mapa para marcar onde você está.')).toBeTruthy(),
+      expect(
+        getByText('Toque no mapa para marcar onde você está.'),
+      ).toBeTruthy(),
     );
   });
 
   it('mostra carregando no botao enquanto busca o local', async () => {
     mockLocation = { ...mockLocation, loading: true };
-    location.requestForegroundPermissionsAsync.mockResolvedValue({ status: 'denied' });
+    location.requestForegroundPermissionsAsync.mockResolvedValue({
+      status: 'denied',
+    });
     const { getByLabelText, queryByText } = renderHeader();
     await act(async () => {
       fireEvent.press(getByLabelText('Definir local'));

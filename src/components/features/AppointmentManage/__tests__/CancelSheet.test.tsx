@@ -38,8 +38,9 @@ const outcome: CancellationOutcome = {
 
 const sheetHandlers = () => ({ onClose: jest.fn(), onDone: jest.fn() });
 
-const isDisabled = (node: { props: { accessibilityState?: { disabled?: boolean } } }) =>
-  node.props.accessibilityState?.disabled;
+const isDisabled = (node: {
+  props: { accessibilityState?: { disabled?: boolean } };
+}) => node.props.accessibilityState?.disabled;
 
 describe('CancelSheet', () => {
   let previewCancellation: jest.Mock;

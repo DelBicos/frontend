@@ -30,7 +30,12 @@ describe('PhoneInput', () => {
 
   it('mostra erro e respeita disabled', () => {
     const { getByText, getByLabelText } = render(
-      <PhoneInput value="" onChangeText={jest.fn()} error="Telefone invalido" disabled />,
+      <PhoneInput
+        value=""
+        onChangeText={jest.fn()}
+        error="Telefone invalido"
+        disabled
+      />,
     );
     expect(getByText('Telefone invalido')).toBeTruthy();
     expect(getByLabelText('Telefone').props.editable).toBe(false);

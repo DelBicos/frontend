@@ -16,7 +16,12 @@ describe('MapComponent', () => {
   it('repassa a regiao ao renderizador de mapa', () => {
     const { getByText } = render(
       <MapComponent
-        region={{ latitude: -23, longitude: -46, latitudeDelta: 1, longitudeDelta: 1 }}
+        region={{
+          latitude: -23,
+          longitude: -46,
+          latitudeDelta: 1,
+          longitudeDelta: 1,
+        }}
         markerCoords={null}
         onMapPress={jest.fn()}
       />,

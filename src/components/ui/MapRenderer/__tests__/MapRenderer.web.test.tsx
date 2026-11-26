@@ -5,7 +5,12 @@ import MapRendererWeb from '../MapRenderer.web';
 const mockPanTo = jest.fn();
 
 jest.mock('@lib/logger', () => ({
-  logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() },
+  logger: {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  },
 }));
 
 jest.mock('@react-google-maps/api', () => {
@@ -17,11 +22,18 @@ jest.mock('@react-google-maps/api', () => {
     GoogleMap: (props: { children: React.ReactNode }) => (
       <View testID="google-map" {...props} />
     ),
-    Marker: (props: Record<string, unknown>) => <View testID="google-marker" {...props} />,
+    Marker: (props: Record<string, unknown>) => (
+      <View testID="google-marker" {...props} />
+    ),
   };
 });
 
-const region = { latitude: -23, longitude: -46, latitudeDelta: 1, longitudeDelta: 1 };
+const region = {
+  latitude: -23,
+  longitude: -46,
+  latitudeDelta: 1,
+  longitudeDelta: 1,
+};
 const ORIGINAL_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
 
 describe('MapRenderer (web)', () => {
@@ -36,14 +48,22 @@ describe('MapRenderer (web)', () => {
   it('avisa quando falta a chave da API', () => {
     process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY = '';
     const { getByText } = render(
-      <MapRendererWeb region={region} markerCoords={null} onMapPress={jest.fn()} />,
+      <MapRendererWeb
+        region={region}
+        markerCoords={null}
+        onMapPress={jest.fn()}
+      />,
     );
     expect(getByText('API Key do Google Maps não encontrada.')).toBeTruthy();
   });
 
   it('mostra erro quando o script do Google falha', () => {
     const { getByTestId, getByText } = render(
-      <MapRendererWeb region={region} markerCoords={null} onMapPress={jest.fn()} />,
+      <MapRendererWeb
+        region={region}
+        markerCoords={null}
+        onMapPress={jest.fn()}
+      />,
     );
     act(() => {
       getByTestId('load-script').props.onError(new Error('rede'));
@@ -53,13 +73,14 @@ describe('MapRenderer (web)', () => {
 
   it('carrega o mapa, mostra o marcador e trata cliques', () => {
     const onMapPress = jest.fn();
-    const { getByTestId, getByText, queryByText, queryByTestId, rerender } = render(
-      <MapRendererWeb
-        region={null}
-        markerCoords={{ latitude: -23, longitude: -46 }}
-        onMapPress={onMapPress}
-      />,
-    );
+    const { getByTestId, getByText, queryByText, queryByTestId, rerender } =
+      render(
+        <MapRendererWeb
+          region={null}
+          markerCoords={{ latitude: -23, longitude: -46 }}
+          onMapPress={onMapPress}
+        />,
+      );
     expect(getByText('Iniciando mapa...')).toBeTruthy();
     expect(queryByTestId('google-marker')).toBeNull();
     expect(getByTestId('google-map').props.zoom).toBe(12);

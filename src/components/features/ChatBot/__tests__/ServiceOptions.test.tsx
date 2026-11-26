@@ -62,7 +62,13 @@ describe('ServiceOptions', () => {
             professionalCity: null,
             categoryName: null,
           }),
-          option({ id: 2, professionalId: 4, professionalName: 'Carla', ratingsCount: 1, rating: 5 }),
+          option({
+            id: 2,
+            professionalId: 4,
+            professionalName: 'Carla',
+            ratingsCount: 1,
+            rating: 5,
+          }),
         ]}
         onSelect={jest.fn()}
       />,
@@ -88,10 +94,7 @@ describe('ServiceOptions', () => {
 
     fireEvent.press(getByLabelText('Escolher Carla para Limpeza residencial'));
 
-    expect(onSelect).toHaveBeenCalledWith(
-      '2',
-      'Limpeza residencial com Carla',
-    );
+    expect(onSelect).toHaveBeenCalledWith('2', 'Limpeza residencial com Carla');
   });
 
   it('deve bloquear a escolha quando desabilitado', () => {

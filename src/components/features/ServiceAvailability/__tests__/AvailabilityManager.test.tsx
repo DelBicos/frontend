@@ -36,8 +36,7 @@ const renderManager = (initial?: AvailabilityItem[]) => {
 
 describe('AvailabilityManager', () => {
   it('deve começar com segunda marcada e lista vazia', () => {
-    const { getByLabelText, getByText, startInput, endInput } =
-      renderManager();
+    const { getByLabelText, getByText, startInput, endInput } = renderManager();
 
     expect(getByLabelText('Segunda').props.accessibilityState).toEqual({
       selected: true,

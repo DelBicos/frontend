@@ -11,7 +11,13 @@ describe('FeedbackModal', () => {
     ['info', 'info-circle'],
   ] as const)('usa o icone do tipo %s', (type, icon) => {
     const { UNSAFE_getByType } = render(
-      <FeedbackModal visible type={type} title="T" message="M" onClose={jest.fn()} />,
+      <FeedbackModal
+        visible
+        type={type}
+        title="T"
+        message="M"
+        onClose={jest.fn()}
+      />,
     );
     expect(UNSAFE_getByType(FontAwesome).props.name).toBe(icon);
   });

@@ -5,7 +5,11 @@ import { QuickReplies } from '../QuickReplies';
 describe('QuickReplies', () => {
   it('não deve renderizar sem opções', () => {
     const { toJSON } = render(
-      <QuickReplies quickReplies={[]} suggestedTimes={[]} onSelect={jest.fn()} />,
+      <QuickReplies
+        quickReplies={[]}
+        suggestedTimes={[]}
+        onSelect={jest.fn()}
+      />,
     );
 
     expect(toJSON()).toBeNull();
@@ -33,7 +37,9 @@ describe('QuickReplies', () => {
     const onSelect = jest.fn();
     const { getByText, getByLabelText } = render(
       <QuickReplies
-        suggestedTimes={[{ label: 'Sáb, 5 jul às 14:00', value: '2026-07-05|14:00' }]}
+        suggestedTimes={[
+          { label: 'Sáb, 5 jul às 14:00', value: '2026-07-05|14:00' },
+        ]}
         onSelect={onSelect}
       />,
     );

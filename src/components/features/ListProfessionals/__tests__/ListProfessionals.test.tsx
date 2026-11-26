@@ -9,11 +9,21 @@ import type { ListedProfessional } from '@stores/Professional/types';
 
 jest.mock('@lib/helpers/httpClient', () => ({
   __esModule: true,
-  default: { get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn() },
+  default: {
+    get: jest.fn(),
+    post: jest.fn(),
+    put: jest.fn(),
+    delete: jest.fn(),
+  },
 }));
 
 jest.mock('@lib/logger', () => ({
-  logger: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
+  logger: {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  },
 }));
 
 let mockAddress: { lat?: string; lon?: string } | null = null;
@@ -71,10 +81,9 @@ describe('ListProfessionals', () => {
     mockAddress = null;
     mockWidth = 400;
     useProfessionalStore.setState({
-      fetchProfessionals:
-        fetchProfessionals as unknown as ReturnType<
-          typeof useProfessionalStore.getState
-        >['fetchProfessionals'],
+      fetchProfessionals: fetchProfessionals as unknown as ReturnType<
+        typeof useProfessionalStore.getState
+      >['fetchProfessionals'],
     });
   });
 

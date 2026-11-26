@@ -162,8 +162,12 @@ describe('AddressSelectionModal', () => {
   });
 
   it('deve abrir o formulário de novo endereço e voltar para a lista', () => {
-    const { getByText, getByPlaceholderText, queryByText, UNSAFE_getAllByType } =
-      renderModal();
+    const {
+      getByText,
+      getByPlaceholderText,
+      queryByText,
+      UNSAFE_getAllByType,
+    } = renderModal();
 
     fireEvent.press(getByText('Adicionar novo endereço'));
     expect(getByText('Novo Endereço')).toBeTruthy();
@@ -175,9 +179,7 @@ describe('AddressSelectionModal', () => {
     expect(getByText('Selecione o Endereço')).toBeTruthy();
   });
 
-  const fillForm = async (
-    getByPlaceholderText: (text: string) => unknown,
-  ) => {
+  const fillForm = async (getByPlaceholderText: (text: string) => unknown) => {
     fireEvent.changeText(getByPlaceholderText('00000-000') as never, '1800');
     fireEvent.changeText(
       getByPlaceholderText('Ex: Rua das Flores') as never,

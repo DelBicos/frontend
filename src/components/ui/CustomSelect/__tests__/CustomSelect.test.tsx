@@ -17,7 +17,12 @@ describe('CustomSelect', () => {
   it('mostra o placeholder e escolhe uma opcao pelo modal', () => {
     const onChange = jest.fn();
     const { getByText, getAllByText } = render(
-      <CustomSelect label="Turno" value="" options={options} onChange={onChange} />,
+      <CustomSelect
+        label="Turno"
+        value=""
+        options={options}
+        onChange={onChange}
+      />,
     );
     expect(getByText('Selecione...')).toBeTruthy();
     fireEvent.press(getByText('Selecione...'));
@@ -28,7 +33,12 @@ describe('CustomSelect', () => {
 
   it('mostra o rotulo da opcao escolhida e fecha pelo Cancelar', () => {
     const { getByText, getAllByText } = render(
-      <CustomSelect value="M" options={options} onChange={jest.fn()} placeholder="Escolha" />,
+      <CustomSelect
+        value="M"
+        options={options}
+        onChange={jest.fn()}
+        placeholder="Escolha"
+      />,
     );
     fireEvent.press(getByText('Manhã'));
     expect(getByText('Escolha')).toBeTruthy();
@@ -38,7 +48,12 @@ describe('CustomSelect', () => {
 
   it('mostra as mensagens de erro', () => {
     const { getByText, rerender } = render(
-      <CustomSelect value="" options={options} onChange={jest.fn()} error="Obrigatorio" />,
+      <CustomSelect
+        value=""
+        options={options}
+        onChange={jest.fn()}
+        error="Obrigatorio"
+      />,
     );
     expect(getByText('Obrigatorio')).toBeTruthy();
     rerender(
@@ -50,7 +65,9 @@ describe('CustomSelect', () => {
       />,
     );
     expect(getByText('Escolha um turno')).toBeTruthy();
-    rerender(<CustomSelect value="" options={options} onChange={jest.fn()} error />);
+    rerender(
+      <CustomSelect value="" options={options} onChange={jest.fn()} error />,
+    );
     expect(getByText('Campo inválido')).toBeTruthy();
   });
 
@@ -60,7 +77,9 @@ describe('CustomSelect', () => {
     );
     fireEvent.press(getByText('Selecione...'));
     expect(queryByText('Cancelar')).toBeNull();
-    rerender(<CustomSelect value="" options={options} onChange={jest.fn()} loading />);
+    rerender(
+      <CustomSelect value="" options={options} onChange={jest.fn()} loading />,
+    );
     expect(queryByText('Selecione...')).toBeNull();
   });
 
@@ -70,7 +89,9 @@ describe('CustomSelect', () => {
     const { UNSAFE_root } = render(
       <CustomSelect value="" options={options} onChange={onChange} />,
     );
-    const select = UNSAFE_root.findByType('select' as unknown as React.ElementType);
+    const select = UNSAFE_root.findByType(
+      'select' as unknown as React.ElementType,
+    );
     select.props.onChange({ target: { value: 'M' } });
     expect(onChange).toHaveBeenCalledWith('M');
   });

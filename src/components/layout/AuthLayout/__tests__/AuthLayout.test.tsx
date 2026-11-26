@@ -68,7 +68,10 @@ describe('AuthLayout', () => {
       </AuthLayout>,
     );
     fireEvent.press(getByLabelText('Voltar'));
-    expect(mockReset).toHaveBeenCalledWith({ index: 0, routes: [{ name: 'Home' }] });
+    expect(mockReset).toHaveBeenCalledWith({
+      index: 0,
+      routes: [{ name: 'Home' }],
+    });
   });
 
   it('no desktop mostra o painel da marca e usa onBack', () => {

@@ -45,7 +45,11 @@ const buildAppointment = (overrides: Partial<Appointment> = {}): Appointment =>
 const renderModal = (appointment: Appointment | null = buildAppointment()) => {
   const onClose = jest.fn();
   const utils = render(
-    <ClientTrackingMapModal visible onClose={onClose} appointment={appointment} />,
+    <ClientTrackingMapModal
+      visible
+      onClose={onClose}
+      appointment={appointment}
+    />,
   );
   return { ...utils, onClose };
 };
@@ -79,17 +83,25 @@ describe('ClientTrackingMapModal', () => {
     expect(getByText('🚘 Transmitindo localização a cada 5s')).toBeTruthy();
     expect(getByText('5.6 km da sua casa')).toBeTruthy();
     expect(getByText('~19 min')).toBeTruthy();
-    expect(getByText(/^GPS Ao Vivo: Lat -23\.45000 \| Lng -47\.45000/)).toBeTruthy();
-    expect(queryByText('🚘 Prestador a cerca de 5 minutos da sua casa!')).toBeNull();
+    expect(
+      getByText(/^GPS Ao Vivo: Lat -23\.45000 \| Lng -47\.45000/),
+    ).toBeTruthy();
+    expect(
+      queryByText('🚘 Prestador a cerca de 5 minutos da sua casa!'),
+    ).toBeNull();
   });
 
   it('deve avisar quando o prestador está perto, em metros', () => {
     const { getByText } = renderModal();
 
-    act(() => mockSocket.onLocation?.({ latitude: -23.501, longitude: -47.45 }));
+    act(() =>
+      mockSocket.onLocation?.({ latitude: -23.501, longitude: -47.45 }),
+    );
 
     expect(getByText('111 metros da sua casa')).toBeTruthy();
-    expect(getByText('🚘 Prestador a cerca de 5 minutos da sua casa!')).toBeTruthy();
+    expect(
+      getByText('🚘 Prestador a cerca de 5 minutos da sua casa!'),
+    ).toBeTruthy();
   });
 
   it('deve ignorar atualização sem coordenadas', () => {
@@ -111,7 +123,9 @@ describe('ClientTrackingMapModal', () => {
     const { getByText } = renderModal();
 
     act(() => mockSocket.onProximity?.({}));
-    expect(getByText('🚘 Prestador a cerca de 5 minutos da sua casa!')).toBeTruthy();
+    expect(
+      getByText('🚘 Prestador a cerca de 5 minutos da sua casa!'),
+    ).toBeTruthy();
   });
 
   it('deve mostrar a chegada e o código de confirmação', () => {

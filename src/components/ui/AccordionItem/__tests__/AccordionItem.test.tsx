@@ -26,6 +26,8 @@ describe('AccordionItem', () => {
       </AccordionItem>,
     );
     expect(getByText('Elemento')).toBeTruthy();
-    expect(getByRole('button').props.accessibilityState).toEqual({ expanded: true });
+    expect(getByRole('button').props.accessibilityState).toEqual({
+      expanded: true,
+    });
   });
 });

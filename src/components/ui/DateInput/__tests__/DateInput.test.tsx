@@ -21,7 +21,12 @@ describe('DateInput', () => {
 
   it('mostra erro em texto e fica bloqueado quando desabilitado', () => {
     const { getByText, getByLabelText } = render(
-      <DateInput value="" onChangeText={jest.fn()} error="Data invalida" disabled />,
+      <DateInput
+        value=""
+        onChangeText={jest.fn()}
+        error="Data invalida"
+        disabled
+      />,
     );
     expect(getByText('Data invalida')).toBeTruthy();
     expect(getByLabelText('Data').props.editable).toBe(false);

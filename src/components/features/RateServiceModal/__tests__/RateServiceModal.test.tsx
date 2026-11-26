@@ -68,8 +68,13 @@ describe('RateServiceModal', () => {
 
   it('deve enviar a nota e o comentário e mostrar o agradecimento', async () => {
     reviewAppointment.mockResolvedValue(true);
-    const { getByText, getByLabelText, getByPlaceholderText, onSuccess, onClose } =
-      renderModal();
+    const {
+      getByText,
+      getByLabelText,
+      getByPlaceholderText,
+      onSuccess,
+      onClose,
+    } = renderModal();
 
     fireEvent.press(getByLabelText('4 estrelas, Muito bom'));
     expect(getByText('Muito bom')).toBeTruthy();

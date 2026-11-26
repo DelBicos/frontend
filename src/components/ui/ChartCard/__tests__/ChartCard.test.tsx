@@ -21,7 +21,9 @@ describe('ChartCard', () => {
     expect(getByLabelText('Receita. Subiu 10%')).toBeTruthy();
     expect(queryByText(/largura/)).toBeNull();
 
-    const card = UNSAFE_root.findAll((n: TestNode) => typeof n.props.onLayout === 'function')[0];
+    const card = UNSAFE_root.findAll(
+      (n: TestNode) => typeof n.props.onLayout === 'function',
+    )[0];
     fireEvent(card, 'layout', { nativeEvent: { layout: { width: 500.7 } } });
     expect(getByText('largura 460')).toBeTruthy();
 

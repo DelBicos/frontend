@@ -224,8 +224,11 @@ describe('ServiceForm', () => {
 
     fireEvent.press(getByText('Salvar alterações'));
 
-    // A mensagem aparece no campo e tambem no aviso do formulario.
-    await waitFor(() => expect(getAllByText(msg)).toHaveLength(2));
+    // A mensagem aparece no campo e tambem no aviso do formulario. A validacao
+    // do formulario e assincrona e, com a suite inteira rodando, passa de 1 s.
+    await waitFor(() => expect(getAllByText(msg)).toHaveLength(2), {
+      timeout: 5000,
+    });
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 

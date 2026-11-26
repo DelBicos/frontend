@@ -33,8 +33,9 @@ const buildAppointment = (overrides: Partial<Appointment> = {}): Appointment =>
 
 const sheetHandlers = () => ({ onClose: jest.fn(), onDone: jest.fn() });
 
-const isDisabled = (node: { props: { accessibilityState?: { disabled?: boolean } } }) =>
-  node.props.accessibilityState?.disabled;
+const isDisabled = (node: {
+  props: { accessibilityState?: { disabled?: boolean } };
+}) => node.props.accessibilityState?.disabled;
 
 describe('RescheduleSheet', () => {
   let getRescheduleSlots: jest.Mock;

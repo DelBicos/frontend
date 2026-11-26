@@ -12,7 +12,11 @@ describe('Sheet', () => {
   it('mostra titulo, conteudo e rodape e fecha ao tocar fora', () => {
     const onClose = jest.fn();
     const { getByText, getByLabelText } = render(
-      <Sheet visible title="Remarcar" onClose={onClose} footer={<Text>rodape</Text>}>
+      <Sheet
+        visible
+        title="Remarcar"
+        onClose={onClose}
+        footer={<Text>rodape</Text>}>
         <Text>corpo</Text>
       </Sheet>,
     );
@@ -38,7 +42,9 @@ describe('Sheet', () => {
 describe('SheetButton', () => {
   it('chama onPress', () => {
     const onPress = jest.fn();
-    const { getByText } = render(<SheetButton label="Confirmar" onPress={onPress} />);
+    const { getByText } = render(
+      <SheetButton label="Confirmar" onPress={onPress} />,
+    );
     fireEvent.press(getByText('Confirmar'));
     expect(onPress).toHaveBeenCalled();
   });
@@ -46,7 +52,12 @@ describe('SheetButton', () => {
   it('mostra carregando e fica desabilitado', () => {
     const onPress = jest.fn();
     const { getByRole, UNSAFE_getByType, queryByText } = render(
-      <SheetButton label="Confirmar" onPress={onPress} loading variant="secondary" />,
+      <SheetButton
+        label="Confirmar"
+        onPress={onPress}
+        loading
+        variant="secondary"
+      />,
     );
     expect(UNSAFE_getByType(ActivityIndicator).props.color).toBeTruthy();
     expect(queryByText('Confirmar')).toBeNull();
@@ -58,10 +69,17 @@ describe('SheetButton', () => {
 
   it('variantes de perigo e secundaria mostram o texto', () => {
     const { getByText, rerender, UNSAFE_getByType } = render(
-      <SheetButton label="Excluir" onPress={jest.fn()} variant="danger" disabled />,
+      <SheetButton
+        label="Excluir"
+        onPress={jest.fn()}
+        variant="danger"
+        disabled
+      />,
     );
     expect(getByText('Excluir')).toBeTruthy();
-    rerender(<SheetButton label="Voltar" onPress={jest.fn()} variant="secondary" />);
+    rerender(
+      <SheetButton label="Voltar" onPress={jest.fn()} variant="secondary" />,
+    );
     expect(getByText('Voltar')).toBeTruthy();
     rerender(<SheetButton label="Ir" onPress={jest.fn()} loading />);
     expect(UNSAFE_getByType(ActivityIndicator).props.color).toBe('#000000');

@@ -18,7 +18,9 @@ describe('Autocomplete', () => {
   });
 
   it('abre a lista ao focar e seleciona uma opcao', () => {
-    const dismiss = jest.spyOn(Keyboard, 'dismiss').mockImplementation(() => {});
+    const dismiss = jest
+      .spyOn(Keyboard, 'dismiss')
+      .mockImplementation(() => {});
     const onChange = jest.fn();
     const { getByLabelText, getByText, queryByText } = render(
       <Autocomplete label="Cidade" data={data} value="" onChange={onChange} />,
@@ -55,7 +57,13 @@ describe('Autocomplete', () => {
 
   it('mostra carregando', () => {
     const { getByLabelText, getByText } = render(
-      <Autocomplete label="Cidade" data={data} value="" onChange={jest.fn()} loading />,
+      <Autocomplete
+        label="Cidade"
+        data={data}
+        value=""
+        onChange={jest.fn()}
+        loading
+      />,
     );
     fireEvent(getByLabelText('Cidade'), 'focus');
     expect(getByText('Carregando...')).toBeTruthy();
@@ -63,7 +71,13 @@ describe('Autocomplete', () => {
 
   it('nao abre quando desabilitado', () => {
     const { getByLabelText, queryByText } = render(
-      <Autocomplete label="Cidade" data={data} value="" onChange={jest.fn()} disabled />,
+      <Autocomplete
+        label="Cidade"
+        data={data}
+        value=""
+        onChange={jest.fn()}
+        disabled
+      />,
     );
     fireEvent(getByLabelText('Cidade'), 'focus');
     expect(queryByText('Campinas')).toBeNull();
@@ -74,7 +88,12 @@ describe('Autocomplete', () => {
       <Autocomplete label="Cidade" data={data} value="" onChange={jest.fn()} />,
     );
     rerender(
-      <Autocomplete label="Cidade" data={data} value="Campinas" onChange={jest.fn()} />,
+      <Autocomplete
+        label="Cidade"
+        data={data}
+        value="Campinas"
+        onChange={jest.fn()}
+      />,
     );
     expect(getByLabelText('Cidade').props.value).toBe('Campinas');
   });
@@ -87,7 +106,8 @@ describe('Autocomplete', () => {
     fireEvent(getByLabelText('Cidade'), 'focus');
     expect(queryByText('Campinas')).toBeTruthy();
     const overlay = UNSAFE_root.findAll(
-      (n: TestNode) => typeof n.props.onPress === 'function' && n.props.activeOpacity === 1,
+      (n: TestNode) =>
+        typeof n.props.onPress === 'function' && n.props.activeOpacity === 1,
     )[0];
     fireEvent.press(overlay);
     expect(queryByText('Campinas')).toBeNull();

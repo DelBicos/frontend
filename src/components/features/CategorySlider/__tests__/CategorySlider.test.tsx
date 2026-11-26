@@ -46,9 +46,7 @@ const buildCategory = (id: number, title: string): Category => ({
 const flatten = (style: unknown): Record<string, unknown> =>
   Object.assign(
     {},
-    ...(Array.isArray(style) ? style.flat(Infinity) : [style]).filter(
-      Boolean,
-    ),
+    ...(Array.isArray(style) ? style.flat(Infinity) : [style]).filter(Boolean),
   );
 
 type Node = { props: { style?: unknown }; parent: Node | null };

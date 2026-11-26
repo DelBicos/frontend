@@ -66,7 +66,9 @@ describe('AgendaCard', () => {
     expect(getByText('Confirmado')).toBeTruthy();
 
     fireEvent.press(
-      getByLabelText(/^Limpeza residencial com Bruno Prestador, .*Ver detalhes$/),
+      getByLabelText(
+        /^Limpeza residencial com Bruno Prestador, .*Ver detalhes$/,
+      ),
     );
     expect(onOpenDetails).toHaveBeenCalledTimes(1);
   });
@@ -108,7 +110,10 @@ describe('AgendaCard', () => {
     ],
     [
       'Reagendamento enviado',
-      { reschedule_requested_start: future(48), reschedule_requested_by: 'client' },
+      {
+        reschedule_requested_start: future(48),
+        reschedule_requested_by: 'client',
+      },
       'client',
     ],
     [
@@ -121,8 +126,16 @@ describe('AgendaCard', () => {
       'client',
     ],
     ['Pagamento pendente', { payment_intent_id: null }, 'client'],
-    ['Aguardando sua resposta', { status: AppointmentStatus.PENDING }, 'professional'],
-    ['Aguardando o profissional', { status: AppointmentStatus.PENDING }, 'client'],
+    [
+      'Aguardando sua resposta',
+      { status: AppointmentStatus.PENDING },
+      'professional',
+    ],
+    [
+      'Aguardando o profissional',
+      { status: AppointmentStatus.PENDING },
+      'client',
+    ],
     [
       'Falta concluir',
       { start_time: future(-3), end_time: future(-2) },
@@ -133,11 +146,19 @@ describe('AgendaCard', () => {
       { start_time: future(-3), end_time: future(-2) },
       'client',
     ],
-    ['Profissional a caminho', { status: AppointmentStatus.IN_TRANSIT }, 'client'],
+    [
+      'Profissional a caminho',
+      { status: AppointmentStatus.IN_TRANSIT },
+      'client',
+    ],
     ['Profissional no local', { status: AppointmentStatus.ARRIVED }, 'client'],
     ['Em andamento', { status: AppointmentStatus.IN_PROGRESS }, 'client'],
     ['Concluído', { status: AppointmentStatus.COMPLETED }, 'client'],
-    ['Cliente não compareceu', { status: AppointmentStatus.NO_SHOW }, 'professional'],
+    [
+      'Cliente não compareceu',
+      { status: AppointmentStatus.NO_SHOW },
+      'professional',
+    ],
     ['Não compareceu', { status: AppointmentStatus.NO_SHOW }, 'client'],
     ['Cancelado', { status: AppointmentStatus.CANCELED }, 'client'],
   ])('deve mostrar o selo "%s"', (label, overrides, role) => {
@@ -148,9 +169,7 @@ describe('AgendaCard', () => {
 
   it('deve aceitar o pedido mostrando carregamento enquanto responde', async () => {
     let resolve: () => void = () => {};
-    const onAccept = jest.fn(
-      () => new Promise<void>((r) => (resolve = r)),
-    );
+    const onAccept = jest.fn(() => new Promise<void>((r) => (resolve = r)));
     const onDecline = jest.fn(() => Promise.resolve());
     const { getByLabelText, queryByText } = renderCard(
       buildAppointment({ status: AppointmentStatus.PENDING }),
@@ -208,7 +227,9 @@ describe('AgendaCard', () => {
     );
 
     await act(async () => {
-      fireEvent.press(getByLabelText('Concluir atendimento: Limpeza residencial'));
+      fireEvent.press(
+        getByLabelText('Concluir atendimento: Limpeza residencial'),
+      );
     });
 
     expect(onComplete).toHaveBeenCalledTimes(1);
@@ -253,7 +274,9 @@ describe('AgendaCard', () => {
       { onRate: jest.fn(), onToggleFavorite: jest.fn(), isFavorite: true },
     );
 
-    expect(getByLabelText('Editar avaliação: Limpeza residencial')).toBeTruthy();
+    expect(
+      getByLabelText('Editar avaliação: Limpeza residencial'),
+    ).toBeTruthy();
     expect(
       getByLabelText('Remover Bruno Prestador dos favoritos').props
         .accessibilityState,

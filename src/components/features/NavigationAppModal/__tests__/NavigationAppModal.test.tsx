@@ -15,7 +15,11 @@ const ADDRESS = 'Rua das Flores, 123, Sorocaba';
 const renderModal = (visible = true) => {
   const onClose = jest.fn();
   const utils = render(
-    <NavigationAppModal visible={visible} onClose={onClose} address={ADDRESS} />,
+    <NavigationAppModal
+      visible={visible}
+      onClose={onClose}
+      address={ADDRESS}
+    />,
   );
   return { ...utils, onClose };
 };

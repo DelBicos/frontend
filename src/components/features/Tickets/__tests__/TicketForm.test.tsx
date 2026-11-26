@@ -144,7 +144,10 @@ describe('TicketForm', () => {
     const { getByPlaceholderText, getByText, getByTestId, onSubmit } =
       renderForm();
 
-    fireEvent.changeText(getByPlaceholderText(TITLE_PLACEHOLDER), 'a'.repeat(101));
+    fireEvent.changeText(
+      getByPlaceholderText(TITLE_PLACEHOLDER),
+      'a'.repeat(101),
+    );
     fireEvent.changeText(
       getByPlaceholderText(DESCRIPTION_PLACEHOLDER),
       'b'.repeat(2001),

@@ -46,7 +46,12 @@ describe('AddressCard', () => {
   it('endereco principal tem selo e nao pode ser excluido', () => {
     const { getByText, queryByText } = render(
       <AddressCard
-        addressData={{ ...address, isPrimary: true, complement: null, postal_code: '123' }}
+        addressData={{
+          ...address,
+          isPrimary: true,
+          complement: null,
+          postal_code: '123',
+        }}
         onDelete={jest.fn()}
         onSetPrimary={jest.fn()}
         onEditPress={jest.fn()}
@@ -57,7 +62,9 @@ describe('AddressCard', () => {
     expect(queryByText('Excluir')).toBeNull();
     expect(queryByText('Tornar principal')).toBeNull();
     expect(
-      getByText('Usado como padrão nos agendamentos e na busca por profissionais.'),
+      getByText(
+        'Usado como padrão nos agendamentos e na busca por profissionais.',
+      ),
     ).toBeTruthy();
   });
 

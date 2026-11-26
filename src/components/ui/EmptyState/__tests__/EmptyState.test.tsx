@@ -16,7 +16,9 @@ describe('EmptyState', () => {
   });
 
   it('mostra so o titulo quando nao ha texto nem acoes', () => {
-    const { getByText, toJSON } = render(<EmptyState icon="inbox" title="Vazio" />);
+    const { getByText, toJSON } = render(
+      <EmptyState icon="inbox" title="Vazio" />,
+    );
     expect(getByText('Vazio')).toBeTruthy();
     expect(JSON.stringify(toJSON())).not.toContain('Tente');
   });
