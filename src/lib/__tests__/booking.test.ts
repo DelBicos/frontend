@@ -1,6 +1,8 @@
 import {
   formatDuration,
+  formatLongDate,
   formatShortDay,
+  formatTime,
   initials,
   isSlotBookable,
   minBookingDate,
@@ -62,5 +64,19 @@ describe('booking', () => {
 
   it('formata o dia curto com dia e mes', () => {
     expect(formatShortDay('2026-09-29')).toMatch(/29\/09$/);
+  });
+
+  it('formata a data longa a partir de AAAA-MM-DD, ISO ou Date', () => {
+    expect(formatLongDate('2026-09-26')).toBe('sábado, 26 de setembro');
+    expect(formatLongDate(new Date(2026, 8, 25, 12))).toBe(
+      'sexta-feira, 25 de setembro',
+    );
+    expect(formatLongDate('2026-09-24T12:00:00')).toBe(
+      'quinta-feira, 24 de setembro',
+    );
+  });
+
+  it('formata a hora local com dois digitos', () => {
+    expect(formatTime(new Date(2026, 8, 25, 9, 5))).toBe('09:05');
   });
 });

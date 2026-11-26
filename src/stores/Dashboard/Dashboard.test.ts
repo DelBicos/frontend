@@ -49,4 +49,74 @@ describe('dashboard store', () => {
     const state = useDashboardStore.getState();
     expect(state.earnings).toEqual(expected);
   });
+
+  it('guarda a mensagem padrao quando os KPIs falham e encerra o carregamento', async () => {
+    (backendHttpClient.get as jest.Mock).mockRejectedValueOnce(
+      new Error('falhou'),
+    );
+
+    await useDashboardStore.getState().fetchKpis();
+
+    const state = useDashboardStore.getState();
+    expect(state.error).toBe('Erro ao buscar KPIs');
+    expect(state.loading).toBe(false);
+  });
+
+  it('busca os ganhos sem filtro e registra o erro quando falha', async () => {
+    (backendHttpClient.get as jest.Mock).mockRejectedValueOnce(
+      new Error('falhou'),
+    );
+
+    await useDashboardStore.getState().fetchEarnings();
+
+    expect(backendHttpClient.get).toHaveBeenCalledWith(
+      '/api/dashboard/earnings-over-time',
+    );
+    expect(useDashboardStore.getState().error).toBe('Erro ao buscar ganhos');
+  });
+
+  it('busca as categorias com e sem periodo', async () => {
+    const categorias = [{ category: 'Pintura', count: 2 }];
+    (backendHttpClient.get as jest.Mock).mockResolvedValueOnce({
+      data: categorias,
+    });
+
+    await useDashboardStore.getState().fetchCategories('2025-01-01');
+
+    expect(backendHttpClient.get).toHaveBeenLastCalledWith(
+      '/api/dashboard/services-by-category?from=2025-01-01',
+    );
+    expect(useDashboardStore.getState().categories).toEqual(categorias);
+
+    (backendHttpClient.get as jest.Mock).mockResolvedValueOnce({ data: [] });
+    await useDashboardStore.getState().fetchCategories(undefined, '2025-02-01');
+    expect(backendHttpClient.get).toHaveBeenLastCalledWith(
+      '/api/dashboard/services-by-category?to=2025-02-01',
+    );
+
+    (backendHttpClient.get as jest.Mock).mockResolvedValueOnce({ data: [] });
+    await useDashboardStore.getState().fetchCategories();
+    expect(backendHttpClient.get).toHaveBeenLastCalledWith(
+      '/api/dashboard/services-by-category',
+    );
+  });
+
+  it('registra o erro das categorias e limpa tudo com clear', async () => {
+    (backendHttpClient.get as jest.Mock).mockRejectedValueOnce(
+      new Error('falhou'),
+    );
+    await useDashboardStore.getState().fetchCategories();
+    expect(useDashboardStore.getState().error).toBe(
+      'Erro ao buscar categorias',
+    );
+    expect(useDashboardStore.getState().loading).toBe(false);
+
+    useDashboardStore.getState().clear();
+    expect(useDashboardStore.getState()).toMatchObject({
+      kpis: null,
+      earnings: [],
+      categories: [],
+      error: null,
+    });
+  });
 });

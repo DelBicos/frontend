@@ -109,3 +109,69 @@ describe('AppointmentStore - cancelamento, reagendamento e disputas', () => {
     expect(await actions().getDispute('A1B2C3')).toBeNull();
   });
 });
+
+describe('AppointmentStore - etapas da visita', () => {
+  it('retorna sucesso em cada etapa e envia os dados certos', async () => {
+    http.post.mockResolvedValue({ data: {} });
+
+    expect(await actions().markInTransit('A1')).toEqual({ success: true });
+    expect(http.post).toHaveBeenLastCalledWith(
+      '/api/appointments/A1/in-transit',
+    );
+
+    const coords = { latitude: -23.5, longitude: -46.6 };
+    expect(await actions().markArrived('A1', coords)).toEqual({
+      success: true,
+    });
+    expect(http.post).toHaveBeenLastCalledWith(
+      '/api/appointments/A1/arrived',
+      coords,
+    );
+
+    expect(await actions().startService('A1', '1234')).toEqual({
+      success: true,
+    });
+    expect(http.post).toHaveBeenLastCalledWith(
+      '/api/appointments/A1/start-service',
+      { code: '1234' },
+    );
+
+    expect(await actions().completeService('A1', '5678')).toEqual({
+      success: true,
+    });
+    expect(http.post).toHaveBeenLastCalledWith(
+      '/api/appointments/A1/complete-service',
+      { code: '5678' },
+    );
+  });
+
+  it('usa a mensagem da API quando ela vem no campo error', async () => {
+    http.post.mockRejectedValue({
+      response: { data: { error: 'Fora do raio permitido.' } },
+    });
+    expect(
+      await actions().markArrived('A1', { latitude: 0, longitude: 0 }),
+    ).toEqual({ success: false, error: 'Fora do raio permitido.' });
+  });
+
+  it('usa a mensagem padrao de cada etapa quando a API nao explica', async () => {
+    http.post.mockRejectedValue(new Error('rede'));
+    expect(await actions().markInTransit('A1')).toEqual({
+      success: false,
+      error: 'Erro ao atualizar o status para a caminho.',
+    });
+    expect(
+      await actions().markArrived('A1', { latitude: 0, longitude: 0 }),
+    ).toEqual({ success: false, error: 'Erro ao confirmar a chegada.' });
+    expect(await actions().startService('A1', '0000')).toEqual({
+      success: false,
+      error: 'Código incorreto. Peça o código de confirmação ao cliente.',
+    });
+
+    http.post.mockRejectedValue({ response: { data: { error: 42 } } });
+    expect(await actions().completeService('A1', '0000')).toEqual({
+      success: false,
+      error: 'Não foi possível concluir o atendimento.',
+    });
+  });
+});
