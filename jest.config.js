@@ -14,6 +14,10 @@ module.exports = {
     '!src/assets/**',
   ],
   coverageReporters: ['text-summary', 'lcov'],
+  // Minimo exigido (RNF-06). O CI roda test:coverage, entao uma queda barra a PR.
+  coverageThreshold: {
+    global: { lines: 80, statements: 80, branches: 80, functions: 80 },
+  },
   transformIgnorePatterns: [
     'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)',
   ],
