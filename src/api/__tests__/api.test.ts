@@ -1,7 +1,16 @@
 import { AxiosError, AxiosHeaders } from 'axios';
 
 import { backendHttpClient } from '@lib/helpers/httpClient';
-import { mapAuthResponse, login, verifyCode } from '../auth';
+import {
+  mapAuthResponse,
+  login,
+  register,
+  requestPasswordReset,
+  resendCode,
+  resetPassword,
+  verifyCode,
+} from '../auth';
+import { getActiveSession, sendMessage } from '../chatbot';
 import {
   getApiErrorCode,
   getApiErrorMessage,
@@ -19,6 +28,7 @@ jest.mock('@lib/helpers/httpClient', () => ({
 }));
 
 const post = backendHttpClient.post as jest.Mock;
+const get = backendHttpClient.get as jest.Mock;
 
 const axiosError = (status?: number, data?: unknown) => {
   const error = new AxiosError('falhou');
@@ -158,5 +168,108 @@ describe('payments', () => {
 
   it('extrai o id do PaymentIntent do client_secret', () => {
     expect(paymentIntentIdFromSecret('pi_123_secret_abc')).toBe('pi_123');
+  });
+});
+
+describe('auth - cadastro e senha', () => {
+  it('cadastra e reenvia o codigo nas rotas corretas', async () => {
+    post.mockResolvedValue({ data: {} });
+    const payload = {
+      name: 'Ana',
+      email: 'ana@exemplo.com',
+      password: 'segredo-teste',
+      cpf: '00000000000',
+      address: { postal_code: '01001000', street: 'Rua A', number: '1' },
+    };
+
+    await register(payload);
+    expect(post).toHaveBeenCalledWith('/auth/register', payload);
+
+    await resendCode('ana@exemplo.com');
+    expect(post).toHaveBeenLastCalledWith('/auth/resend', {
+      email: 'ana@exemplo.com',
+    });
+  });
+
+  it('pede a troca de senha e devolve a mensagem do servidor', async () => {
+    post.mockResolvedValueOnce({ data: { message: 'Enviamos um codigo.' } });
+    await expect(requestPasswordReset('ana@exemplo.com')).resolves.toBe(
+      'Enviamos um codigo.',
+    );
+    expect(post).toHaveBeenCalledWith('/auth/forgot-password', {
+      email: 'ana@exemplo.com',
+    });
+
+    post.mockResolvedValueOnce({ data: undefined });
+    await expect(requestPasswordReset('ana@exemplo.com')).resolves.toBe('');
+  });
+
+  it('grava a nova senha com o codigo', async () => {
+    post.mockResolvedValue({ data: {} });
+    await resetPassword('ana@exemplo.com', '123456', 'nova-senha-teste');
+    expect(post).toHaveBeenCalledWith('/auth/reset-password', {
+      email: 'ana@exemplo.com',
+      code: '123456',
+      password: 'nova-senha-teste',
+    });
+  });
+});
+
+describe('chatbot', () => {
+  it('busca a sessao ativa do usuario', async () => {
+    get.mockResolvedValueOnce({ data: { session_id: 4 } });
+    await expect(getActiveSession()).resolves.toEqual({ session_id: 4 });
+    expect(get).toHaveBeenCalledWith('/api/chat/bot/session/active');
+
+    get.mockResolvedValueOnce({ data: null });
+    await expect(getActiveSession()).resolves.toBeNull();
+  });
+
+  it('envia a mensagem com sessao e horario escolhido', async () => {
+    post.mockResolvedValue({ data: { reply: 'ok' } });
+    const signal = new AbortController().signal;
+
+    await expect(
+      sendMessage(
+        {
+          message: 'Quero agendar',
+          sessionId: 9,
+          channel: 'app',
+          timezone: 'America/Sao_Paulo',
+          utcOffsetMinutes: -180,
+          selectedTime: '2026-02-01T13:00:00.000Z',
+        },
+        signal,
+      ),
+    ).resolves.toEqual({ reply: 'ok' });
+
+    expect(post).toHaveBeenCalledWith(
+      '/api/chat/bot/message',
+      {
+        message: 'Quero agendar',
+        session_id: 9,
+        channel: 'app',
+        timezone: 'America/Sao_Paulo',
+        utc_offset_minutes: -180,
+        selected_time: '2026-02-01T13:00:00.000Z',
+      },
+      { signal },
+    );
+  });
+
+  it('omite sessao e horario quando nao informados', async () => {
+    post.mockResolvedValue({ data: {} });
+    await sendMessage({
+      message: 'Oi',
+      sessionId: null,
+      channel: 'web',
+      timezone: 'UTC',
+      utcOffsetMinutes: 0,
+    });
+    expect(post).toHaveBeenCalledWith(
+      '/api/chat/bot/message',
+      { message: 'Oi', channel: 'web', timezone: 'UTC', utc_offset_minutes: 0 },
+      { signal: undefined },
+    );
   });
 });

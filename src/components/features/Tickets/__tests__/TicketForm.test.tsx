@@ -140,6 +140,31 @@ describe('TicketForm', () => {
     });
   });
 
+  it('deve recusar título e descrição acima do limite que passem do maxLength', () => {
+    const { getByPlaceholderText, getByText, getByTestId, onSubmit } =
+      renderForm();
+
+    fireEvent.changeText(
+      getByPlaceholderText(TITLE_PLACEHOLDER),
+      'a'.repeat(101),
+    );
+    fireEvent.changeText(
+      getByPlaceholderText(DESCRIPTION_PLACEHOLDER),
+      'b'.repeat(2001),
+    );
+    fireEvent.press(getByText('Pagamento'));
+    fireEvent.press(getByTestId('ticket-priority-BAIXA'));
+    fireEvent.press(getByTestId('ticket-submit-button'));
+
+    expect(
+      getByText('O título deve ter no máximo 100 caracteres.'),
+    ).toBeTruthy();
+    expect(
+      getByText('A descrição deve ter no máximo 2000 caracteres.'),
+    ).toBeTruthy();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   it('deve trocar a prioridade quando o usuário escolhe outra', () => {
     const { getByTestId, onSubmit } = renderForm({
       initialValues: {

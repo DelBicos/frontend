@@ -77,4 +77,17 @@ describe('FavoriteStore', () => {
     useFavoriteStore.getState().clearFavorites();
     expect(useFavoriteStore.getState().favorites).toEqual([]);
   });
+
+  it('mantem a alteracao local quando o servidor falha', async () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    http.post.mockRejectedValue(new Error('offline'));
+    http.delete.mockRejectedValue(new Error('offline'));
+
+    await useFavoriteStore.getState().addFavorite(fav(1));
+    expect(useFavoriteStore.getState().favorites).toHaveLength(1);
+
+    await useFavoriteStore.getState().removeFavorite(1);
+    expect(useFavoriteStore.getState().favorites).toEqual([]);
+    expect(warn).toHaveBeenCalledTimes(2);
+  });
 });

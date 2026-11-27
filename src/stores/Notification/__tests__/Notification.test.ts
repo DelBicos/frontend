@@ -59,4 +59,34 @@ describe('NotificationStore', () => {
       useNotificationStore.getState().markAsRead(1, 7),
     ).rejects.toThrow(/marcar a notifica/);
   });
+
+  it('so registra o erro no log quando showLogs e verdadeiro', async () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    http.get.mockRejectedValue(new Error('500'));
+
+    await useNotificationStore.getState().fetchNotifications(7);
+    expect(errorSpy).not.toHaveBeenCalled();
+
+    await useNotificationStore.getState().fetchNotifications(7, true);
+    expect(errorSpy).toHaveBeenCalledWith(
+      'Erro ao buscar notificações:',
+      expect.any(Error),
+    );
+  });
+
+  it('marca todas como lidas', async () => {
+    useNotificationStore.setState({
+      notifications: [notification(1), notification(2)],
+    });
+    http.patch.mockResolvedValue({});
+
+    await useNotificationStore.getState().markAllAsRead(7);
+
+    expect(http.patch).toHaveBeenCalledWith(
+      '/api/notifications/mark-all-read/7',
+    );
+    expect(
+      useNotificationStore.getState().notifications.every((n) => n.is_read),
+    ).toBe(true);
+  });
 });
