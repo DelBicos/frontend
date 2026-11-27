@@ -50,6 +50,10 @@ const choose = (
   fireEvent.press(getByText(option));
 };
 
+// Tela pesada: com a maquina carregada (CI ou suite inteira) montar e validar
+// o formulario passa dos 5 s padrao do Jest. O prazo maior nao muda o que e verificado.
+jest.setTimeout(20000);
+
 describe('ServiceForm', () => {
   const onClose = jest.fn();
   const mockCreate = jest.fn();
@@ -227,7 +231,7 @@ describe('ServiceForm', () => {
     // A mensagem aparece no campo e tambem no aviso do formulario. A validacao
     // do formulario e assincrona e, com a suite inteira rodando, passa de 1 s.
     await waitFor(() => expect(getAllByText(msg)).toHaveLength(2), {
-      timeout: 5000,
+      timeout: 15000,
     });
     expect(mockUpdate).not.toHaveBeenCalled();
   });

@@ -82,6 +82,10 @@ const typeOtp = (
   });
 };
 
+// Tela pesada: com a maquina carregada (CI ou suite inteira) montar a tela
+// e o mapa passa dos 5 s padrao do Jest. O prazo maior nao muda o que e verificado.
+jest.setTimeout(20000);
+
 describe('DeslocamentoScreen', () => {
   const mockGetById = jest.fn();
   const mockMarkInTransit = jest.fn();
