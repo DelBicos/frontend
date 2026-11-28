@@ -104,7 +104,7 @@ A tela compõe layout, feature e UI. Só uma store fala com a API: componente n�
 ```
 DelBicosV2
 ├── src
-│  ├── api             # Legado. Chamada nova fica na store
+│  ├── api             # Legado (auth, chatbot, payments). Chamada nova fica na store
 │  ├── assets          # Imagens e fontes
 │  ├── components
 │  │  ├── features     # Comportamento de uma parte do produto (pode usar store)
@@ -113,7 +113,10 @@ DelBicosV2
 │  ├── config          # Ambiente do app (src/config/varEnvs.ts)
 │  ├── hooks           # Listener, ciclo de vida ou API de plataforma (voz, socket)
 │  ├── lib             # HTTP, Stripe, mapas, upload, logger, SSE
-│  ├── screens         # public e private (cliente, profissional, admin, chat)
+│  ├── screens
+│  │  ├── public       # Feed, busca, categorias, perfil do parceiro, checkout, login, cadastro
+│  │  └── private      # admin, chat, chatbot, client, professional, ProfessionalDashboard,
+│  │                   # ProfessionalEarningsScreen (ganhos) e tickets
 │  ├── stores          # Zustand. Único lugar que chama a API
 │  ├── theme           # Claro, escuro e alto contraste
 │  └── utils           # Função pura
