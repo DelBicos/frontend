@@ -38,7 +38,6 @@ Ao solucionar esse problema, notaria-se também os seguintes benefícios para a 
 🔗 **Documentações das disciplinas do projeto**
 
 - Repositório de documentação: [DelBicos Docs](https://github.com/DelBicos/docs)
-- Aplicação no ar: [azure.delbicos.com.br](https://azure.delbicos.com.br)
 
 <details>
   <summary> Documentações das disciplinas do projeto</summary>
@@ -55,6 +54,8 @@ Ao solucionar esse problema, notaria-se também os seguintes benefícios para a 
 <br>
 
 ## 🎬 Apresentação
+
+A aplicação está no ar em [azure.delbicos.com.br](https://azure.delbicos.com.br). Abaixo, o vídeo de pitch e os fluxos principais da navegação.
 
 <image src="assets/delbicos_pitch_HD.gif" alt="Vídeo PITCH do projeto DelBicos" width="80%">
 <p>Vídeo PITCH do projeto DelBicos
