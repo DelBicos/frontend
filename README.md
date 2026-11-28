@@ -35,21 +35,7 @@ Ao solucionar esse problema, notaria-se também os seguintes benefícios para a 
 
 > > 📌 **Status:** $\color{Apricot}{Em\ desenvolvimento}$
 
-🔗 **Documentações das disciplinas do projeto**
-
-- Repositório de documentação: [DelBicos Docs](https://github.com/DelBicos/docs)
-
-<details>
-  <summary> Documentações das disciplinas do projeto</summary>
-  <p>
-<a href="https://github.com/DelBicos/docs/blob/main/semester1/DOC_DELBICOS_I.pdf"> Delivery de Bicos I - 1 Semestre </a><p>
-<a href="https://github.com/DelBicos/docs/blob/main/semester2/DOC_DELBICOS_II.pdf"> Delivery de Bicos II - 2 Semestre </a><p>
-<a href="https://github.com/DelBicos/docs/blob/main/semester3/DOC_DELBICOS_III_GA.pdf"> Gestão Ágil de Projetos de Software - 3 Semestre </a><p>
-<a href="https://github.com/DelBicos/docs/blob/main/semester3/DOC_DELBICOS_III_IHC.pdf"> Interação Humano-Computador - 3 Semestre </a><p>
-<a href="https://github.com/DelBicos/docs/blob/main/semester4/DOC_DELBICOS_IV.pdf"> Projeto Interdisciplinar IV - 4 Semestre </a><p>
-<a href="https://github.com/DelBicos/docs/blob/main/semester4/DOC_DELBICOS_IV_UX.pdf"> UX Design - 4 Semestre </a><p>
-</p>
-</details>
+🔗 **Repositório de documentação:** [DelBicos Docs](https://github.com/DelBicos/docs)
 
 <br>
 
