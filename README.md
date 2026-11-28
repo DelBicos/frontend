@@ -60,14 +60,26 @@ A aplicação está no ar em [azure.delbicos.com.br](https://azure.delbicos.com.
 <image src="assets/delbicos_pitch_HD.gif" alt="Vídeo PITCH do projeto DelBicos" width="80%">
 <p>Vídeo PITCH do projeto DelBicos
 <p>
-<image src="assets/Tela-de-Login.gif" alt="tela de login" width="80%">
-<p>Tela de login
+<image src="assets/nav-busca.gif" alt="Início e busca por categoria, serviço e dia" width="80%">
+<p>Início e busca por categoria, serviço e dia
 <p>
-<image src="assets/tela-de-profile.gif" alt="tela da Área do Cliente" width="80%">
-<p>Tela da Área do Cliente
+<image src="assets/nav-login.gif" alt="Login com e-mail e senha" width="80%">
+<p>Login com e-mail e senha
 <p>
-<image src="assets/tela-dark-light.gif" alt="tela dark e light mode" width="80%">
-<p>Tela Light, Dark e Contrast Mode
+<image src="assets/nav-agendamento.gif" alt="Perfil do profissional, agendamento e pagamento" width="80%">
+<p>Perfil do profissional, agendamento e pagamento
+<p>
+<image src="assets/nav-area-cliente.gif" alt="Área do cliente: agendamentos e perfil" width="80%">
+<p>Área do cliente: agendamentos e perfil
+<p>
+<image src="assets/nav-painel-profissional.gif" alt="Painel do profissional" width="80%">
+<p>Painel do profissional
+<p>
+<image src="assets/nav-temas.gif" alt="Temas claro, escuro e alto contraste" width="80%">
+<p>Temas claro, escuro e alto contraste
+<p>
+<image src="assets/nav-assistente.gif" alt="Assistente (chatbot)" width="80%">
+<p>Assistente (chatbot)
 
 <br>
 
