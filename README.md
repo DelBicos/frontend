@@ -102,7 +102,7 @@ O app é Expo 54, React Native 0.81 e React 19, em TypeScript. O estado e as cha
 A tela compõe layout, feature e UI. Só uma store fala com a API: componente não chama HTTP, e componente de UI não lê store. `src/lib` guarda integração de plataforma (cliente HTTP, Stripe, mapas, upload, logger, SSE). `src/utils` guarda função pura, sem interpretar campo do backend. A regra de negócio da API continua no servidor; o que o app repete é só espelho para a experiência. O porquê de cada camada está em [docs/architecture.md](docs/architecture.md).
 
 ```
-DelBicosV2
+frontend
 ├── src
 │  ├── api             # Legado (auth, chatbot, payments). Chamada nova fica na store
 │  ├── assets          # Imagens e fontes
@@ -111,7 +111,7 @@ DelBicosV2
 │  │  ├── layout       # Cabeçalho, navegação, container. Não dispara API
 │  │  └── ui           # Peça visual genérica, só por props
 │  ├── config          # Ambiente do app (src/config/varEnvs.ts)
-│  ├── hooks           # Listener, ciclo de vida ou API de plataforma (voz, socket)
+│  ├── hooks           # Listener, ciclo de vida ou API de plataforma (voz, chat e localização por socket)
 │  ├── lib             # HTTP, Stripe, mapas, upload, logger, SSE
 │  ├── screens
 │  │  ├── public       # Feed, busca, categorias, perfil do parceiro, checkout, login, cadastro
@@ -121,11 +121,15 @@ DelBicosV2
 │  ├── theme           # Claro, escuro e alto contraste
 │  └── utils           # Função pura
 ├── patches            # Correções aplicadas no npm install (patch-package)
-├── docs               # Arquitetura, contribuição e requisitos
+├── docs               # Arquitetura, contribuição, requisitos e qualidade
+├── public             # Configuração do site estático (staticwebapp.config.json)
+├── nginx              # Templates do contêiner de produção
 ├── app.json           # Expo: plugins e permissões. Fonte do prebuild
 ├── environments       # .env.dev e .env.prod locais (não vão para o git)
 └── scripts            # Android (Gradle) e sincronização de regras
 ```
+
+O site web é gerado com `expo export -p web` e publicado como site estático em uma Storage Account do Azure, em [azure.delbicos.com.br](https://azure.delbicos.com.br). A API roda em Azure App Service; o PostgreSQL e o Cosmos DB (API para MongoDB, usado pelo chat) ficam no Azure.
 
 As pastas `ios/` e `android/` são geradas pelo `expo prebuild` e não são versionadas. `npm run ios` e `npm run android` criam a pasta; a fonte é o `app.json`.
 
