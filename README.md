@@ -8,10 +8,7 @@
 
 <p align="center">
   <a href="#-about">About</a> |
-  <a href="#-entregas-de-sprints">Sprints</a> |
-  <a href="#-backlogs">Backlogs</a> |
-  <a href="#-user-stories">User Stories</a> |
-  <a href="#-functional-requirements">Functional Requirements</a> |
+  <a href="#-apresentação">Apresentação</a> |
   <a href="#-prototype">Prototype</a> |
   <a href="#️-tecnologies">Tecnologies</a> |
   <a href="#-team">Team</a> |
@@ -38,46 +35,26 @@ Ao solucionar esse problema, notaria-se também os seguintes benefícios para a 
 
 > > 📌 **Status:** $\color{Apricot}{Em\ desenvolvimento}$
 
--🔗 **Documentações das disciplinas do projeto**
+🔗 **Documentações das disciplinas do projeto**
 
-- <a href="assets/DelBicos - Projeto Interdisciplinar IV.pdf"> Projeto Interdisciplinar IV - 4 Semestre </a><p>
 - Repositório de documentação: [DelBicos Docs](https://github.com/DelBicos/docs)
-- <a href="assets/DelBicos - Projeto Interdisciplinar IV - UX.pdf"> UX Design - 4 Semestre </a><p>
+- Aplicação no ar: [azure.delbicos.com.br](https://azure.delbicos.com.br)
 
 <details>
   <summary> Documentações das disciplinas do projeto</summary>
   <p>
-<a href="assets/DelBicos - Delivery de Bicos I.pdf"> Delivery de Bicos I - 1 Semestre </a><p>
-<a href="assets/DelBicos - Delivery de Bicos II.pdf"> Delivery de Bicos II - 2 Semestre </a><p>
-<a href="assets/DelBicos - Projeto Interdisciplinar III - Gestão Ágil.pdf"> Gestão Ágil de Projetos de Software - 3 Semestre </a><p>
-<a href="assets/Projeto_IHC-DelBicos-Projeto_Interdisciplinar_III.pdf"> Interação Humano-Computador - 3 Semestre </a><p>
-
+<a href="https://github.com/DelBicos/docs/blob/main/semester1/DOC_DELBICOS_I.pdf"> Delivery de Bicos I - 1 Semestre </a><p>
+<a href="https://github.com/DelBicos/docs/blob/main/semester2/DOC_DELBICOS_II.pdf"> Delivery de Bicos II - 2 Semestre </a><p>
+<a href="https://github.com/DelBicos/docs/blob/main/semester3/DOC_DELBICOS_III_GA.pdf"> Gestão Ágil de Projetos de Software - 3 Semestre </a><p>
+<a href="https://github.com/DelBicos/docs/blob/main/semester3/DOC_DELBICOS_III_IHC.pdf"> Interação Humano-Computador - 3 Semestre </a><p>
+<a href="https://github.com/DelBicos/docs/blob/main/semester4/DOC_DELBICOS_IV.pdf"> Projeto Interdisciplinar IV - 4 Semestre </a><p>
+<a href="https://github.com/DelBicos/docs/blob/main/semester4/DOC_DELBICOS_IV_UX.pdf"> UX Design - 4 Semestre </a><p>
 </p>
 </details>
 
 <br>
 
-## 🏁 Entregas de Sprints
-
-<image src="assets/Entrega_de_sprints.png" alt="Entregas de Sprints do projeto DelBicos" width="80%">
-
-| Sprint |    Período    | Entregas                                                                                                                                                                                                                                                                              |    Status    |
-| :----: | :-----------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :----------: |
-|   01   | 04/06 - 20/06 | Figma do protótipo de agendar e pagar serviço, Página de Feed, Header, Endpoint GET de profissionais com filtros opcionais `<br>` (termo pesquisado, localização, categoria, subcategoria, data_inicio, data_fim) e com ordenação (relevância, avaliação, distância, disponibilidade) | ✅ Concluído |
-|   02   | 10/06 - 17/06 | Página de Meus Agendamentos, Figma do protótipo de Página de Login, Página de Login por E-mail e Senha,`<br>` dois endpoints POST de login por senha, endpoint POST de cadastro, endpoint POST de cancelar agendamento                                                                | ✅ Concluído |
-|   03   | 17/06 - 24/06 | Interações do protótipo do Figma, endpoint POST de cadastro de parceiro,`<br>` endpoint POST de aceitar agendamento, endpoint POST de editar disponibilidade                                                                                                                          | ✅ Concluído |
-|   04   | 24/06 - 25/08 | Implementação de Envio de E-mails Automatizados                                                                                                                                                                                                                                       | ✅ Concluído |
-|   05   | 26/08 - 08/09 | Implementação de Sistema de Agendamento com Calendário                                                                                                                                                                                                                                | ✅ Concluído |
-|   06   | 09/09 - 15/09 | Implementação de Geolocalização e Mapas                                                                                                                                                                                                                                               | ✅ Concluído |
-|   07   | 16/09 - 22/09 | Implementação de Upload e Armazenamento de Arquivos                                                                                                                                                                                                                                   | ✅ Concluído |
-|   08   | 23/09 - 06/10 | Implementação de Sistema de Avaliações ou Comentários                                                                                                                                                                                                                                 | ✅ Concluído |
-|   09   | 07/10 - 13/10 | Implementação de Geração de Entrega de Relatórios em PDF                                                                                                                                                                                                                              | ✅ Concluído |
-|   10   | 14/10 - 20/10 | Implementação de Envio de Notificações em Tempo Real                                                                                                                                                                                                                                  | ✅ Concluído |
-|   11   | 21/10 - 03/11 | Implementação de Integração com API de Pagamentos                                                                                                                                                                                                                                     | ✅ Concluído |
-|   12   | 04/11 - 10/11 | Implementação de IExportação de Dados para Excel/CSV                                                                                                                                                                                                                                  | ✅ Concluído |
-|   13   | 11/11 - 17/11 | Implementação de Visualização com Gráficos                                                                                                                                                                                                                                            | ✅ Concluído |
-
-### 🎬 Apresentação
+## 🎬 Apresentação
 
 <image src="assets/delbicos_pitch_HD.gif" alt="Vídeo PITCH do projeto DelBicos" width="80%">
 <p>Vídeo PITCH do projeto DelBicos
@@ -90,50 +67,6 @@ Ao solucionar esse problema, notaria-se também os seguintes benefícios para a 
 <p>
 <image src="assets/tela-dark-light.gif" alt="tela dark e light mode" width="80%">
 <p>Tela Light, Dark e Contrast Mode
-
-<br>
-
-## 🎯 Backlogs
-
-<details>
-  <summary> Backlogs </summary>
-  <p>
-<image src="assets/backlogP.png" alt="Backlog de Produtos do projeto DelBicos" width="60%"><p>
-<image src="assets/backlogS.png" alt="Backlog de Sprints do projeto DelBicos" width="60%">
-</p>
-</details>
-<br>
-
-## 🎥 User Stories
-
-<details>
-  <summary> User Stories </summary>
-  <p>
-<image src="assets/sprint01-1.png" alt="User Stories do projeto DelBicos" width="60%"><p>
-<image src="assets/sprint01-2.png" alt="User Stories do projeto DelBicos" width="60%"><p>
-<image src="assets/sprint01-3.png" alt="User Stories do projeto DelBicos" width="60%"><p>
-<image src="assets/sprint02-1.png" alt="User Stories do projeto DelBicos" width="60%"><p>
-<image src="assets/sprint02-2.png" alt="User Stories do projeto DelBicos" width="60%"><p>
-<image src="assets/sprint03-1.png" alt="User Stories do projeto DelBicos" width="60%"><p>
-<image src="assets/sprint03-2.png" alt="User Stories do projeto DelBicos" width="60%"><p>
-<image src="assets/sprint04.png" alt="User Stories do projeto DelBicos" width="60%"><p>
-</details>
-<br>
-
-## 💡 Functional Requirements
-
-<details>
-  <summary> Requisitos Funcionais - Cliente </summary>
-  <image src="assets/requisitos_tabela_requisitos_funcionais_cliente.png" alt="Requisitos Funcionais do projeto DelBicos" width="80%"><p>
-  <p>
- <summary> Requisitos Funcionais - Profissional </summary>
-  <image src="assets/requisitos_tabela_requisitos_funcionais_profissional.png" alt="Requisitos Funcionais do projeto DelBicos" width="80%"><p>
-  <p>
-   <summary> Requisitos Funcionais - Administrador </summary>
-  <image src="assets/requisitos_tabela_requisitos_funcionais_administrador.png" alt="Requisitos Funcionais do projeto DelBicos" width="80%"><p>
-  <p>
-</p>
-</details>
 
 <br>
 
@@ -197,8 +130,8 @@ As pastas `ios/` e `android/` são geradas pelo `expo prebuild` e não são vers
 Node 20 (é a versão do CI). O gerenciador é o npm: o lockfile é o `package-lock.json`.
 
 ```bash
-git clone https://github.com/fershibli/DelBicosV2.git
-cd DelBicosV2
+git clone https://github.com/DelBicos/frontend.git
+cd frontend
 npm install
 ```
 
